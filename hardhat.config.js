@@ -85,3 +85,6 @@ module.exports = {
     timeout: 100000
   }
 };
+
+// Registrar la tarea setup
+require("./scripts/tasks/setup");
