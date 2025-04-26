@@ -1,10 +1,10 @@
 # INHABIT Vendor NFT - Plataforma de Venta de NFTs
 
-## 📋 Descripción General
+## 📋 <a id="descripcion-general"></a>Descripción General
 
 INHABIT Vendor NFT es una plataforma descentralizada que permite la venta de NFTs de múltiples colecciones, aceptando pagos en diferentes tokens ERC20 y tokens nativos (como ETH, MATIC, CELO). La plataforma incluye funcionalidades avanzadas como distribución de ingresos, sistema de reembolsos y gestión de roles.
 
-## 🚀 Características Principales
+## 🚀 <a id="caracteristicas-principales"></a>Características Principales
 
 - **Venta de NFTs**: Compra de NFTs de diferentes colecciones
 - **Múltiples Métodos de Pago**: Acepta tokens ERC20 y tokens nativos
@@ -13,7 +13,7 @@ INHABIT Vendor NFT es una plataforma descentralizada que permite la venta de NFT
 - **Gestión de Roles**: Sistema de permisos para administradores y usuarios
 - **Oracles de Precios**: Integración con Chainlink para precios en tiempo real
 
-## 🔧 Configuración Técnica
+## 🔧 <a id="configuracion-tecnica"></a>Configuración Técnica
 
 ### Requisitos
 - Node.js 14+
@@ -32,7 +32,7 @@ npm install
 npx hardhat run scripts/deploy.js --network <red>
 ```
 
-## 🔗 Configuración de Tokens y Oracles
+## 🔗 <a id="configuracion-tokens-oracles"></a>Configuración de Tokens y Oracles
 
 ### 1. Tokens Disponibles en Celo
 
@@ -114,20 +114,20 @@ Los oráculos se obtienen de la [documentación oficial de Chainlink para la red
    - Verifica que los oráculos estén funcionando
    - Actualiza los feeds si es necesario
 
-## 🔒 Seguridad
+## 🔒 <a id="seguridad"></a>Seguridad
 
 - **ReentrancyGuard**: Protección contra ataques de reentrada
 - **AccessControl**: Sistema de roles y permisos
 - **Validaciones**: Comprobaciones de saldo y aprobaciones
 - **SafeMath**: Operaciones matemáticas seguras
 
-## 🧪 Testing
+## 🧪 <a id="testing"></a>Testing
 
 El proyecto incluye contratos mock para testing:
 - `MockOracleV2.sol`: Simula oráculos de precios
 - `MockErc20.sol`: Simula tokens ERC20
 
-## 📊 Flujo del Sistema
+## 📊 <a id="flujo-sistema"></a>Flujo del Sistema
 
 ### 1. Diagrama de Flujo General
 
@@ -205,7 +205,7 @@ graph TD
    - Reembolsar fondos
    - Registrar transacción
 
-## ⚙️ Guía de Configuración del Sistema
+## ⚙️ <a id="guia-configuracion"></a>Guía de Configuración del Sistema
 
 ### 1. Configuración Inicial del Contrato
 
@@ -376,7 +376,7 @@ uint256 price = vendor.getUSDPrice(tokenAddress);
    - Verificar balances regularmente
    - Actualizar feeds de precios cuando sea necesario
 
-## 📚 Documentación Técnica de Contratos
+## 📚 <a id="documentacion-tecnica"></a>Documentación Técnica de Contratos
 
 ### 1. VendorV2.sol - Contrato Principal
 
@@ -579,7 +579,7 @@ bytes32 public constant USER_ROLE = keccak256("USER");
   - Retiro de tokens ERC20
   - Seguridad en transacciones
 
-## 🤝 Contribución
+## 🤝 <a id="contribucion"></a>Contribución
 
 1. Fork del repositorio
 2. Crear rama de características (`git checkout -b feature/AmazingFeature`)
@@ -587,10 +587,10 @@ bytes32 public constant USER_ROLE = keccak256("USER");
 4. Push a la rama (`git push origin feature/AmazingFeature`)
 5. Abrir Pull Request
 
-## 📝 Licencia
+## 📝 <a id="licencia"></a>Licencia
 
 Distribuido bajo la licencia MIT. Ver `LICENSE` para más información.
 
-## 📞 Contacto
+## 📞 <a id="contacto"></a>Contacto
 
 Para consultas técnicas o soporte, contactar al equipo de desarrollo.
