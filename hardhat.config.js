@@ -1,15 +1,13 @@
-require("dotenv").config();
-const { task, subtask, types } = require("hardhat/config");
-
 require("@nomicfoundation/hardhat-toolbox");
-require("@nomiclabs/hardhat-ethers");
-require("@nomiclabs/hardhat-etherscan");
-require("@nomiclabs/hardhat-waffle");
+require("dotenv").config();
 require("hardhat-gas-reporter");
 require("solidity-coverage");
-require("hardhat-contract-sizer");
-require("./tasks/tasks.js");
 
+const PRIVATE_KEY = process.env.PRIVATE_KEY;
+const CELO_RPC_URL = process.env.CELO_RPC_URL;
+const ALFAJORES_RPC_URL = process.env.ALFAJORES_RPC_URL;
+const CELOSCAN_API_KEY = process.env.CELOSCAN_API_KEY;
+const COINMARKETCAP_API_KEY = process.env.COINMARKETCAP_API_KEY;
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
@@ -18,48 +16,46 @@ module.exports = {
     settings: {
       optimizer: {
         enabled: true,
-        runs: 200,
+        runs: 1000,
+        details: {
+          yul: true,
+          yulDetails: {
+            stackAllocation: true,
+            optimizerSteps: "dhfoDgvulfnTUtnIf"
+          }
+        }
       },
-    },
+      viaIR: false
+    }
   },
-  defaultNetwork: "celo",
   networks: {
     hardhat: {
-      inject: false, // optional. if true it will expose your mnemonic in front end. it would be available as an in page browser wallet/signer which can sign without confirmation.
+      chainId: 1337,
+      allowUnlimitedContractSize: true
     },
     celo: {
-      url: process.env.CELO_MAINNET_URL,
-      accounts: [process.env.PRIVATE_KEY],
-      gasPrice: 'auto',
-      gas: 'auto',
+      url: CELO_RPC_URL || "https://forno.celo.org",
+      accounts: PRIVATE_KEY ? [PRIVATE_KEY] : [],
+      chainId: 42220,
+      gasPrice: 50000000000
     },
-    celoTestnet: {
-      url: process.env.CELO_TEST_URL,
-      accounts: [process.env.PRIVATE_KEY],
-      gasPrice: "auto", // 200000000000
-      gas: "auto",
+    alfajores: {
+      url: ALFAJORES_RPC_URL || "https://alfajores-forno.celo-testnet.org",
+      accounts: PRIVATE_KEY ? [PRIVATE_KEY] : [],
+      chainId: 44787,
+      gasPrice: 1000000000
     },
-  },
-  paths: {
-    sources: "./contracts",
-    tests: "./test",
-    cache: "./cache",
-    artifacts: "./artifacts",
+    localhost: {
+      url: "http://127.0.0.1:8545",
+      chainId: 1337
+    }
   },
   etherscan: {
     apiKey: {
-      celo: process.env.ETHERSCAN_API_KEY_CELO,
-      celoTestnet: process.env.ETHERSCAN_API_KEY_CELO,
+      celo: CELOSCAN_API_KEY,
+      alfajores: CELOSCAN_API_KEY
     },
     customChains: [
-      {
-        network: "celoTestnet",
-        chainId: 44787,
-        urls: {
-          apiURL: "https://api-alfajores.celoscan.io/api",
-          browserURL: "https://alfajores.celoscan.io"
-        }
-      },
       {
         network: "celo",
         chainId: 42220,
@@ -67,13 +63,25 @@ module.exports = {
           apiURL: "https://api.celoscan.io/api",
           browserURL: "https://celoscan.io"
         }
+      },
+      {
+        network: "alfajores",
+        chainId: 44787,
+        urls: {
+          apiURL: "https://api-alfajores.celoscan.io/api",
+          browserURL: "https://alfajores.celoscan.io"
+        }
       }
     ]
   },
-  contractSizer: {
-    alphaSort: true,
-    disambiguatePaths: false,
-    runOnCompile: true,
-    strict: true,
+  gasReporter: {
+    enabled: process.env.REPORT_GAS !== undefined,
+    currency: "USD",
+    coinmarketcap: COINMARKETCAP_API_KEY,
+    token: "CELO",
+    gasPrice: 100
   },
+  mocha: {
+    timeout: 100000
+  }
 };

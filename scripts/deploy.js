@@ -1,35 +1,66 @@
-// We require the Hardhat Runtime Environment explicitly here. This is optional
-// but useful for running the script in a standalone fashion through `node <script>`.
-//
-// When running the script with `npx hardhat run <script>` you'll find the Hardhat
-// Runtime Environment's members available in the global scope.
-// bsc mainnnet = 0xC9E13F4976be99A262A9cC3c55ABE1842F206201
-// bsc testnet = 0xEa42673e7D4a0cDCE9577820aa3890c892a8Ec37
 const hre = require("hardhat");
 
 async function main() {
-  // Hardhat always runs the compile task when running scripts with its command
-  // line interface.
-  //
-  // If this script is run directly using `node` you may want to call compile
-  // manually to make sure everything is compiled
-  await hre.run("compile");
-
-
   const [deployer] = await hre.ethers.getSigners();
-  console.log("Deploying contracts with the account:", deployer.address);
+  const network = hre.network.name;
+  
+  console.log(`Desplegando contratos en la red: ${network}`);
+  console.log("Desplegando contratos con la cuenta:", deployer.address);
 
-  console.log("Account balance:", (await deployer.getBalance()).toString());
+  // Configurar opciones de gas para Alfajores
+  const gasOptions = network === "alfajores" ? {
+    gasPrice: hre.ethers.parseUnits("0.1", "gwei"),
+    gasLimit: 5000000
+  } : {};
 
-  // Deploy
-  const factory = await hre.ethers.getContractFactory("VendorV2");
-  const contract = await factory.deploy();
+  // Desplegar el contrato VendorV2
+  console.log("Desplegando VendorV2...");
+  const VendorV2 = await hre.ethers.getContractFactory("VendorV2");
+  const vendorV2 = await VendorV2.deploy(gasOptions);
+  await vendorV2.waitForDeployment();
+  const vendorV2Address = await vendorV2.getAddress();
+  console.log(`VendorV2 desplegado en ${network}:`, vendorV2Address);
 
-  // The address of the contract once mined
-  console.log("Contract address:", contract.address);
+  // Configurar el deployer como admin y user
+  console.log("Configurando roles...");
+  await vendorV2.addUser(deployer.address, gasOptions);
+  console.log("Deployer configurado como usuario");
 
-  // Transaction that was sent to the network
-  console.log(contract.deployTransaction.hash);
+  // Solo verificar si no estamos en la red local
+  if (network !== "hardhat" && network !== "localhost") {
+    // Esperar para la verificación
+    console.log("Esperando 5 bloques para la verificación...");
+    await vendorV2.deploymentTransaction().wait(5);
+
+    // Verificar el contrato
+    console.log("Verificando contrato...");
+    try {
+      await hre.run("verify:verify", {
+        address: vendorV2Address,
+        constructorArguments: [],
+      });
+      console.log("Contrato verificado exitosamente");
+    } catch (error) {
+      console.error("Error en la verificación:", error);
+    }
+  } else {
+    console.log("Saltando verificación en red local");
+  }
+
+  // Documentación de uso
+  console.log("\nDocumentación de uso:");
+  console.log("1. Configuración inicial:");
+  console.log("   - Usar addToken() para configurar tokens aceptados");
+  console.log("   - Usar addCollection() para configurar colecciones de NFTs");
+  console.log("   - Usar addGroup() para configurar grupos de distribución");
+  console.log("\n2. Operaciones principales:");
+  console.log("   - buyWithToken() para comprar con tokens ERC20");
+  console.log("   - buyNative() para comprar con ETH");
+  console.log("   - refundInvestment() para solicitar reembolsos");
+  console.log("\n3. Administración:");
+  console.log("   - addUser() para agregar nuevos usuarios");
+  console.log("   - setRefundActive() para controlar reembolsos");
+  console.log("   - setCollectionStatus() para gestionar colecciones");
 }
 
 main()
@@ -37,4 +68,4 @@ main()
   .catch((error) => {
     console.error(error);
     process.exit(1);
-  });
+  }); 

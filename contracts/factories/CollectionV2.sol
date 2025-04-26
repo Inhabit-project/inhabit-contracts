@@ -69,6 +69,8 @@ contract CollectionV2 is Administered {
         bool _act
     ) external onlyUser {
         require(!isCollection(_addr), "Collection already stored");
+        require(_addr != address(0), "Invalid collection address");
+        require(_pr > 0, "Price must be greater than zero");
 
         collections[collectionCount] = CollectionStruct(_addr, _pr, _act);
         collectionIndex[_addr] = CollectionIndexStruct(_addr, collectionCount);
@@ -108,7 +110,7 @@ contract CollectionV2 is Administered {
      * @dev Verify if is a Collection
      * @param _addr Collection Contract Address
      */
-    function isCollection(address _addr) private view returns (bool) {
+    function isCollection(address _addr) public virtual view returns (bool) {
         return (collectionIndex[_addr].addr == address(0x0)) ? false : true;
     }
 

@@ -122,7 +122,7 @@ contract WhiteListTokenV2 is Administered {
      * @param _addr                     Address of the token contract
      */
     function isToken(address _addr) public view returns (bool) {
-        return (whitelistIndex[_addr].addr == address(0x0)) ? false : true;
+        return (whitelistIndex[_addr].addr != address(0x0));
     }
 
 

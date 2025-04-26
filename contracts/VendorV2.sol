@@ -47,7 +47,9 @@ contract VendorV2 is
         uint256 _idx,
         address _addr,
         uint256 _qty
-    ) external onlyUser nonReentrant {
+    ) external nonReentrant {
+        require(isUser(_msgSender()), "Caller is not user");
+        require(_addr != address(0), "Invalid destination address");
         CollectionStruct storage c = collections[_idx];
         require(c.active, "Collection is not active");
         _sendNFTs(c.addr, _addr, _qty);
@@ -102,37 +104,48 @@ contract VendorV2 is
 
     /**
      * @dev Buy NFT and pay with native token
-     * @param _cIdx                              Id of the Collection
-     * @param _token                              Address of the token to pay
-     * @param _amount                        Amount of tokens to buy
+     * @param _group Group name
+     * @param _cIdx Collection index
+     * @param _amount Amount of NFTs to buy
      */
     function buyNative(
         string calldata _group,
         uint256 _cIdx,
-        address _token,
         uint256 _amount
     ) external payable nonReentrant {
-        require(_amount > 0, "Amount of token greater than zero");
-        require(msg.value > 0, "No amount sent");
-
+        require(_amount > 0, "Amount must be greater than zero");
+        require(isCollection(collections[_cIdx].addr), "Collection does not exist");
+        
         CollectionStruct storage c = collections[_cIdx];
         require(c.active, "Collection is not active");
-        require(isToken(_token), "Invalid token");
-
-        ERC20List memory tk = getTokenByAddr(_token);
-        require(tk.active && tk.isNative, "Token is not available");
-
-        /** Amount to Pay */
-        uint256 _atp = parseUSDtoToken((c.price * _amount), _token, true);
-        require(msg.value >= _atp, "You don't have enough tokens to buy");
-
+        
+        uint256 totalPrice = c.price * _amount;
+        require(msg.value >= totalPrice, "Insufficient ETH sent");
+        
         // Registra la inversión del usuario
-        investments[_msgSender()][_token] += msg.value;
-
+        investments[_msgSender()][address(0)] += msg.value;
+        
         /// @dev distribution of tokens a group
-        distribution(_group, _atp, true, _token);
-
+        distribution(_group, msg.value, true, address(0));
+        
         _sendNFTs(c.addr, _msgSender(), _amount);
+        
+        if (msg.value > totalPrice) {
+            payable(_msgSender()).transfer(msg.value - totalPrice);
+        }
+    }
+
+    /**
+     * @dev Internal function to handle NFT purchase
+     * @param _collection Address of the NFT collection
+     * @param _amount Amount of NFTs to buy
+     */
+    function _buyNFT(address _collection, uint256 _amount) internal {
+        require(_amount > 0, "Amount must be greater than zero");
+        CollectionStruct storage collection = collections[collectionIndex[_collection].index];
+        require(collection.active, "Collection is not active");
+        
+        _sendNFTs(_collection, msg.sender, _amount);
     }
 
     /**
@@ -192,9 +205,7 @@ contract VendorV2 is
         // Resetea la inversión para evitar múltiples devoluciones
         investments[_msgSender()][_token] = 0;
 
-        ERC20List memory tk = getTokenByAddr(_token);
-
-        if (tk.isNative) {
+        if (_token == address(0)) { // Manejo explícito para token nativo (ETH)
             // Reembolso en token nativo (ETH)
             require(
                 address(this).balance >= investedAmount,
@@ -202,7 +213,10 @@ contract VendorV2 is
             );
             (bool success, ) = _msgSender().call{value: investedAmount}("");
             require(success, "Refund failed");
-        } else {
+        } else { // Lógica existente para tokens ERC20
+            ERC20List memory tk = getTokenByAddr(_token); // Llamar solo para ERC20
+            // require(!tk.isNative, "Use address(0) for native token refund"); // Opcional: verificación extra
+
             // Reembolso en tokens ERC20
             require(
                 IERC20(_token).balanceOf(address(this)) >= investedAmount,
@@ -225,6 +239,57 @@ contract VendorV2 is
         address _to
     ) external onlyAdmin {
         IERC721(_nftAddress).transferFrom(address(this), _to, _nftId);
+    }
+
+    /// @notice Reserva NFTs para usuarios específicos
+    /// @param _collectionName Nombre de la colección
+    /// @param _users Array de direcciones de usuarios
+    /// @param _amounts Array de cantidades de NFTs a reservar
+    function reserveNFTs(
+        string calldata _collectionName,
+        address[] calldata _users,
+        uint256[] calldata _amounts
+    ) external onlyAdmin {
+        require(_users.length == _amounts.length, "Arrays length mismatch");
+        
+        // Buscar la colección por nombre
+        uint256 collectionIndex = 0;
+        bool found = false;
+        for (uint256 i = 0; i < collectionCount; i++) {
+            if (keccak256(bytes(_collectionName)) == keccak256(bytes(abi.encodePacked(i)))) {
+                collectionIndex = i;
+                found = true;
+                break;
+            }
+        }
+        require(found, "Collection not found");
+        
+        CollectionStruct storage collection = collections[collectionIndex];
+        require(collection.active, "Collection is not active");
+        
+        for (uint256 i = 0; i < _users.length; i++) {
+            require(_users[i] != address(0), "Invalid user address");
+            require(_amounts[i] > 0, "Amount must be greater than zero");
+            
+            // Reservar los NFTs
+            _sendNFTs(collection.addr, _users[i], _amounts[i]);
+        }
+    }
+
+    /// @notice Verifica si una colección existe por su dirección
+    /// @param _collection Dirección de la colección a verificar
+    /// @return bool Verdadero si la colección existe, falso en caso contrario
+    function isCollection(address _collection) public view override returns (bool) {
+        return super.isCollection(_collection);
+    }
+
+    /// @notice Actualiza el estado de una colección
+    /// @param _collectionAddr Dirección de la colección
+    /// @param _status Nuevo estado de la colección
+    function setCollectionStatus(address _collectionAddr, bool _status) external onlyUser {
+        require(isCollection(_collectionAddr), "Collection does not exist");
+        CollectionIndexStruct storage collectionIdx = collectionIndex[_collectionAddr];
+        updateCollection(collectionIdx.index, 3, address(0), 0, _status);
     }
 
     // Permite recibir Celo directamente sin llamar a una función específica
