@@ -32,6 +32,88 @@ npm install
 npx hardhat run scripts/deploy.js --network <red>
 ```
 
+## 🔗 Configuración de Tokens y Oracles
+
+### 1. Tokens Disponibles en Celo
+
+#### 1.1 Token Nativo (CELO)
+```solidity
+// Configuración para CELO
+vendor.addToken(
+    "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE", // Dirección especial para token nativo
+    "0x0568fD19986748cEfF3301e55c0eb1E729E0Ab7e", // Oracle de Chainlink para CELO/USD
+    8,  // Decimales del oracle
+    true, // Activo
+    true  // Es nativo
+);
+```
+
+#### 1.2 Token ERC20 (cUSD)
+```solidity
+// Configuración para cUSD
+vendor.addToken(
+    "0x765DE816845861e75A25fCA122bb6898B8B1282a", // Dirección de cUSD
+    "0xe38A27BE4E7d866327e09736F3C570F256FFd048", // Oracle de Chainlink para cUSD/USD
+    8,  // Decimales del oracle
+    true, // Activo
+    false // No es nativo
+);
+```
+
+### 2. Oracles de Chainlink en Celo
+
+Los oráculos se obtienen de la [documentación oficial de Chainlink para la red Celo](https://docs.chain.link/data-feeds/price-feeds/addresses/?network=celo&page=1):
+
+1. **CELO/USD**: `0x0568fD19986748cEfF3301e55c0eb1E729E0Ab7e`
+2. **cUSD/USD**: `0xe38A27BE4E7d866327e09736F3C570F256FFd048`
+
+> **Nota**: Las direcciones de los oráculos pueden cambiar. Siempre verifica la documentación oficial de Chainlink para obtener las direcciones más actualizadas.
+
+### 3. Proceso de Configuración
+
+1. **Preparación**:
+   - Asegúrate de tener la dirección del contrato `VendorV2`
+   - Tener permisos de administrador o usuario en el contrato
+
+2. **Ejecución**:
+   ```javascript
+   // Ejemplo usando Hardhat
+   const vendor = await ethers.getContractAt("VendorV2", VENDOR_ADDRESS);
+   
+   // Agregar token
+   await vendor.addToken(
+       TOKEN_ADDRESS,
+       ORACLE_ADDRESS,
+       ORACLE_DECIMALS,
+       true, // activo
+       IS_NATIVE
+   );
+   ```
+
+3. **Verificación**:
+   ```javascript
+   // Verificar tokens configurados
+   const tokens = await vendor.tokensList();
+   console.log(tokens);
+   ```
+
+### 4. Consideraciones Importantes
+
+1. **Seguridad**:
+   - Verifica que las direcciones de los oráculos sean las correctas
+   - Asegúrate de que los decimales coincidan con el token
+   - Verifica que el token esté activo en la red
+
+2. **Precisión**:
+   - Los oráculos de Chainlink usan 8 decimales por defecto
+   - Los tokens nativos (CELO) usan 18 decimales
+   - Los tokens ERC20 pueden tener diferentes decimales
+
+3. **Mantenimiento**:
+   - Monitorea los precios regularmente
+   - Verifica que los oráculos estén funcionando
+   - Actualiza los feeds si es necesario
+
 ## 🔒 Seguridad
 
 - **ReentrancyGuard**: Protección contra ataques de reentrada
