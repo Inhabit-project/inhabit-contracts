@@ -86,5 +86,3 @@ module.exports = {
   }
 };
 
-// Registrar la tarea setup
-require("./scripts/tasks/setup");
