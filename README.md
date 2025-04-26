@@ -4,35 +4,35 @@
 
 ### 1. [Descripción General](#descripcion-general)
 ### 2. [Características Principales](#caracteristicas-principales)
-### 3. [Configuración Técnica](#configuracion-tecnica)
-   - [Requisitos](#requisitos)
-   - [Instalación](#instalacion)
-   - [Despliegue](#despliegue)
-### 4. [Configuración de Tokens y Oracles](#configuracion-tokens-oracles)
-   - [Tokens Disponibles en Celo](#tokens-disponibles-celo)
-   - [Oracles de Chainlink](#oracles-chainlink)
-   - [Proceso de Configuración](#proceso-configuracion)
-   - [Consideraciones Importantes](#consideraciones-importantes)
-### 5. [Configuración de Grupos](#configuracion-grupos)
-   - [Estructura de Grupos](#estructura-grupos)
-   - [Creación de Grupos](#creacion-grupos)
-   - [Gestión de Miembros](#gestion-miembros)
-   - [Distribución de Fondos](#distribucion-fondos)
-   - [Ejemplos Prácticos](#ejemplos-practicos)
-### 6. [Seguridad](#seguridad)
-### 7. [Testing](#testing)
-### 8. [Flujo del Sistema](#flujo-sistema)
+### 3. [Flujo del Sistema](#flujo-sistema)
    - [Diagrama de Flujo](#diagrama-flujo)
    - [Roles y Responsabilidades](#roles-responsabilidades)
    - [Proceso de Compra](#proceso-compra)
    - [Proceso de Reembolso](#proceso-reembolso)
-### 9. [Guía de Configuración del Sistema](#guia-configuracion)
+### 4. [Guía de Configuración del Sistema](#guia-configuracion)
    - [Configuración Inicial](#configuracion-inicial)
    - [Configuración de Tokens](#configuracion-tokens)
    - [Configuración de Colecciones](#configuracion-colecciones)
    - [Configuración de Grupos](#configuracion-grupos)
    - [Configuración de Reembolsos](#configuracion-reembolsos)
    - [Operaciones del Sistema](#operaciones-sistema)
+### 5. [Configuración Técnica](#configuracion-tecnica)
+   - [Requisitos](#requisitos)
+   - [Instalación](#instalacion)
+   - [Despliegue](#despliegue)
+### 6. [Configuración de Tokens y Oracles](#configuracion-tokens-oracles)
+   - [Tokens Disponibles en Celo](#tokens-disponibles-celo)
+   - [Oracles de Chainlink](#oracles-chainlink)
+   - [Proceso de Configuración](#proceso-configuracion)
+   - [Consideraciones Importantes](#consideraciones-importantes)
+### 7. [Configuración de Grupos](#configuracion-grupos)
+   - [Estructura de Grupos](#estructura-grupos)
+   - [Creación de Grupos](#creacion-grupos)
+   - [Gestión de Miembros](#gestion-miembros)
+   - [Distribución de Fondos](#distribucion-fondos)
+   - [Ejemplos Prácticos](#ejemplos-practicos)
+### 8. [Seguridad](#seguridad)
+### 9. [Testing](#testing)
 ### 10. [Documentación Técnica de Contratos](#documentacion-tecnica)
    - [VendorV2.sol](#vendorv2)
    - [CollectionV2.sol](#collectionv2)
@@ -56,120 +56,6 @@ INHABIT Vendor NFT es una plataforma descentralizada que permite la venta de NFT
 - **Distribución de Ingresos**: Reparto automático de ganancias entre grupos
 - **Gestión de Roles**: Sistema de permisos para administradores y usuarios
 - **Oracles de Precios**: Integración con Chainlink para precios en tiempo real
-
-## 🔧 <a id="configuracion-tecnica"></a>Configuración Técnica
-
-### Requisitos
-- Node.js 14+
-- Hardhat
-- Dependencias:
-  - OpenZeppelin Contracts
-  - Chainlink Oracles
-
-### Instalación
-```bash
-npm install
-```
-
-### Despliegue
-```bash
-npx hardhat run scripts/deploy.js --network <red>
-```
-
-## 🔗 <a id="configuracion-tokens-oracles"></a>Configuración de Tokens y Oracles
-
-### 1. Tokens Disponibles en Celo
-
-#### 1.1 Token Nativo (CELO)
-```solidity
-// Configuración para CELO
-vendor.addToken(
-    "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE", // Dirección especial para token nativo
-    "0x0568fD19986748cEfF3301e55c0eb1E729E0Ab7e", // Oracle de Chainlink para CELO/USD
-    8,  // Decimales del oracle
-    true, // Activo
-    true  // Es nativo
-);
-```
-
-#### 1.2 Token ERC20 (cUSD)
-```solidity
-// Configuración para cUSD
-vendor.addToken(
-    "0x765DE816845861e75A25fCA122bb6898B8B1282a", // Dirección de cUSD
-    "0xe38A27BE4E7d866327e09736F3C570F256FFd048", // Oracle de Chainlink para cUSD/USD
-    8,  // Decimales del oracle
-    true, // Activo
-    false // No es nativo
-);
-```
-
-### 2. Oracles de Chainlink en Celo
-
-Los oráculos se obtienen de la [documentación oficial de Chainlink para la red Celo](https://docs.chain.link/data-feeds/price-feeds/addresses/?network=celo&page=1):
-
-1. **CELO/USD**: `0x0568fD19986748cEfF3301e55c0eb1E729E0Ab7e`
-2. **cUSD/USD**: `0xe38A27BE4E7d866327e09736F3C570F256FFd048`
-
-> **Nota**: Las direcciones de los oráculos pueden cambiar. Siempre verifica la documentación oficial de Chainlink para obtener las direcciones más actualizadas.
-
-### 3. Proceso de Configuración
-
-1. **Preparación**:
-   - Asegúrate de tener la dirección del contrato `VendorV2`
-   - Tener permisos de administrador o usuario en el contrato
-
-2. **Ejecución**:
-   ```javascript
-   // Ejemplo usando Hardhat
-   const vendor = await ethers.getContractAt("VendorV2", VENDOR_ADDRESS);
-   
-   // Agregar token
-   await vendor.addToken(
-       TOKEN_ADDRESS,
-       ORACLE_ADDRESS,
-       ORACLE_DECIMALS,
-       true, // activo
-       IS_NATIVE
-   );
-   ```
-
-3. **Verificación**:
-   ```javascript
-   // Verificar tokens configurados
-   const tokens = await vendor.tokensList();
-   console.log(tokens);
-   ```
-
-### 4. Consideraciones Importantes
-
-1. **Seguridad**:
-   - Verifica que las direcciones de los oráculos sean las correctas
-   - Asegúrate de que los decimales coincidan con el token
-   - Verifica que el token esté activo en la red
-
-2. **Precisión**:
-   - Los oráculos de Chainlink usan 8 decimales por defecto
-   - Los tokens nativos (CELO) usan 18 decimales
-   - Los tokens ERC20 pueden tener diferentes decimales
-
-3. **Mantenimiento**:
-   - Monitorea los precios regularmente
-   - Verifica que los oráculos estén funcionando
-   - Actualiza los feeds si es necesario
-
-## 🔒 <a id="seguridad"></a>Seguridad
-
-- **ReentrancyGuard**: Protección contra ataques de reentrada
-- **AccessControl**: Sistema de roles y permisos
-- **Validaciones**: Comprobaciones de saldo y aprobaciones
-- **SafeMath**: Operaciones matemáticas seguras
-
-## 🧪 <a id="testing"></a>Testing
-
-El proyecto incluye contratos mock para testing:
-- `MockOracleV2.sol`: Simula oráculos de precios
-- `MockErc20.sol`: Simula tokens ERC20
 
 ## 📊 <a id="flujo-sistema"></a>Flujo del Sistema
 
@@ -403,22 +289,249 @@ uint256 balance = IERC20(tokenAddress).balanceOf(vendorAddress);
 uint256 price = vendor.getUSDPrice(tokenAddress);
 ```
 
-### 7. Consideraciones Importantes
+## 🔧 <a id="configuracion-tecnica"></a>Configuración Técnica
 
-1. **Seguridad**
-   - Verificar todas las direcciones antes de configurar
-   - Usar feeds de precios oficiales de Chainlink
-   - Mantener actualizados los permisos de roles
+### Requisitos
+- Node.js 14+
+- Hardhat
+- Dependencias:
+  - OpenZeppelin Contracts
+  - Chainlink Oracles
 
-2. **Precisión**
-   - Usar decimales correctos para cada token
-   - Verificar precios antes de operaciones importantes
-   - Mantener balances suficientes para reembolsos
+### Instalación
+```bash
+npm install
+```
 
-3. **Mantenimiento**
-   - Monitorear estados de colecciones
-   - Verificar balances regularmente
-   - Actualizar feeds de precios cuando sea necesario
+### Despliegue
+```bash
+npx hardhat run scripts/deploy.js --network <red>
+```
+
+## 🔗 <a id="configuracion-tokens-oracles"></a>Configuración de Tokens y Oracles
+
+### 1. Tokens Disponibles en Celo
+
+#### 1.1 Token Nativo (CELO)
+```solidity
+// Configuración para CELO
+vendor.addToken(
+    "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE", // Dirección especial para token nativo
+    "0x0568fD19986748cEfF3301e55c0eb1E729E0Ab7e", // Oracle de Chainlink para CELO/USD
+    8,  // Decimales del oracle
+    true, // Activo
+    true  // Es nativo
+);
+```
+
+#### 1.2 Token ERC20 (cUSD)
+```solidity
+// Configuración para cUSD
+vendor.addToken(
+    "0x765DE816845861e75A25fCA122bb6898B8B1282a", // Dirección de cUSD
+    "0xe38A27BE4E7d866327e09736F3C570F256FFd048", // Oracle de Chainlink para cUSD/USD
+    8,  // Decimales del oracle
+    true, // Activo
+    false // No es nativo
+);
+```
+
+### 2. Oracles de Chainlink en Celo
+
+Los oráculos se obtienen de la [documentación oficial de Chainlink para la red Celo](https://docs.chain.link/data-feeds/price-feeds/addresses/?network=celo&page=1):
+
+1. **CELO/USD**: `0x0568fD19986748cEfF3301e55c0eb1E729E0Ab7e`
+2. **cUSD/USD**: `0xe38A27BE4E7d866327e09736F3C570F256FFd048`
+
+> **Nota**: Las direcciones de los oráculos pueden cambiar. Siempre verifica la documentación oficial de Chainlink para obtener las direcciones más actualizadas.
+
+### 3. Proceso de Configuración
+
+1. **Preparación**:
+   - Asegúrate de tener la dirección del contrato `VendorV2`
+   - Tener permisos de administrador o usuario en el contrato
+
+2. **Ejecución**:
+   ```javascript
+   // Ejemplo usando Hardhat
+   const vendor = await ethers.getContractAt("VendorV2", VENDOR_ADDRESS);
+   
+   // Agregar token
+   await vendor.addToken(
+       TOKEN_ADDRESS,
+       ORACLE_ADDRESS,
+       ORACLE_DECIMALS,
+       true, // activo
+       IS_NATIVE
+   );
+   ```
+
+3. **Verificación**:
+   ```javascript
+   // Verificar tokens configurados
+   const tokens = await vendor.tokensList();
+   console.log(tokens);
+   ```
+
+### 4. Consideraciones Importantes
+
+1. **Seguridad**:
+   - Verifica que las direcciones de los oráculos sean las correctas
+   - Asegúrate de que los decimales coincidan con el token
+   - Verifica que el token esté activo en la red
+
+2. **Precisión**:
+   - Los oráculos de Chainlink usan 8 decimales por defecto
+   - Los tokens nativos (CELO) usan 18 decimales
+   - Los tokens ERC20 pueden tener diferentes decimales
+
+3. **Mantenimiento**:
+   - Monitorea los precios regularmente
+   - Verifica que los oráculos estén funcionando
+   - Actualiza los feeds si es necesario
+
+## 👥 <a id="configuracion-grupos"></a>Configuración de Grupos
+
+### Índice
+1. [Estructura de Grupos](#estructura-grupos)
+2. [Creación de Grupos](#creacion-grupos)
+3. [Gestión de Miembros](#gestion-miembros)
+4. [Distribución de Fondos](#distribucion-fondos)
+5. [Ejemplos Prácticos](#ejemplos-practicos)
+
+### 1. <a id="estructura-grupos"></a>Estructura de Grupos
+
+El sistema de grupos está diseñado para manejar la distribución de fondos entre múltiples beneficiarios. Cada grupo tiene la siguiente estructura:
+
+```solidity
+struct GroupStruct {
+    string group;      // Nombre del grupo
+    bool state;        // Estado del grupo (activo/inactivo)
+    Shared[] arrayShared; // Lista de miembros y sus porcentajes
+}
+
+struct Shared {
+    address addr;      // Dirección del miembro
+    uint256 pcng;      // Porcentaje de distribución (en base 10000)
+}
+```
+
+### 2. <a id="creacion-grupos"></a>Creación de Grupos
+
+Para crear un nuevo grupo, se utiliza la función `addGroup`:
+
+```solidity
+// Ejemplo de creación de grupo
+Shared[] memory members = new Shared[](2);
+members[0] = Shared(0x123..., 5000); // 50% para dirección 1
+members[1] = Shared(0x456..., 5000); // 50% para dirección 2
+
+vendor.addGroup(
+    "equipo",    // Nombre del grupo
+    true,        // Activo
+    members      // Miembros y porcentajes
+);
+```
+
+### 3. <a id="gestion-miembros"></a>Gestión de Miembros
+
+#### 3.1 Añadir Miembro
+```solidity
+Shared memory newMember = Shared(0x789..., 2500);
+vendor.addSharedOfGroup("equipo", newMember);
+```
+
+#### 3.2 Eliminar Miembro
+```solidity
+vendor.removeSharedOfGroup("equipo", 0); // Elimina el primer miembro
+```
+
+#### 3.3 Actualizar Miembro
+```solidity
+Shared memory updatedMember = Shared(0x789..., 3000);
+vendor.updateSharedOfGroup("equipo", 2, 0, updatedMember);
+```
+
+### 4. <a id="distribucion-fondos"></a>Distribución de Fondos
+
+La distribución de fondos se realiza automáticamente cuando se ejecuta una compra:
+
+```solidity
+// Ejemplo de distribución con token ERC20
+vendor.buyWithToken(
+    "equipo",      // Grupo para distribución
+    usdcAddress,   // Token de pago
+    0,             // ID de la colección
+    1              // Cantidad
+);
+
+// Ejemplo de distribución con token nativo
+vendor.buyNative{value: 100000000000000000}(
+    "equipo",      // Grupo para distribución
+    0,             // ID de la colección
+    ethAddress,    // Dirección ETH
+    1              // Cantidad
+);
+```
+
+### 5. <a id="ejemplos-practicos"></a>Ejemplos Prácticos
+
+#### 5.1 Creación de Grupo de Equipo
+```solidity
+// Crear grupo con 3 miembros
+Shared[] memory teamMembers = new Shared[](3);
+teamMembers[0] = Shared(0x123..., 4000); // 40% para fundador
+teamMembers[1] = Shared(0x456..., 3000); // 30% para desarrollador
+teamMembers[2] = Shared(0x789..., 3000); // 30% para diseñador
+
+vendor.addGroup("equipo", true, teamMembers);
+```
+
+#### 5.2 Creación de Grupo de Artistas
+```solidity
+// Crear grupo con 2 artistas
+Shared[] memory artists = new Shared[](2);
+artists[0] = Shared(0xABC..., 6000); // 60% para artista principal
+artists[1] = Shared(0xDEF..., 4000); // 40% para artista colaborador
+
+vendor.addGroup("artistas", true, artists);
+```
+
+#### 5.3 Actualización de Porcentajes
+```solidity
+// Actualizar porcentaje de un miembro
+Shared memory updatedShare = Shared(0x123..., 3500);
+vendor.updateSharedOfGroup("equipo", 2, 0, updatedShare);
+```
+
+### Consideraciones Importantes
+
+1. **Porcentajes**:
+   - Los porcentajes se manejan en base 10000 (100% = 10000)
+   - La suma total no debe exceder 10000
+
+2. **Seguridad**:
+   - Solo los administradores pueden gestionar grupos
+   - Los grupos pueden ser activados/desactivados
+   - Las direcciones deben ser válidas
+
+3. **Distribución**:
+   - Se realiza automáticamente en cada compra
+   - Soporta tokens ERC20 y nativos
+   - Emite eventos de distribución
+
+## 🔒 <a id="seguridad"></a>Seguridad
+
+- **ReentrancyGuard**: Protección contra ataques de reentrada
+- **AccessControl**: Sistema de roles y permisos
+- **Validaciones**: Comprobaciones de saldo y aprobaciones
+- **SafeMath**: Operaciones matemáticas seguras
+
+## 🧪 <a id="testing"></a>Testing
+
+El proyecto incluye contratos mock para testing:
+- `MockOracleV2.sol`: Simula oráculos de precios
+- `MockErc20.sol`: Simula tokens ERC20
 
 ## 📚 <a id="documentacion-tecnica"></a>Documentación Técnica de Contratos
 
@@ -638,133 +751,3 @@ Distribuido bajo la licencia MIT. Ver `LICENSE` para más información.
 ## 📞 <a id="contacto"></a>Contacto
 
 Para consultas técnicas o soporte, contactar al equipo de desarrollo.
-
-## 👥 <a id="configuracion-grupos"></a>Configuración de Grupos
-
-### Índice
-1. [Estructura de Grupos](#estructura-grupos)
-2. [Creación de Grupos](#creacion-grupos)
-3. [Gestión de Miembros](#gestion-miembros)
-4. [Distribución de Fondos](#distribucion-fondos)
-5. [Ejemplos Prácticos](#ejemplos-practicos)
-
-### 1. <a id="estructura-grupos"></a>Estructura de Grupos
-
-El sistema de grupos está diseñado para manejar la distribución de fondos entre múltiples beneficiarios. Cada grupo tiene la siguiente estructura:
-
-```solidity
-struct GroupStruct {
-    string group;      // Nombre del grupo
-    bool state;        // Estado del grupo (activo/inactivo)
-    Shared[] arrayShared; // Lista de miembros y sus porcentajes
-}
-
-struct Shared {
-    address addr;      // Dirección del miembro
-    uint256 pcng;      // Porcentaje de distribución (en base 10000)
-}
-```
-
-### 2. <a id="creacion-grupos"></a>Creación de Grupos
-
-Para crear un nuevo grupo, se utiliza la función `addGroup`:
-
-```solidity
-// Ejemplo de creación de grupo
-Shared[] memory members = new Shared[](2);
-members[0] = Shared(0x123..., 5000); // 50% para dirección 1
-members[1] = Shared(0x456..., 5000); // 50% para dirección 2
-
-vendor.addGroup(
-    "equipo",    // Nombre del grupo
-    true,        // Activo
-    members      // Miembros y porcentajes
-);
-```
-
-### 3. <a id="gestion-miembros"></a>Gestión de Miembros
-
-#### 3.1 Añadir Miembro
-```solidity
-Shared memory newMember = Shared(0x789..., 2500);
-vendor.addSharedOfGroup("equipo", newMember);
-```
-
-#### 3.2 Eliminar Miembro
-```solidity
-vendor.removeSharedOfGroup("equipo", 0); // Elimina el primer miembro
-```
-
-#### 3.3 Actualizar Miembro
-```solidity
-Shared memory updatedMember = Shared(0x789..., 3000);
-vendor.updateSharedOfGroup("equipo", 2, 0, updatedMember);
-```
-
-### 4. <a id="distribucion-fondos"></a>Distribución de Fondos
-
-La distribución de fondos se realiza automáticamente cuando se ejecuta una compra:
-
-```solidity
-// Ejemplo de distribución con token ERC20
-vendor.buyWithToken(
-    "equipo",      // Grupo para distribución
-    usdcAddress,   // Token de pago
-    0,             // ID de la colección
-    1              // Cantidad
-);
-
-// Ejemplo de distribución con token nativo
-vendor.buyNative{value: 100000000000000000}(
-    "equipo",      // Grupo para distribución
-    0,             // ID de la colección
-    ethAddress,    // Dirección ETH
-    1              // Cantidad
-);
-```
-
-### 5. <a id="ejemplos-practicos"></a>Ejemplos Prácticos
-
-#### 5.1 Creación de Grupo de Equipo
-```solidity
-// Crear grupo con 3 miembros
-Shared[] memory teamMembers = new Shared[](3);
-teamMembers[0] = Shared(0x123..., 4000); // 40% para fundador
-teamMembers[1] = Shared(0x456..., 3000); // 30% para desarrollador
-teamMembers[2] = Shared(0x789..., 3000); // 30% para diseñador
-
-vendor.addGroup("equipo", true, teamMembers);
-```
-
-#### 5.2 Creación de Grupo de Artistas
-```solidity
-// Crear grupo con 2 artistas
-Shared[] memory artists = new Shared[](2);
-artists[0] = Shared(0xABC..., 6000); // 60% para artista principal
-artists[1] = Shared(0xDEF..., 4000); // 40% para artista colaborador
-
-vendor.addGroup("artistas", true, artists);
-```
-
-#### 5.3 Actualización de Porcentajes
-```solidity
-// Actualizar porcentaje de un miembro
-Shared memory updatedShare = Shared(0x123..., 3500);
-vendor.updateSharedOfGroup("equipo", 2, 0, updatedShare);
-```
-
-### Consideraciones Importantes
-
-1. **Porcentajes**:
-   - Los porcentajes se manejan en base 10000 (100% = 10000)
-   - La suma total no debe exceder 10000
-
-2. **Seguridad**:
-   - Solo los administradores pueden gestionar grupos
-   - Los grupos pueden ser activados/desactivados
-   - Las direcciones deben ser válidas
-
-3. **Distribución**:
-   - Se realiza automáticamente en cada compra
-   - Soporta tokens ERC20 y nativos
-   - Emite eventos de distribución
