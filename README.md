@@ -594,3 +594,133 @@ Distribuido bajo la licencia MIT. Ver `LICENSE` para más información.
 ## 📞 <a id="contacto"></a>Contacto
 
 Para consultas técnicas o soporte, contactar al equipo de desarrollo.
+
+## 👥 <a id="configuracion-grupos"></a>Configuración de Grupos
+
+### Índice
+1. [Estructura de Grupos](#estructura-grupos)
+2. [Creación de Grupos](#creacion-grupos)
+3. [Gestión de Miembros](#gestion-miembros)
+4. [Distribución de Fondos](#distribucion-fondos)
+5. [Ejemplos Prácticos](#ejemplos-practicos)
+
+### 1. <a id="estructura-grupos"></a>Estructura de Grupos
+
+El sistema de grupos está diseñado para manejar la distribución de fondos entre múltiples beneficiarios. Cada grupo tiene la siguiente estructura:
+
+```solidity
+struct GroupStruct {
+    string group;      // Nombre del grupo
+    bool state;        // Estado del grupo (activo/inactivo)
+    Shared[] arrayShared; // Lista de miembros y sus porcentajes
+}
+
+struct Shared {
+    address addr;      // Dirección del miembro
+    uint256 pcng;      // Porcentaje de distribución (en base 10000)
+}
+```
+
+### 2. <a id="creacion-grupos"></a>Creación de Grupos
+
+Para crear un nuevo grupo, se utiliza la función `addGroup`:
+
+```solidity
+// Ejemplo de creación de grupo
+Shared[] memory members = new Shared[](2);
+members[0] = Shared(0x123..., 5000); // 50% para dirección 1
+members[1] = Shared(0x456..., 5000); // 50% para dirección 2
+
+vendor.addGroup(
+    "equipo",    // Nombre del grupo
+    true,        // Activo
+    members      // Miembros y porcentajes
+);
+```
+
+### 3. <a id="gestion-miembros"></a>Gestión de Miembros
+
+#### 3.1 Añadir Miembro
+```solidity
+Shared memory newMember = Shared(0x789..., 2500);
+vendor.addSharedOfGroup("equipo", newMember);
+```
+
+#### 3.2 Eliminar Miembro
+```solidity
+vendor.removeSharedOfGroup("equipo", 0); // Elimina el primer miembro
+```
+
+#### 3.3 Actualizar Miembro
+```solidity
+Shared memory updatedMember = Shared(0x789..., 3000);
+vendor.updateSharedOfGroup("equipo", 2, 0, updatedMember);
+```
+
+### 4. <a id="distribucion-fondos"></a>Distribución de Fondos
+
+La distribución de fondos se realiza automáticamente cuando se ejecuta una compra:
+
+```solidity
+// Ejemplo de distribución con token ERC20
+vendor.buyWithToken(
+    "equipo",      // Grupo para distribución
+    usdcAddress,   // Token de pago
+    0,             // ID de la colección
+    1              // Cantidad
+);
+
+// Ejemplo de distribución con token nativo
+vendor.buyNative{value: 100000000000000000}(
+    "equipo",      // Grupo para distribución
+    0,             // ID de la colección
+    ethAddress,    // Dirección ETH
+    1              // Cantidad
+);
+```
+
+### 5. <a id="ejemplos-practicos"></a>Ejemplos Prácticos
+
+#### 5.1 Creación de Grupo de Equipo
+```solidity
+// Crear grupo con 3 miembros
+Shared[] memory teamMembers = new Shared[](3);
+teamMembers[0] = Shared(0x123..., 4000); // 40% para fundador
+teamMembers[1] = Shared(0x456..., 3000); // 30% para desarrollador
+teamMembers[2] = Shared(0x789..., 3000); // 30% para diseñador
+
+vendor.addGroup("equipo", true, teamMembers);
+```
+
+#### 5.2 Creación de Grupo de Artistas
+```solidity
+// Crear grupo con 2 artistas
+Shared[] memory artists = new Shared[](2);
+artists[0] = Shared(0xABC..., 6000); // 60% para artista principal
+artists[1] = Shared(0xDEF..., 4000); // 40% para artista colaborador
+
+vendor.addGroup("artistas", true, artists);
+```
+
+#### 5.3 Actualización de Porcentajes
+```solidity
+// Actualizar porcentaje de un miembro
+Shared memory updatedShare = Shared(0x123..., 3500);
+vendor.updateSharedOfGroup("equipo", 2, 0, updatedShare);
+```
+
+### Consideraciones Importantes
+
+1. **Porcentajes**:
+   - Los porcentajes se manejan en base 10000 (100% = 10000)
+   - La suma total no debe exceder 10000
+
+2. **Seguridad**:
+   - Solo los administradores pueden gestionar grupos
+   - Los grupos pueden ser activados/desactivados
+   - Las direcciones deben ser válidas
+
+3. **Distribución**:
+   - Se realiza automáticamente en cada compra
+   - Soporta tokens ERC20 y nativos
+   - Emite eventos de distribución
