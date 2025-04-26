@@ -13,180 +13,6 @@ INHABIT Vendor NFT es una plataforma descentralizada que permite la venta de NFT
 - **Gestión de Roles**: Sistema de permisos para administradores y usuarios
 - **Oracles de Precios**: Integración con Chainlink para precios en tiempo real
 
-## 📚 Documentación Detallada de Contratos
-
-### 1. VendorV2.sol - Contrato Principal
-
-#### Funcionalidades Principales
-- **Compra de NFTs**
-  ```solidity
-  function buyWithToken(
-      string calldata _group,    // Grupo para distribución
-      address _token,            // Token de pago
-      uint256 _cIdx,            // ID de la colección
-      uint256 _amount           // Cantidad a comprar
-  )
-  ```
-  - Compra con tokens ERC20
-  - Verifica saldo y aprobaciones
-  - Distribuye fondos según grupo
-
-- **Compra con Token Nativo**
-  ```solidity
-  function buyNative(
-      string calldata _group,
-      uint256 _cIdx,
-      address _token,
-      uint256 _amount
-  ) external payable
-  ```
-  - Compra con ETH/MATIC/CELO
-  - Maneja pagos nativos
-  - Distribuye fondos
-
-- **Sistema de Reembolsos**
-  ```solidity
-  function refundInvestment(
-      uint256 _cIdx,    // ID de la colección
-      address _token,    // Token usado en la compra
-      uint256 _nftId    // ID del NFT a devolver
-  )
-  ```
-  - Devuelve NFTs y reembolsa fondos
-  - Verifica propiedad y estado
-  - Maneja tokens ERC20 y nativos
-
-### 2. CollectionV2.sol - Gestión de Colecciones
-
-#### Estructuras
-```solidity
-struct CollectionStruct {
-    address addr;    // Dirección del contrato NFT
-    uint256 price;   // Precio en USD
-    bool active;     // Estado de la colección
-}
-
-struct CollectionIndexStruct {
-    address addr;
-    uint256 index;
-}
-```
-
-#### Funciones Principales
-- **Gestión de Colecciones**
-  ```solidity
-  function addCollection(
-      address _addr,    // Dirección del NFT
-      uint256 _pr,      // Precio en USD
-      bool _act         // Estado activo
-  )
-  ```
-  - Añade nuevas colecciones
-  - Actualiza precios y estados
-  - Mantiene índice de colecciones
-
-### 3. OracleV2.sol - Sistema de Precios
-
-#### Funcionalidades
-- **Conversión de Precios**
-  ```solidity
-  function parseUSDtoToken(
-      uint256 _amount,    // Cantidad en USD
-      address _token,     // Token destino
-      bool _isNative      // Si es token nativo
-  )
-  ```
-  - Convierte USD a tokens
-  - Maneja diferentes decimales
-  - Integra con Chainlink
-
-- **Obtención de Precios**
-  ```solidity
-  function getUSDPrice(address _addr)
-  ```
-  - Obtiene precios de Chainlink
-  - Verifica tokens permitidos
-  - Ajusta decimales
-
-### 4. Group.sol - Distribución de Ingresos
-
-#### Estructuras
-```solidity
-struct GroupStruct {
-    string group;
-    bool state;
-    Shared[] arrayShared;
-}
-
-struct Shared {
-    address addr;
-    uint256 pcng;
-}
-```
-
-#### Funciones Principales
-- **Gestión de Grupos**
-  ```solidity
-  function addGroup(
-      string calldata _group,
-      bool _state,
-      Shared[] memory _groups
-  )
-  ```
-  - Crea grupos de distribución
-  - Asigna porcentajes
-  - Gestiona miembros
-
-- **Distribución de Fondos**
-  ```solidity
-  function distribution(
-      string calldata _group,
-      uint256 _amount,
-      bool _isNative,
-      address tokenAddrs
-  )
-  ```
-  - Distribuye fondos automáticamente
-  - Maneja tokens ERC20 y nativos
-  - Registra eventos
-
-### 5. Administered.sol - Control de Acceso
-
-#### Roles y Permisos
-```solidity
-bytes32 public constant USER_ROLE = keccak256("USER");
-```
-
-#### Funciones Principales
-- **Gestión de Roles**
-  ```solidity
-  function addAdmin(address account)
-  function addUser(address account)
-  function removeUser(address account)
-  ```
-  - Control de acceso granular
-  - Herencia de permisos
-  - Seguridad basada en roles
-
-### 6. WithdrawV2.sol - Gestión de Retiros
-
-#### Funciones Principales
-- **Retiro de Fondos**
-  ```solidity
-  function withdraw(
-      uint256 _amount,
-      address _to
-  )
-  function withdrawToken(
-      address _token,
-      uint256 _amount,
-      address _to
-  )
-  ```
-  - Retiro de tokens nativos
-  - Retiro de tokens ERC20
-  - Seguridad en transacciones
-
 ## 🔧 Configuración Técnica
 
 ### Requisitos
@@ -219,23 +45,85 @@ El proyecto incluye contratos mock para testing:
 - `MockOracleV2.sol`: Simula oráculos de precios
 - `MockErc20.sol`: Simula tokens ERC20
 
-## 🤝 Contribución
+## 📊 Flujo del Sistema
 
-1. Fork del repositorio
-2. Crear rama de características (`git checkout -b feature/AmazingFeature`)
-3. Commit de cambios (`git commit -m 'Add some AmazingFeature'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
-5. Abrir Pull Request
+### 1. Diagrama de Flujo General
 
-## 📝 Licencia
+```mermaid
+graph TD
+    A[Usuario] -->|Selecciona NFT| B[VendorV2]
+    B -->|Verifica| C[OracleV2]
+    C -->|Precio actual| B
+    B -->|Procesa pago| D[Tokens]
+    D -->|Distribuye| E[Group]
+    E -->|Paga a| F[Miembros]
+    B -->|Mint NFT| G[CollectionV2]
+    G -->|Entrega| A
+    A -->|Solicita reembolso| H[WithdrawV2]
+    H -->|Verifica| B
+    B -->|Procesa reembolso| A
+```
 
-Distribuido bajo la licencia MIT. Ver `LICENSE` para más información.
+### 2. Roles y Responsabilidades
 
-## 📞 Contacto
+#### 2.1 Administrador
+- Configurar sistema
+- Gestionar colecciones
+- Monitorear operaciones
+- Resolver problemas
 
-Para consultas técnicas o soporte, contactar al equipo de desarrollo.
+#### 2.2 Usuario
+- Comprar NFTs
+- Solicitar reembolsos
+- Verificar transacciones
+- Reportar problemas
 
-## ⚙️ Configuración del Sistema
+#### 2.3 Sistema
+- Procesar pagos
+- Distribuir fondos
+- Gestionar NFTs
+- Mantener registros
+
+### 3. Proceso de Compra
+
+1. **Selección**
+   - Usuario elige NFT
+   - Selecciona método de pago
+   - Verifica precio actual
+
+2. **Pago**
+   - Aprobar gasto (ERC20)
+   - Enviar fondos
+   - Confirmar transacción
+
+3. **Distribución**
+   - Calcular comisiones
+   - Distribuir a grupos
+   - Registrar transacción
+
+4. **Entrega**
+   - Mintear NFT
+   - Transferir al usuario
+   - Confirmar recepción
+
+### 4. Proceso de Reembolso
+
+1. **Solicitud**
+   - Usuario solicita reembolso
+   - Verificar propiedad
+   - Confirmar elegibilidad
+
+2. **Procesamiento**
+   - Calcular monto
+   - Verificar fondos
+   - Preparar reembolso
+
+3. **Ejecución**
+   - Devolver NFT
+   - Reembolsar fondos
+   - Registrar transacción
+
+## ⚙️ Guía de Configuración del Sistema
 
 ### 1. Configuración Inicial del Contrato
 
@@ -345,27 +233,9 @@ vendor.setRefundActive(true);
 vendor.setRefundEnabled(0x123..., true);
 ```
 
-### 6. Configuración de Seguridad
+### 6. Operaciones del Sistema
 
-#### 6.1 Verificar Permisos
-```solidity
-// Verificar roles
-require(vendor.isAdmin(msg.sender), "No es administrador");
-require(vendor.isUser(msg.sender), "No es usuario");
-```
-
-#### 6.2 Configurar Límites
-```solidity
-// En el contrato NFT
-function mintReserved(address to, uint256 amount) external {
-    require(msg.sender == vendorAddress, "Solo vendor puede mintear");
-    // Lógica de minting
-}
-```
-
-### 7. Flujo de Operación
-
-#### 7.1 Compra de NFT
+#### 6.1 Compra de NFT
 ```solidity
 // Compra con USDC
 usdc.approve(vendorAddress, 1000000); // Aprobar gasto
@@ -385,7 +255,7 @@ vendor.buyNative{value: 100000000000000000}(
 );
 ```
 
-#### 7.2 Reembolso de NFT
+#### 6.2 Reembolso de NFT
 ```solidity
 // Solicitar reembolso
 vendor.refundInvestment(
@@ -395,33 +265,19 @@ vendor.refundInvestment(
 );
 ```
 
-### 8. Monitoreo y Mantenimiento
-
-#### 8.1 Verificar Estados
+#### 6.3 Monitoreo y Mantenimiento
 ```solidity
 // Verificar estado de colección
 (bool active, uint256 price) = vendor.getCollection(0);
 
 // Verificar balance de tokens
 uint256 balance = IERC20(tokenAddress).balanceOf(vendorAddress);
-```
 
-#### 8.2 Actualizaciones de Precios
-```solidity
 // Verificar precio actual
 uint256 price = vendor.getUSDPrice(tokenAddress);
-
-// Actualizar feed si es necesario
-vendor.updateToken(
-    tokenId,
-    1,          // Tipo: 1 = actualizar oracle
-    newOracle,  // Nueva dirección del oracle
-    0,          // Decimales (no aplica)
-    false       // Estado (no aplica)
-);
 ```
 
-### 9. Consideraciones Importantes
+### 7. Consideraciones Importantes
 
 1. **Seguridad**
    - Verificar todas las direcciones antes de configurar
@@ -438,347 +294,221 @@ vendor.updateToken(
    - Verificar balances regularmente
    - Actualizar feeds de precios cuando sea necesario
 
-4. **Backup y Recuperación**
-   - Mantener copias de seguridad de configuraciones
-   - Documentar todos los cambios
-   - Tener plan de contingencia para emergencias
+## 📚 Documentación Técnica de Contratos
 
-## 📊 Flujo del Sistema
+### 1. VendorV2.sol - Contrato Principal
 
-### 1. Flujo No Técnico
+#### Propósito General
+El contrato VendorV2 actúa como una plataforma centralizada para la venta de NFTs de diversas colecciones. Permite a los usuarios comprar estos NFTs utilizando tokens ERC20 específicos o el token nativo de la blockchain (ej. ETH, MATIC, CELO).
 
-#### 1.1 Para Administradores
-1. **Configuración Inicial**
-   - Crear cuenta de administrador
-   - Configurar tokens aceptados
-   - Establecer precios de NFTs
-   - Crear grupos de distribución
-
-2. **Gestión de Colecciones**
-   - Añadir nuevas colecciones NFT
-   - Establecer precios en USD
-   - Activar/desactivar colecciones
-   - Monitorear ventas
-
-3. **Gestión de Grupos**
-   - Crear grupos de distribución
-   - Asignar porcentajes a miembros
-   - Gestionar cambios en la distribución
-   - Verificar pagos realizados
-
-4. **Monitoreo**
-   - Revisar ventas diarias
-   - Verificar distribuciones
-   - Gestionar reembolsos
-   - Actualizar precios
-
-#### 1.2 Para Usuarios
-1. **Compra de NFTs**
-   - Seleccionar colección
-   - Elegir método de pago
-   - Confirmar compra
-   - Recibir NFT
-
-2. **Reembolsos**
-   - Solicitar reembolso
-   - Esperar confirmación
-   - Recibir fondos
-   - Devolver NFT
-
-3. **Verificación**
-   - Comprobar propiedad
-   - Verificar precios
-   - Revisar historial
-   - Consultar soporte
-
-### 2. Diagrama de Flujo General
-
-```mermaid
-graph TD
-    A[Usuario] -->|Selecciona NFT| B[VendorV2]
-    B -->|Verifica| C[OracleV2]
-    C -->|Precio actual| B
-    B -->|Procesa pago| D[Tokens]
-    D -->|Distribuye| E[Group]
-    E -->|Paga a| F[Miembros]
-    B -->|Mint NFT| G[CollectionV2]
-    G -->|Entrega| A
-    A -->|Solicita reembolso| H[WithdrawV2]
-    H -->|Verifica| B
-    B -->|Procesa reembolso| A
-```
-
-### 3. Proceso de Compra
-
-1. **Selección**
-   - Usuario elige NFT
-   - Selecciona método de pago
-   - Verifica precio actual
-
-2. **Pago**
-   - Aprobar gasto (ERC20)
-   - Enviar fondos
-   - Confirmar transacción
-
-3. **Distribución**
-   - Calcular comisiones
-   - Distribuir a grupos
-   - Registrar transacción
-
-4. **Entrega**
-   - Mintear NFT
-   - Transferir al usuario
-   - Confirmar recepción
-
-### 4. Proceso de Reembolso
-
-1. **Solicitud**
-   - Usuario solicita reembolso
-   - Verificar propiedad
-   - Confirmar elegibilidad
-
-2. **Procesamiento**
-   - Calcular monto
-   - Verificar fondos
-   - Preparar reembolso
-
-3. **Ejecución**
-   - Devolver NFT
-   - Reembolsar fondos
-   - Registrar transacción
-
-### 5. Roles y Responsabilidades
-
-#### 5.1 Administrador
-- Configurar sistema
-- Gestionar colecciones
-- Monitorear operaciones
-- Resolver problemas
-
-#### 5.2 Usuario
-- Comprar NFTs
-- Solicitar reembolsos
-- Verificar transacciones
-- Reportar problemas
-
-#### 5.3 Sistema
-- Procesar pagos
-- Distribuir fondos
-- Gestionar NFTs
-- Mantener registros
-
-### 6. Consideraciones de Negocio
-
-1. **Seguridad**
-   - Verificar identidades
-   - Proteger fondos
-   - Prevenir fraudes
-   - Mantener registros
-
-2. **Eficiencia**
-   - Optimizar procesos
-   - Reducir costos
-   - Mejorar experiencia
-   - Automatizar tareas
-
-3. **Escalabilidad**
-   - Manejar crecimiento
-   - Adaptar a cambios
-   - Mejorar rendimiento
-   - Expandir funcionalidades
-
-4. **Soporte**
-   - Asistir usuarios
-   - Resolver problemas
-   - Mantener documentación
-   - Proporcionar guías
-
-## 📄 Documentación Técnica del Contrato VendorV2
-
-### 1. Propósito General
-
-El contrato VendorV2 actúa como una plataforma centralizada para la venta de NFTs de diversas colecciones. Permite a los usuarios comprar estos NFTs utilizando tokens ERC20 específicos o el token nativo de la blockchain (ej. ETH, MATIC, CELO). Incorpora funcionalidades robustas para la administración de colecciones, gestión de tokens aceptados, oráculo de precios, distribución de ingresos a grupos, sistema de roles, retiro de fondos y un mecanismo de reembolso opcional.
-
-### 2. Módulos Heredados y Funcionalidad
-
-#### 2.1 Administered (./security/Administered.sol)
-- Implementa sistema de control de acceso basado en roles
-- Roles principales: Admin y User
-- Funciones clave:
-  ```solidity
-  function addAdmin(address account)
-  function removeAdmin(address account)
-  function isAdmin(address account)
-  function addUser(address account)
-  function removeUser(address account)
-  function isUser(address account)
-  ```
-
-#### 2.2 WithdrawV2 (./helpers/WithdrawV2.sol)
-- Lógica para retiro de fondos
-- Funciones clave:
-  ```solidity
-  function withdrawToken(address _token, uint256 _amount, address _to)
-  function withdrawNative(uint256 _amount, address _to)
-  ```
-
-#### 2.3 ReentrancyGuard
-- Prevención de ataques de reentrada
-- Modificador `nonReentrant`
-- Aplicado en funciones críticas
-
-#### 2.4 CollectionV2 (./factories/CollectionV2.sol)
-- Gestión de colecciones NFT
-- Estructura:
-  ```solidity
-  struct CollectionStruct {
-      address addr;    // Dirección del contrato NFT
-      uint256 price;   // Precio en USD
-      bool active;     // Estado de la colección
-  }
-  ```
-
-#### 2.5 OracleV2 (./helpers/OracleV2.sol)
-- Gestión de tokens aceptados
-- Integración con Chainlink
-- Estructura:
-  ```solidity
-  struct ERC20List {
-      address addr;    // Dirección del token
-      address feed;    // Feed de precios
-      bool active;     // Estado del token
-      bool isNative;   // Si es token nativo
-  }
-  ```
-
-#### 2.6 Group (./patners/Group.sol)
-- Distribución de ingresos
-- Gestión de grupos y miembros
-- Funciones clave:
-  ```solidity
-  function addGroup(string calldata _group, bool _state, Shared[] memory _groups)
-  function distribution(string calldata _group, uint256 _amount, bool _isNative, address tokenAddrs)
-  ```
-
-### 3. Variables de Estado Principales
-
+#### Variables de Estado Principales
 ```solidity
 mapping(address => mapping(address => uint256)) public investments;
 mapping(address => bool) public refundEnabled;
 bool public refundActive;
 ```
 
-### 4. Funciones Principales
+#### Funcionalidades Principales
+- **Compra de NFTs**
+  ```solidity
+  function buyWithToken(
+      string calldata _group,    // Grupo para distribución
+      address _token,            // Token de pago
+      uint256 _cIdx,            // ID de la colección
+      uint256 _amount           // Cantidad a comprar
+  )
+  ```
+  - Compra con tokens ERC20
+  - Verifica saldo y aprobaciones
+  - Distribuye fondos según grupo
 
-#### 4.1 Transferencia Reservada
+- **Compra con Token Nativo**
+  ```solidity
+  function buyNative(
+      string calldata _group,
+      uint256 _cIdx,
+      address _token,
+      uint256 _amount
+  ) external payable
+  ```
+  - Compra con ETH/MATIC/CELO
+  - Maneja pagos nativos
+  - Distribuye fondos
+
+- **Sistema de Reembolsos**
+  ```solidity
+  function refundInvestment(
+      uint256 _cIdx,    // ID de la colección
+      address _token,    // Token usado en la compra
+      uint256 _nftId    // ID del NFT a devolver
+  )
+  ```
+  - Devuelve NFTs y reembolsa fondos
+  - Verifica propiedad y estado
+  - Maneja tokens ERC20 y nativos
+
+- **Transferencia Reservada**
+  ```solidity
+  function transferReserved(
+      uint256 _idx,    // ID de la colección
+      address _addr,    // Dirección destino
+      uint256 _qty     // Cantidad
+  ) external onlyUser nonReentrant
+  ```
+
+### 2. CollectionV2.sol - Gestión de Colecciones
+
+#### Estructuras
 ```solidity
-function transferReserved(
-    uint256 _idx,    // ID de la colección
-    address _addr,    // Dirección destino
-    uint256 _qty     // Cantidad
-) external onlyUser nonReentrant
+struct CollectionStruct {
+    address addr;    // Dirección del contrato NFT
+    uint256 price;   // Precio en USD
+    bool active;     // Estado de la colección
+}
+
+struct CollectionIndexStruct {
+    address addr;
+    uint256 index;
+}
 ```
 
-#### 4.2 Compra con Token
+#### Funciones Principales
+- **Gestión de Colecciones**
+  ```solidity
+  function addCollection(
+      address _addr,    // Dirección del NFT
+      uint256 _pr,      // Precio en USD
+      bool _act         // Estado activo
+  )
+  ```
+  - Añade nuevas colecciones
+  - Actualiza precios y estados
+  - Mantiene índice de colecciones
+
+### 3. OracleV2.sol - Sistema de Precios
+
+#### Estructuras
 ```solidity
-function buyWithToken(
-    string calldata _group,    // Grupo para distribución
-    address _token,            // Token de pago
-    uint256 _cIdx,            // ID de la colección
-    uint256 _amount           // Cantidad a comprar
-) external nonReentrant
+struct ERC20List {
+    address addr;    // Dirección del token
+    address feed;    // Feed de precios
+    bool active;     // Estado del token
+    bool isNative;   // Si es token nativo
+}
 ```
 
-#### 4.3 Compra con Token Nativo
+#### Funcionalidades
+- **Conversión de Precios**
+  ```solidity
+  function parseUSDtoToken(
+      uint256 _amount,    // Cantidad en USD
+      address _token,     // Token destino
+      bool _isNative      // Si es token nativo
+  )
+  ```
+  - Convierte USD a tokens
+  - Maneja diferentes decimales
+  - Integra con Chainlink
+
+- **Obtención de Precios**
+  ```solidity
+  function getUSDPrice(address _addr)
+  ```
+  - Obtiene precios de Chainlink
+  - Verifica tokens permitidos
+  - Ajusta decimales
+
+### 4. Group.sol - Distribución de Ingresos
+
+#### Estructuras
 ```solidity
-function buyNative(
-    string calldata _group,    // Grupo para distribución
-    uint256 _cIdx,            // ID de la colección
-    address _token,            // Token nativo
-    uint256 _amount           // Cantidad a comprar
-) external payable nonReentrant
+struct GroupStruct {
+    string group;
+    bool state;
+    Shared[] arrayShared;
+}
+
+struct Shared {
+    address addr;
+    uint256 pcng;
+}
 ```
 
-#### 4.4 Funciones de Reembolso
+#### Funciones Principales
+- **Gestión de Grupos**
+  ```solidity
+  function addGroup(
+      string calldata _group,
+      bool _state,
+      Shared[] memory _groups
+  )
+  ```
+  - Crea grupos de distribución
+  - Asigna porcentajes
+  - Gestiona miembros
+
+- **Distribución de Fondos**
+  ```solidity
+  function distribution(
+      string calldata _group,
+      uint256 _amount,
+      bool _isNative,
+      address tokenAddrs
+  )
+  ```
+  - Distribuye fondos automáticamente
+  - Maneja tokens ERC20 y nativos
+  - Registra eventos
+
+### 5. Administered.sol - Control de Acceso
+
+#### Roles y Permisos
 ```solidity
-function setRefundEnabled(address _wallet, bool _enabled) external onlyAdmin
-function setRefundActive(bool _active) external onlyAdmin
-function refundInvestment(uint256 _cIdx, address _token, uint256 _nftId) external nonReentrant
+bytes32 public constant USER_ROLE = keccak256("USER");
 ```
 
-### 5. Configuración Post-Despliegue
+#### Funciones Principales
+- **Gestión de Roles**
+  ```solidity
+  function addAdmin(address account)
+  function addUser(address account)
+  function removeUser(address account)
+  ```
+  - Control de acceso granular
+  - Herencia de permisos
+  - Seguridad basada en roles
 
-#### 5.1 Añadir Tokens Aceptados
-1. Para tokens ERC20:
-   ```solidity
-   addToken(
-       tokenAddress,    // Dirección del token
-       feedAddress,     // Feed de precios
-       false           // No es nativo
-   )
-   ```
+### 6. WithdrawV2.sol - Gestión de Retiros
 
-2. Para token nativo:
-   ```solidity
-   addToken(
-       nativeAddress,   // Dirección representativa
-       feedAddress,     // Feed de precios
-       true            // Es nativo
-   )
-   ```
+#### Funciones Principales
+- **Retiro de Fondos**
+  ```solidity
+  function withdraw(
+      uint256 _amount,
+      address _to
+  )
+  function withdrawToken(
+      address _token,
+      uint256 _amount,
+      address _to
+  )
+  ```
+  - Retiro de tokens nativos
+  - Retiro de tokens ERC20
+  - Seguridad en transacciones
 
-#### 5.2 Añadir Colecciones NFT
-```solidity
-addCollection(
-    nftAddress,    // Dirección del contrato NFT
-    priceUSD,      // Precio en USD
-    true          // Activo
-)
-```
+## 🤝 Contribución
 
-#### 5.3 Configurar Grupos
-```solidity
-addGroup(
-    "groupName",    // Nombre del grupo
-    true,          // Activo
-    members        // Array de miembros
-)
-```
+1. Fork del repositorio
+2. Crear rama de características (`git checkout -b feature/AmazingFeature`)
+3. Commit de cambios (`git commit -m 'Add some AmazingFeature'`)
+4. Push a la rama (`git push origin feature/AmazingFeature`)
+5. Abrir Pull Request
 
-### 6. Consideraciones de Seguridad
+## 📝 Licencia
 
-1. **ReentrancyGuard**
-   - Protección en funciones críticas
-   - Prevención de ataques de reentrada
+Distribuido bajo la licencia MIT. Ver `LICENSE` para más información.
 
-2. **Control de Acceso**
-   - Roles bien definidos
-   - Permisos granularizados
+## 📞 Contacto
 
-3. **Validaciones**
-   - Verificación de estados
-   - Comprobación de balances
-   - Validación de permisos
-
-4. **Manejo de Fondos**
-   - Distribución segura
-   - Retiros controlados
-   - Reembolsos verificados
-
-### 7. Despliegue
-
-1. **Preparación**
-   ```bash
-   npx hardhat compile
-   ```
-
-2. **Despliegue**
-   ```bash
-   npx hardhat run scripts/deploy.js --network <red>
-   ```
-
-3. **Configuración Inicial**
-   - Configurar tokens
-   - Añadir colecciones
-   - Establecer grupos
-   - Gestionar roles
+Para consultas técnicas o soporte, contactar al equipo de desarrollo.
