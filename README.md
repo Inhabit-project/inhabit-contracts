@@ -3,45 +3,63 @@
 ## 📑 Índice General
 
 ### 1. [Descripción General](#descripcion-general)
+
 ### 2. [Características Principales](#caracteristicas-principales)
+
 ### 3. [Flujo del Sistema](#flujo-sistema)
-   - [Diagrama de Flujo](#diagrama-flujo)
-   - [Roles y Responsabilidades](#roles-responsabilidades)
-   - [Proceso de Compra](#proceso-compra)
-   - [Proceso de Reembolso](#proceso-reembolso)
+
+- [Diagrama de Flujo](#diagrama-flujo)
+- [Roles y Responsabilidades](#roles-responsabilidades)
+- [Proceso de Compra](#proceso-compra)
+- [Proceso de Reembolso](#proceso-reembolso)
+
 ### 4. [Guía de Configuración del Sistema](#guia-configuracion)
-   - [Configuración Inicial](#configuracion-inicial)
-   - [Configuración de Tokens](#configuracion-tokens)
-   - [Configuración de Colecciones](#configuracion-colecciones)
-   - [Configuración de Grupos](#configuracion-grupos)
-   - [Configuración de Reembolsos](#configuracion-reembolsos)
-   - [Operaciones del Sistema](#operaciones-sistema)
+
+- [Configuración Inicial](#configuracion-inicial)
+- [Configuración de Tokens](#configuracion-tokens)
+- [Configuración de Colecciones](#configuracion-colecciones)
+- [Configuración de Grupos](#configuracion-grupos)
+- [Configuración de Reembolsos](#configuracion-reembolsos)
+- [Operaciones del Sistema](#operaciones-sistema)
+
 ### 5. [Configuración Técnica](#configuracion-tecnica)
-   - [Requisitos](#requisitos)
-   - [Instalación](#instalacion)
-   - [Despliegue](#despliegue)
+
+- [Requisitos](#requisitos)
+- [Instalación](#instalacion)
+- [Despliegue](#despliegue)
+
 ### 6. [Configuración de Tokens y Oracles](#configuracion-tokens-oracles)
-   - [Tokens Disponibles en Celo](#tokens-disponibles-celo)
-   - [Oracles de Chainlink](#oracles-chainlink)
-   - [Proceso de Configuración](#proceso-configuracion)
-   - [Consideraciones Importantes](#consideraciones-importantes)
+
+- [Tokens Disponibles en Celo](#tokens-disponibles-celo)
+- [Oracles de Chainlink](#oracles-chainlink)
+- [Proceso de Configuración](#proceso-configuracion)
+- [Consideraciones Importantes](#consideraciones-importantes)
+
 ### 7. [Configuración de Grupos](#configuracion-grupos)
-   - [Estructura de Grupos](#estructura-grupos)
-   - [Creación de Grupos](#creacion-grupos)
-   - [Gestión de Miembros](#gestion-miembros)
-   - [Distribución de Fondos](#distribucion-fondos)
-   - [Ejemplos Prácticos](#ejemplos-practicos)
+
+- [Estructura de Grupos](#estructura-grupos)
+- [Creación de Grupos](#creacion-grupos)
+- [Gestión de Miembros](#gestion-miembros)
+- [Distribución de Fondos](#distribucion-fondos)
+- [Ejemplos Prácticos](#ejemplos-practicos)
+
 ### 8. [Seguridad](#seguridad)
+
 ### 9. [Testing](#testing)
+
 ### 10. [Documentación Técnica de Contratos](#documentacion-tecnica)
-   - [VendorV2.sol](#vendorv2)
-   - [CollectionV2.sol](#collectionv2)
-   - [OracleV2.sol](#oraclev2)
-   - [Group.sol](#group)
-   - [Administered.sol](#administered)
-   - [WithdrawV2.sol](#withdrawv2)
+
+- [VendorV2.sol](#vendorv2)
+- [CollectionV2.sol](#collectionv2)
+- [OracleV2.sol](#oraclev2)
+- [Group.sol](#group)
+- [Administered.sol](#administered)
+- [WithdrawV2.sol](#withdrawv2)
+
 ### 11. [Contribución](#contribucion)
+
 ### 12. [Licencia](#licencia)
+
 ### 13. [Contacto](#contacto)
 
 ## 📋 <a id="descripcion-general"></a>Descripción General
@@ -79,18 +97,21 @@ graph TD
 ### 2. Roles y Responsabilidades
 
 #### 2.1 Administrador
+
 - Configurar sistema
 - Gestionar colecciones
 - Monitorear operaciones
 - Resolver problemas
 
 #### 2.2 Usuario
+
 - Comprar NFTs
 - Solicitar reembolsos
 - Verificar transacciones
 - Reportar problemas
 
 #### 2.3 Sistema
+
 - Procesar pagos
 - Distribuir fondos
 - Gestionar NFTs
@@ -99,16 +120,19 @@ graph TD
 ### 3. Proceso de Compra
 
 1. **Selección**
+
    - Usuario elige NFT
    - Selecciona método de pago
    - Verifica precio actual
 
 2. **Pago**
+
    - Aprobar gasto (ERC20)
    - Enviar fondos
    - Confirmar transacción
 
 3. **Distribución**
+
    - Calcular comisiones
    - Distribuir a grupos
    - Registrar transacción
@@ -121,11 +145,13 @@ graph TD
 ### 4. Proceso de Reembolso
 
 1. **Solicitud**
+
    - Usuario solicita reembolso
    - Verificar propiedad
    - Confirmar elegibilidad
 
 2. **Procesamiento**
+
    - Calcular monto
    - Verificar fondos
    - Preparar reembolso
@@ -140,6 +166,7 @@ graph TD
 ### 1. Configuración Inicial del Contrato
 
 #### 1.1 Despliegue del Contrato
+
 ```bash
 # Compilar
 npx hardhat compile
@@ -149,6 +176,7 @@ npx hardhat run scripts/deploy.js --network <red>
 ```
 
 #### 1.2 Configuración de Roles
+
 ```solidity
 // Configurar administradores
 vendor.addAdmin(0x123...);  // Dirección del administrador
@@ -160,6 +188,7 @@ vendor.addUser(0x456...);   // Dirección del usuario
 ### 2. Configuración de Tokens
 
 #### 2.1 Configurar Token Nativo (ETH/MATIC/CELO)
+
 ```solidity
 // Ejemplo para ETH en Ethereum Mainnet
 vendor.addToken(
@@ -172,6 +201,7 @@ vendor.addToken(
 ```
 
 #### 2.2 Configurar Tokens ERC20
+
 ```solidity
 // Ejemplo para USDC en Ethereum Mainnet
 vendor.addToken(
@@ -186,6 +216,7 @@ vendor.addToken(
 ### 3. Configuración de Colecciones NFT
 
 #### 3.1 Añadir Nueva Colección
+
 ```solidity
 // Ejemplo de configuración de colección
 vendor.addCollection(
@@ -196,6 +227,7 @@ vendor.addCollection(
 ```
 
 #### 3.2 Actualizar Colección Existente
+
 ```solidity
 // Actualizar precio
 vendor.updateCollection(
@@ -210,6 +242,7 @@ vendor.updateCollection(
 ### 4. Configuración de Grupos
 
 #### 4.1 Crear Grupo de Distribución
+
 ```solidity
 // Estructura para miembros del grupo
 Shared[] memory members = new Shared[](2);
@@ -225,6 +258,7 @@ vendor.addGroup(
 ```
 
 #### 4.2 Actualizar Grupo
+
 ```solidity
 // Actualizar estado del grupo
 vendor.updateGroupStatus("team", false);
@@ -237,6 +271,7 @@ vendor.addSharedOfGroup("team", newMember);
 ### 5. Configuración de Reembolsos
 
 #### 5.1 Activar Sistema de Reembolsos
+
 ```solidity
 // Activar globalmente
 vendor.setRefundActive(true);
@@ -248,6 +283,7 @@ vendor.setRefundEnabled(0x123..., true);
 ### 6. Operaciones del Sistema
 
 #### 6.1 Compra de NFT
+
 ```solidity
 // Compra con USDC
 usdc.approve(vendorAddress, 1000000); // Aprobar gasto
@@ -268,6 +304,7 @@ vendor.buyNative{value: 100000000000000000}(
 ```
 
 #### 6.2 Reembolso de NFT
+
 ```solidity
 // Solicitar reembolso
 vendor.refundInvestment(
@@ -278,6 +315,7 @@ vendor.refundInvestment(
 ```
 
 #### 6.3 Monitoreo y Mantenimiento
+
 ```solidity
 // Verificar estado de colección
 (bool active, uint256 price) = vendor.getCollection(0);
@@ -292,6 +330,7 @@ uint256 price = vendor.getUSDPrice(tokenAddress);
 ## 🔧 <a id="configuracion-tecnica"></a>Configuración Técnica
 
 ### Requisitos
+
 - Node.js 14+
 - Hardhat
 - Dependencias:
@@ -299,11 +338,13 @@ uint256 price = vendor.getUSDPrice(tokenAddress);
   - Chainlink Oracles
 
 ### Instalación
+
 ```bash
 npm install
 ```
 
 ### Despliegue
+
 ```bash
 npx hardhat run scripts/deploy.js --network <red>
 ```
@@ -313,6 +354,7 @@ npx hardhat run scripts/deploy.js --network <red>
 ### 1. Tokens Disponibles en Celo
 
 #### 1.1 Token Nativo (CELO)
+
 ```solidity
 // Configuración para CELO
 vendor.addToken(
@@ -325,6 +367,7 @@ vendor.addToken(
 ```
 
 #### 1.2 Token ERC20 (cUSD)
+
 ```solidity
 // Configuración para cUSD
 vendor.addToken(
@@ -348,39 +391,43 @@ Los oráculos se obtienen de la [documentación oficial de Chainlink para la red
 ### 3. Proceso de Configuración
 
 1. **Preparación**:
+
    - Asegúrate de tener la dirección del contrato `VendorV2`
    - Tener permisos de administrador o usuario en el contrato
 
 2. **Ejecución**:
+
    ```javascript
    // Ejemplo usando Hardhat
-   const vendor = await ethers.getContractAt("VendorV2", VENDOR_ADDRESS);
-   
+   const vendor = await ethers.getContractAt('VendorV2', VENDOR_ADDRESS)
+
    // Agregar token
    await vendor.addToken(
-       TOKEN_ADDRESS,
-       ORACLE_ADDRESS,
-       ORACLE_DECIMALS,
-       true, // activo
-       IS_NATIVE
-   );
+   	TOKEN_ADDRESS,
+   	ORACLE_ADDRESS,
+   	ORACLE_DECIMALS,
+   	true, // activo
+   	IS_NATIVE
+   )
    ```
 
 3. **Verificación**:
    ```javascript
    // Verificar tokens configurados
-   const tokens = await vendor.tokensList();
-   console.log(tokens);
+   const tokens = await vendor.tokensList()
+   console.log(tokens)
    ```
 
 ### 4. Consideraciones Importantes
 
 1. **Seguridad**:
+
    - Verifica que las direcciones de los oráculos sean las correctas
    - Asegúrate de que los decimales coincidan con el token
    - Verifica que el token esté activo en la red
 
 2. **Precisión**:
+
    - Los oráculos de Chainlink usan 8 decimales por defecto
    - Los tokens nativos (CELO) usan 18 decimales
    - Los tokens ERC20 pueden tener diferentes decimales
@@ -393,6 +440,7 @@ Los oráculos se obtienen de la [documentación oficial de Chainlink para la red
 ## 👥 <a id="configuracion-grupos"></a>Configuración de Grupos
 
 ### Índice
+
 1. [Estructura de Grupos](#estructura-grupos)
 2. [Creación de Grupos](#creacion-grupos)
 3. [Gestión de Miembros](#gestion-miembros)
@@ -436,17 +484,20 @@ vendor.addGroup(
 ### 3. <a id="gestion-miembros"></a>Gestión de Miembros
 
 #### 3.1 Añadir Miembro
+
 ```solidity
 Shared memory newMember = Shared(0x789..., 2500);
 vendor.addSharedOfGroup("equipo", newMember);
 ```
 
 #### 3.2 Eliminar Miembro
+
 ```solidity
 vendor.removeSharedOfGroup("equipo", 0); // Elimina el primer miembro
 ```
 
 #### 3.3 Actualizar Miembro
+
 ```solidity
 Shared memory updatedMember = Shared(0x789..., 3000);
 vendor.updateSharedOfGroup("equipo", 2, 0, updatedMember);
@@ -477,6 +528,7 @@ vendor.buyNative{value: 100000000000000000}(
 ### 5. <a id="ejemplos-practicos"></a>Ejemplos Prácticos
 
 #### 5.1 Creación de Grupo de Equipo
+
 ```solidity
 // Crear grupo con 3 miembros
 Shared[] memory teamMembers = new Shared[](3);
@@ -488,6 +540,7 @@ vendor.addGroup("equipo", true, teamMembers);
 ```
 
 #### 5.2 Creación de Grupo de Artistas
+
 ```solidity
 // Crear grupo con 2 artistas
 Shared[] memory artists = new Shared[](2);
@@ -498,6 +551,7 @@ vendor.addGroup("artistas", true, artists);
 ```
 
 #### 5.3 Actualización de Porcentajes
+
 ```solidity
 // Actualizar porcentaje de un miembro
 Shared memory updatedShare = Shared(0x123..., 3500);
@@ -507,10 +561,12 @@ vendor.updateSharedOfGroup("equipo", 2, 0, updatedShare);
 ### Consideraciones Importantes
 
 1. **Porcentajes**:
+
    - Los porcentajes se manejan en base 10000 (100% = 10000)
    - La suma total no debe exceder 10000
 
 2. **Seguridad**:
+
    - Solo los administradores pueden gestionar grupos
    - Los grupos pueden ser activados/desactivados
    - Las direcciones deben ser válidas
@@ -530,6 +586,7 @@ vendor.updateSharedOfGroup("equipo", 2, 0, updatedShare);
 ## 🧪 <a id="testing"></a>Testing
 
 El proyecto incluye contratos mock para testing:
+
 - `MockOracleV2.sol`: Simula oráculos de precios
 - `MockErc20.sol`: Simula tokens ERC20
 
@@ -538,9 +595,11 @@ El proyecto incluye contratos mock para testing:
 ### 1. VendorV2.sol - Contrato Principal
 
 #### Propósito General
+
 El contrato VendorV2 actúa como una plataforma centralizada para la venta de NFTs de diversas colecciones. Permite a los usuarios comprar estos NFTs utilizando tokens ERC20 específicos o el token nativo de la blockchain (ej. ETH, MATIC, CELO).
 
 #### Variables de Estado Principales
+
 ```solidity
 mapping(address => mapping(address => uint256)) public investments;
 mapping(address => bool) public refundEnabled;
@@ -548,7 +607,9 @@ bool public refundActive;
 ```
 
 #### Funcionalidades Principales
+
 - **Compra de NFTs**
+
   ```solidity
   function buyWithToken(
       string calldata _group,    // Grupo para distribución
@@ -557,11 +618,13 @@ bool public refundActive;
       uint256 _amount           // Cantidad a comprar
   )
   ```
+
   - Compra con tokens ERC20
   - Verifica saldo y aprobaciones
   - Distribuye fondos según grupo
 
 - **Compra con Token Nativo**
+
   ```solidity
   function buyNative(
       string calldata _group,
@@ -570,11 +633,13 @@ bool public refundActive;
       uint256 _amount
   ) external payable
   ```
+
   - Compra con ETH/MATIC/CELO
   - Maneja pagos nativos
   - Distribuye fondos
 
 - **Sistema de Reembolsos**
+
   ```solidity
   function refundInvestment(
       uint256 _cIdx,    // ID de la colección
@@ -582,6 +647,7 @@ bool public refundActive;
       uint256 _nftId    // ID del NFT a devolver
   )
   ```
+
   - Devuelve NFTs y reembolsa fondos
   - Verifica propiedad y estado
   - Maneja tokens ERC20 y nativos
@@ -598,6 +664,7 @@ bool public refundActive;
 ### 2. CollectionV2.sol - Gestión de Colecciones
 
 #### Estructuras
+
 ```solidity
 struct CollectionStruct {
     address addr;    // Dirección del contrato NFT
@@ -612,6 +679,7 @@ struct CollectionIndexStruct {
 ```
 
 #### Funciones Principales
+
 - **Gestión de Colecciones**
   ```solidity
   function addCollection(
@@ -627,6 +695,7 @@ struct CollectionIndexStruct {
 ### 3. OracleV2.sol - Sistema de Precios
 
 #### Estructuras
+
 ```solidity
 struct ERC20List {
     address addr;    // Dirección del token
@@ -637,7 +706,9 @@ struct ERC20List {
 ```
 
 #### Funcionalidades
+
 - **Conversión de Precios**
+
   ```solidity
   function parseUSDtoToken(
       uint256 _amount,    // Cantidad en USD
@@ -645,6 +716,7 @@ struct ERC20List {
       bool _isNative      // Si es token nativo
   )
   ```
+
   - Convierte USD a tokens
   - Maneja diferentes decimales
   - Integra con Chainlink
@@ -660,6 +732,7 @@ struct ERC20List {
 ### 4. Group.sol - Distribución de Ingresos
 
 #### Estructuras
+
 ```solidity
 struct GroupStruct {
     string group;
@@ -674,7 +747,9 @@ struct Shared {
 ```
 
 #### Funciones Principales
+
 - **Gestión de Grupos**
+
   ```solidity
   function addGroup(
       string calldata _group,
@@ -682,6 +757,7 @@ struct Shared {
       Shared[] memory _groups
   )
   ```
+
   - Crea grupos de distribución
   - Asigna porcentajes
   - Gestiona miembros
@@ -702,11 +778,13 @@ struct Shared {
 ### 5. Administered.sol - Control de Acceso
 
 #### Roles y Permisos
+
 ```solidity
 bytes32 public constant USER_ROLE = keccak256("USER");
 ```
 
 #### Funciones Principales
+
 - **Gestión de Roles**
   ```solidity
   function addAdmin(address account)
@@ -720,6 +798,7 @@ bytes32 public constant USER_ROLE = keccak256("USER");
 ### 6. WithdrawV2.sol - Gestión de Retiros
 
 #### Funciones Principales
+
 - **Retiro de Fondos**
   ```solidity
   function withdraw(
