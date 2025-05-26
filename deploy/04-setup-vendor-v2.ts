@@ -3,7 +3,7 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { DeployFunction } from 'hardhat-deploy/types'
 import { Address } from 'viem'
 
-import { NATIVE } from '@/models'
+import { NATIVE } from '@/config/constants'
 
 const setupContracts: DeployFunction = async function (
 	hre: HardhatRuntimeEnvironment

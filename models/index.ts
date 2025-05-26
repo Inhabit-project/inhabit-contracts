@@ -4,4 +4,10 @@ export interface NetworkConfigInfo {
 	}
 }
 
-export const NATIVE = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'
+export interface TokenStruct {
+	addr: string
+	oracle: string
+	orDecimals: bigint
+	active: boolean
+	isNative: boolean
+}

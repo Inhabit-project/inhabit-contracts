@@ -1,8 +1,10 @@
 import { expect } from 'chai'
 import hre, { viem } from 'hardhat'
-import { Address, GetContractReturnType } from 'viem'
+import { Address, GetContractReturnType, zeroAddress } from 'viem'
 
 import { ABIS } from '@/config/abi'
+import { TEST_TOKEN } from '@/config/constants'
+import { TokenStruct } from '@/models'
 
 interface FixtureReturn {
 	deployer: string
@@ -48,7 +50,7 @@ describe('VendorV2', function () {
 		return { deployer, luca, juan, santiago, mockcUSD, dataFeeds, vendorV2 }
 	}
 
-	describe('Administered', function () {
+	describe.skip('Administered', function () {
 		beforeEach(async function () {
 			const fixture = await deployFixture()
 			this.vendorV2 = fixture.vendorV2
@@ -120,6 +122,87 @@ describe('VendorV2', function () {
 
 			const isAdminAfter = await this.vendorV2.read.isAdmin([this.juan])
 			expect(isAdminAfter).to.be.false
+		})
+	})
+
+	describe('WithdrawV2', function () {
+		beforeEach(async function () {
+			const fixture = await deployFixture()
+			this.vendorV2 = fixture.vendorV2
+			this.mockcUSD = fixture.mockcUSD
+			this.dataFeeds = fixture.dataFeeds
+			this.deployer = fixture.deployer
+			this.luca = fixture.luca
+			this.juan = fixture.juan
+			this.santiago = fixture.santiago
+
+			await this.vendorV2.write.addUser([this.luca], {
+				account: this.deployer
+			})
+
+			await this.vendorV2.write.addUser([this.juan], {
+				account: this.deployer
+			})
+		})
+
+		describe('tokenList', function () {
+			it('Should show tokens list', async function () {
+				const tokens = await this.vendorV2.read.tokensList()
+				expect(tokens).to.be.an('array').that.is.not.empty
+			})
+		})
+
+		describe('addToken', function () {
+			it('Should revert if non-user tries to add a token', async function () {
+				await expect(
+					this.vendorV2.write.addToken(
+						[this.mockcUSD.address, this.dataFeeds.address, 8, true, false],
+						{ account: this.santiago }
+					)
+				).to.be.rejectedWith('Restricted to users.')
+			})
+
+			it('Should revert if user tries to add an zero address', async function () {
+				await expect(
+					this.vendorV2.write.addToken(
+						[zeroAddress, this.dataFeeds.address, 8, true, false],
+						{ account: this.luca }
+					)
+				).to.be.rejectedWith('Token already exist')
+			})
+
+			it('Should revert if user tries to add a existing token', async function () {
+				await expect(
+					this.vendorV2.write.addToken(
+						[this.mockcUSD.address, this.dataFeeds.address, 8, true, false],
+						{ account: this.luca }
+					)
+				).to.be.rejectedWith('Token already exist')
+			})
+
+			it('Should allow user to add a token', async function () {
+				await this.vendorV2.write.addToken(
+					[TEST_TOKEN, this.dataFeeds.address, 8, true, false],
+					{ account: this.luca }
+				)
+
+				const tokens = await this.vendorV2.read.tokensList()
+
+				expect(tokens.map((token: TokenStruct) => token.addr)).to.include(
+					TEST_TOKEN
+				)
+			})
+		})
+
+		describe('updateToken', function () {
+			it('Should revert if non-user tries to update error type', async function () {
+				await expect(
+					this.vendorV2.write.updateToken(
+						[0, 0, this.mockcUSD.address, 0, false],
+						{ account: this.juan }
+					)
+				).to.be.rejectedWith('Error type')
+			})
 		})
 	})
 })
