@@ -1,13 +1,28 @@
-node_modules
-.env
+# Build artifacts
+artifacts
+cache
 coverage
 coverage.json
+deployments
+gas-report.txt
 typechain
 typechain-types
-# Hardhat files
-cache
-artifacts
+contracts/test/fuzzing/crytic-export
 
-# Runtime files
+# Node modules
+node_modules
+
+# Lock files
 bun.lock
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
 
+# Output or logs
+*.log
+
+# VS Code
+.vscode
+
+# Environment files
+.env
