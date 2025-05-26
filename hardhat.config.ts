@@ -1,3 +1,4 @@
+import '@nomicfoundation/hardhat-toolbox-viem'
 import 'hardhat-deploy'
 import 'tsconfig-paths/register'
 
