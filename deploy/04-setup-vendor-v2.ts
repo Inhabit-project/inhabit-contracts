@@ -65,4 +65,18 @@ setupContracts.tags = ['all', 'setup']
 		· cUSD address is the same to _addr and _orc parameters.
 		- MockOracleV2: the tests will use this vendor to buy and sell cUSD
 
+	js-test folder:
+		- Distribution.test.js: test are failing
+		- VendorV2.test.js: test are failing
+
+	test folder:
+		- It may test the oracle contract
+
+	contracts:
+		- Contract AAdministered {
+		
+		renounceAdmin()
+			-	Validations: Someone can renounce admin role, etc...
+	}
+
 */

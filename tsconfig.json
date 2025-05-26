@@ -13,12 +13,18 @@
 			"@/*": ["./*"]
 		}
 	},
+
 	"include": [
+		"./artifacts",
+		"./deploy",
+		"./js-test",
 		"./hardhat.config.ts",
 		"./scripts",
-		"./deploy",
 		"./tasks",
 		"./test"
 	],
-	"exclude": ["node_modules"]
+
+	"exclude": ["node_modules"],
+
+	"typeRoots": ["./types", "./node_modules/@types"]
 }
