@@ -6,8 +6,17 @@ export const developmentChains = ['hardhat', 'localhost']
 
 export const networkConfig: NetworkConfigInfo = {
 	localhost: {},
-	hardhat: {}
+	hardhat: {},
+	celo: {
+		blockConfirmations: 3
+	},
+	celoAlfajores: {
+		blockConfirmations: 1
+	}
 }
+
+export const CELO_ALFAJORES_CUSD_ADDRESS: Address =
+	'0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1'
 
 export const NATIVE = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'
 
