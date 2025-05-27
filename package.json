@@ -36,6 +36,7 @@
 		"buffer": "^6.0.3",
 		"crypto-browserify": "^3.12.1",
 		"dotenv": "^16.4.7",
+		"erc721a": "^4.3.0",
 		"eslint": "^9.27.0",
 		"eslint-config-prettier": "^10.1.5",
 		"eslint-plugin-prettier": "^5.4.0",
