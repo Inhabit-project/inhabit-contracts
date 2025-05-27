@@ -1,6 +1,6 @@
 import { run } from 'hardhat'
 
-const verify = async (
+export const verify = async (
 	contractAddress: string,
 	args: unknown[]
 ): Promise<void> => {
@@ -18,5 +18,3 @@ const verify = async (
 		}
 	}
 }
-
-export default verify

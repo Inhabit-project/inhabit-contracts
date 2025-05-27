@@ -3,7 +3,7 @@ import { DeployFunction } from 'hardhat-deploy/types'
 import { parseEther } from 'viem'
 
 import { developmentChains, networkConfig } from '@/config/constants'
-import verify from '@/utils'
+import { verify } from '@/utils/verify'
 
 const deployMockErc20: DeployFunction = async function (
 	hre: HardhatRuntimeEnvironment
