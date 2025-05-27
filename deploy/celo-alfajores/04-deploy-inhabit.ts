@@ -1,7 +1,11 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { DeployFunction } from 'hardhat-deploy/types'
 
-import { developmentChains, networkConfig } from '@/config/constants'
+import {
+	developmentChains,
+	networkConfig,
+	NFT_COLLECTIONS
+} from '@/config/constants'
 import { verify } from '@/utils/verify'
 
 const deployInhabit: DeployFunction = async function (
@@ -14,29 +18,95 @@ const deployInhabit: DeployFunction = async function (
 	const { address: vendorV2Address } = await deployments.get('VendorV2')
 
 	log('----------------------------------------------------')
-	log('Deploying Inhabit and waiting for confirmations...')
+	log('Deploying Inhabit collections and waiting for confirmations...')
 
-	const name: string = 'Inhabit'
-	const symbol: string = 'INHABIT'
-	const maxSupply: bigint = 100n
-	const baseTokenURI: string = 'https://api.inhabit.com/metadata'
-	const scVendorAddress: string = vendorV2Address
+	const titiArgs = [
+		'INHABIT Ñuiyanzhi TITI',
+		'TITI',
+		2483n,
+		NFT_COLLECTIONS.titi,
+		vendorV2Address
+	]
 
-	const args = [name, symbol, maxSupply, baseTokenURI, scVendorAddress]
+	const paujilArgs = [
+		'INHABIT Ñuiyanzhi PAUJIL',
+		'PAUJIL',
+		124n,
+		NFT_COLLECTIONS.paujil,
+		vendorV2Address
+	]
 
-	const inhabit = await deploy('Inhabit', {
+	const caracoliArgs = [
+		'INHABIT Ñuiyanzhi CARACOLI',
+		'CARACOLI',
+		19n,
+		NFT_COLLECTIONS.caracoli,
+		vendorV2Address
+	]
+
+	const jaguarArgs = [
+		'INHABIT Ñuiyanzhi JAGUAR',
+		'JAGUAR',
+		5n,
+		NFT_COLLECTIONS.jaguar,
+		vendorV2Address
+	]
+
+	const caracoliCollection = await deploy('Inhabit_CARACOLI', {
+		contract: 'Inhabit',
 		from: deployer,
-		args,
+		args: caracoliArgs,
 		log: true,
 		waitConfirmations: networkConfig[network.name].blockConfirmations || 1
 	})
 
-	log(`VendorV2 contract at ${inhabit.address}`)
+	log(`Caracoli collection deployed at ${caracoliCollection.address}`)
 
 	if (!developmentChains.includes(network.name)) {
-		await verify(inhabit.address, args)
+		await verify(caracoliCollection.address, caracoliArgs)
+	}
+
+	const jaguarCollection = await deploy('Inhabit_JAGUAR', {
+		contract: 'Inhabit',
+		from: deployer,
+		args: jaguarArgs,
+		log: true,
+		waitConfirmations: networkConfig[network.name].blockConfirmations || 1
+	})
+
+	log(`Jaguar collection deployed at ${jaguarCollection.address}`)
+
+	if (!developmentChains.includes(network.name)) {
+		await verify(jaguarCollection.address, jaguarArgs)
+	}
+
+	const paujilCollection = await deploy('Inhabit_PAUJIL', {
+		contract: 'Inhabit',
+		from: deployer,
+		args: paujilArgs,
+		log: true,
+		waitConfirmations: networkConfig[network.name].blockConfirmations || 1
+	})
+
+	log(`Paujil collection deployed at ${paujilCollection.address}`)
+
+	if (!developmentChains.includes(network.name)) {
+		await verify(paujilCollection.address, paujilArgs)
+	}
+
+	const titiCollection = await deploy('Inhabit_TITI', {
+		contract: 'Inhabit',
+		from: deployer,
+		args: titiArgs,
+		log: true,
+		waitConfirmations: networkConfig[network.name].blockConfirmations || 1
+	})
+	log(`Titi collection deployed at ${titiCollection.address}`)
+
+	if (!developmentChains.includes(network.name)) {
+		await verify(titiCollection.address, titiArgs)
 	}
 }
 
 export default deployInhabit
-deployInhabit.tags = ['celoAlfajores', 'inhabit']
+deployInhabit.tags = ['celoAlfajores', 'inhabitCollections']

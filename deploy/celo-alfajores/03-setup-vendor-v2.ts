@@ -41,44 +41,30 @@ const setupContracts: DeployFunction = async function (
 
 	log('Adding tokens to VendorV2...')
 
-	const txAddToken = await vendorV2.write.addToken(
+	// TODO: Uncomment this when the NATIVE token is available in the network
+
+	// const txAddToken = await vendorV2.write.addToken(
+	// 	[NATIVE, oracleAddress as Address, 8n, true, false],
+	// 	gasOption
+	// )
+
+	// await publicClient.waitForTransactionReceipt({
+	// 	hash: txAddToken
+	// })
+
+	// log(`NATIVE token added. tx hash: ${txAddToken}`)
+
+	const tx2AddToken = await vendorV2.write.addToken(
 		[CELO_ALFAJORES_CUSD_ADDRESS, oracleAddress as Address, 8n, true, false],
 		gasOption
 	)
 
 	await publicClient.waitForTransactionReceipt({
-		hash: txAddToken
+		hash: tx2AddToken
 	})
 
-	log(`cUSD token added. tx hash: ${txAddToken}`)
+	log(`cUSD token added. tx hash: ${tx2AddToken}`)
 }
 
 export default setupContracts
 setupContracts.tags = ['celoAlfajores', 'setup']
-
-/*
-	contracts:
-		- MockOracle: the tests will use this mock oracle to get the price of CELO -> USD and cUSD -> USD
-	
-	setup.js
-	line: 47: 
-		- Look before to deploy....
-		· Will you deploy two oracles? CELO -> USD and cUSD -> USD
-		· cUSD address is the same to _addr and _orc parameters.
-		- MockOracleV2: the tests will use this vendor to buy and sell cUSD
-
-	js-test folder:
-		- Distribution.test.js: test are failing
-		- VendorV2.test.js: test are failing
-
-	test folder:
-		- It may test the oracle contract
-
-	contracts:
-		- Contract AAdministered {
-		
-		renounceAdmin()
-			-	Validations: Someone can renounce admin role, etc...
-	}
-
-*/
