@@ -410,4 +410,184 @@ describe('VendorV2', function () {
 			})
 		})
 	})
+
+	describe.skip('WithdrawV2', function () {
+		const cUSDAmount: bigint = 1000000000n // 10 cUSD
+		const ethAmount: bigint = 1000000000n // 0.000000001 ETH
+
+		beforeEach(async function () {
+			const fixture = await deployFixture()
+			this.vendorV2 = fixture.vendorV2
+			this.mockcUSD = fixture.mockcUSD
+			this.dataFeeds = fixture.dataFeeds
+			this.deployer = fixture.deployer
+			this.luca = fixture.luca
+			this.juan = fixture.juan
+			this.santiago = fixture.santiago
+
+			await this.vendorV2.write.addAdmin([this.luca], {
+				account: this.deployer
+			})
+
+			await this.vendorV2.write.addAdmin([this.juan], {
+				account: this.deployer
+			})
+
+			await this.mockcUSD.write.transfer([this.vendorV2.address, cUSDAmount], {
+				account: this.deployer
+			})
+
+			const wallet = await viem.getWalletClient(this.deployer)
+
+			await wallet.sendTransaction({
+				to: this.vendorV2.address,
+				value: ethAmount
+			})
+		})
+
+		describe('withdraw', function () {
+			it('Should revert if admin tries to withdraw with zero address', async function () {
+				await expect(
+					this.vendorV2.write.withdraw([ethAmount, zeroAddress], {
+						account: this.luca
+					})
+				).to.be.rejectedWith('Invalid address')
+			})
+
+			it('Should revert if admin tries to withdrarw with zero amount', async function () {
+				await expect(
+					this.vendorV2.write.withdraw([0n, this.luca], {
+						account: this.luca
+					})
+				).to.be.rejectedWith('Amount must be greater than zero')
+			})
+
+			it('Should revert if admin tries to withdraw more than balance', async function () {
+				await expect(
+					this.vendorV2.write.withdraw([cUSDAmount, this.luca], {
+						account: this.luca
+					})
+				).to.be.rejectedWith('Insufficient balance')
+			})
+
+			// TODO: Add test to test request: "Failed to withdraw contract fee" only if gas is set low
+
+			it('Should allow admin to withdraw ETH', async function () {
+				const publicClient = await viem.getPublicClient()
+
+				const initialBalance: bigint = await publicClient.getBalance({
+					address: this.luca,
+					blockTag: 'latest'
+				})
+
+				await this.vendorV2.write.withdraw([ethAmount, this.luca], {
+					account: this.deployer
+				})
+
+				const finalBalance: bigint = await publicClient.getBalance({
+					address: this.luca,
+					blockTag: 'latest'
+				})
+
+				expect(finalBalance).to.equal(initialBalance + ethAmount)
+			})
+
+			it('Should decrease contract balance after withdraw', async function () {
+				const publicClient = await viem.getPublicClient()
+
+				const balanceBefore: bigint = await publicClient.getBalance({
+					address: this.vendorV2.address
+				})
+
+				await this.vendorV2.write.withdraw([ethAmount, this.luca], {
+					account: this.deployer
+				})
+
+				const balanceAfter: bigint = await publicClient.getBalance({
+					address: this.vendorV2.address
+				})
+
+				expect(balanceAfter).to.equal(balanceBefore - ethAmount)
+			})
+		})
+
+		describe('withdrawToken', function () {
+			it('Should revert if admin tries to withdraw token with zero address', async function () {
+				await expect(
+					this.vendorV2.write.withdrawToken(
+						[this.mockcUSD.address, cUSDAmount, zeroAddress],
+						{
+							account: this.luca
+						}
+					)
+				).to.be.rejected
+			})
+
+			it('Should revert if admin tries to withdraw zero amount', async function () {
+				await expect(
+					this.vendorV2.write.withdrawToken(
+						[this.mockcUSD.address, 0n, this.luca],
+						{
+							account: this.luca
+						}
+					)
+				).to.be.rejected
+			})
+
+			it('Should revert if admin tries to withdraw more than token balance', async function () {
+				const tooMuch = cUSDAmount + 1_000_000n
+				await expect(
+					this.vendorV2.write.withdrawToken(
+						[this.mockcUSD.address, tooMuch, this.luca],
+						{
+							account: this.luca
+						}
+					)
+				).to.be.rejectedWith('Failed to withdraw contract fee')
+			})
+
+			it('Should allow admin to withdraw token', async function () {
+				const initialBalance = await this.mockcUSD.read.balanceOf([this.luca])
+
+				await this.vendorV2.write.withdrawToken(
+					[this.mockcUSD.address, cUSDAmount, this.luca],
+					{
+						account: this.luca
+					}
+				)
+
+				const finalBalance = await this.mockcUSD.read.balanceOf([this.luca])
+				expect(finalBalance).to.equal(initialBalance + cUSDAmount)
+			})
+
+			it('Should decrease token balance in contract after withdrawal', async function () {
+				const balanceBefore = await this.mockcUSD.read.balanceOf([
+					this.vendorV2.address
+				])
+
+				await this.vendorV2.write.withdrawToken(
+					[this.mockcUSD.address, cUSDAmount, this.luca],
+					{
+						account: this.luca
+					}
+				)
+
+				const balanceAfter = await this.mockcUSD.read.balanceOf([
+					this.vendorV2.address
+				])
+				expect(balanceAfter).to.equal(balanceBefore - cUSDAmount)
+			})
+
+			it('Should revert if called by non-admin', async function () {
+				await expect(
+					this.vendorV2.write.withdrawToken(
+						[this.mockcUSD.address, cUSDAmount, this.luca],
+						{
+							account: this.santiago
+						}
+					)
+				).to.be.rejectedWith('Restricted to admins.')
+			})
+		})
+	})
 })
