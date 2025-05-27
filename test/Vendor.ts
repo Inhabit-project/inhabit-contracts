@@ -1,10 +1,10 @@
 import { expect } from 'chai'
 import hre, { viem } from 'hardhat'
-import { Address, GetContractReturnType, zeroAddress } from 'viem'
+import { Address, GetContractReturnType, parseEther, zeroAddress } from 'viem'
 
 import { ABIS } from '@/config/abi'
 import { TEST_TOKEN_ONE, TEST_TOKEN_TWO } from '@/config/constants'
-import { TokenStruct } from '@/models'
+import { GroupStruct, TokenStruct } from '@/models'
 
 interface FixtureReturn {
 	deployer: string
@@ -233,6 +233,186 @@ describe('VendorV2', function () {
 		})
 	})
 
+	describe.skip('WithdrawV2', function () {
+		const cUSDAmount: bigint = 1000000000n // 10 cUSD
+		const ethAmount: bigint = 1000000000n // 0.000000001 ETH
+
+		beforeEach(async function () {
+			const fixture = await deployFixture()
+			this.vendorV2 = fixture.vendorV2
+			this.mockcUSD = fixture.mockcUSD
+			this.dataFeeds = fixture.dataFeeds
+			this.deployer = fixture.deployer
+			this.luca = fixture.luca
+			this.juan = fixture.juan
+			this.santiago = fixture.santiago
+
+			await this.vendorV2.write.addAdmin([this.luca], {
+				account: this.deployer
+			})
+
+			await this.vendorV2.write.addAdmin([this.juan], {
+				account: this.deployer
+			})
+
+			await this.mockcUSD.write.transfer([this.vendorV2.address, cUSDAmount], {
+				account: this.deployer
+			})
+
+			const wallet = await viem.getWalletClient(this.deployer)
+
+			await wallet.sendTransaction({
+				to: this.vendorV2.address,
+				value: ethAmount
+			})
+		})
+
+		describe('withdraw', function () {
+			it('Should revert if admin tries to withdraw with zero address', async function () {
+				await expect(
+					this.vendorV2.write.withdraw([ethAmount, zeroAddress], {
+						account: this.luca
+					})
+				).to.be.rejectedWith('Invalid address')
+			})
+
+			it('Should revert if admin tries to withdrarw with zero amount', async function () {
+				await expect(
+					this.vendorV2.write.withdraw([0n, this.luca], {
+						account: this.luca
+					})
+				).to.be.rejectedWith('Amount must be greater than zero')
+			})
+
+			it('Should revert if admin tries to withdraw more than balance', async function () {
+				await expect(
+					this.vendorV2.write.withdraw([cUSDAmount, this.luca], {
+						account: this.luca
+					})
+				).to.be.rejectedWith('Insufficient balance')
+			})
+
+			// TODO: Add test to test request: "Failed to withdraw contract fee" only if gas is set low
+
+			it('Should allow admin to withdraw ETH', async function () {
+				const publicClient = await viem.getPublicClient()
+
+				const initialBalance: bigint = await publicClient.getBalance({
+					address: this.luca,
+					blockTag: 'latest'
+				})
+
+				await this.vendorV2.write.withdraw([ethAmount, this.luca], {
+					account: this.deployer
+				})
+
+				const finalBalance: bigint = await publicClient.getBalance({
+					address: this.luca,
+					blockTag: 'latest'
+				})
+
+				expect(finalBalance).to.equal(initialBalance + ethAmount)
+			})
+
+			it('Should decrease contract balance after withdraw', async function () {
+				const publicClient = await viem.getPublicClient()
+
+				const balanceBefore: bigint = await publicClient.getBalance({
+					address: this.vendorV2.address
+				})
+
+				await this.vendorV2.write.withdraw([ethAmount, this.luca], {
+					account: this.deployer
+				})
+
+				const balanceAfter: bigint = await publicClient.getBalance({
+					address: this.vendorV2.address
+				})
+
+				expect(balanceAfter).to.equal(balanceBefore - ethAmount)
+			})
+		})
+
+		describe('withdrawToken', function () {
+			it('Should revert if admin tries to withdraw token with zero address', async function () {
+				await expect(
+					this.vendorV2.write.withdrawToken(
+						[this.mockcUSD.address, cUSDAmount, zeroAddress],
+						{
+							account: this.luca
+						}
+					)
+				).to.be.rejected
+			})
+
+			it('Should revert if admin tries to withdraw zero amount', async function () {
+				await expect(
+					this.vendorV2.write.withdrawToken(
+						[this.mockcUSD.address, 0n, this.luca],
+						{
+							account: this.luca
+						}
+					)
+				).to.be.rejected
+			})
+
+			it('Should revert if admin tries to withdraw more than token balance', async function () {
+				const tooMuch = cUSDAmount + 1_000_000n
+				await expect(
+					this.vendorV2.write.withdrawToken(
+						[this.mockcUSD.address, tooMuch, this.luca],
+						{
+							account: this.luca
+						}
+					)
+				).to.be.rejectedWith('Failed to withdraw contract fee')
+			})
+
+			it('Should allow admin to withdraw token', async function () {
+				const initialBalance = await this.mockcUSD.read.balanceOf([this.luca])
+
+				await this.vendorV2.write.withdrawToken(
+					[this.mockcUSD.address, cUSDAmount, this.luca],
+					{
+						account: this.luca
+					}
+				)
+
+				const finalBalance = await this.mockcUSD.read.balanceOf([this.luca])
+				expect(finalBalance).to.equal(initialBalance + cUSDAmount)
+			})
+
+			it('Should decrease token balance in contract after withdrawal', async function () {
+				const balanceBefore = await this.mockcUSD.read.balanceOf([
+					this.vendorV2.address
+				])
+
+				await this.vendorV2.write.withdrawToken(
+					[this.mockcUSD.address, cUSDAmount, this.luca],
+					{
+						account: this.luca
+					}
+				)
+
+				const balanceAfter = await this.mockcUSD.read.balanceOf([
+					this.vendorV2.address
+				])
+				expect(balanceAfter).to.equal(balanceBefore - cUSDAmount)
+			})
+
+			it('Should revert if called by non-admin', async function () {
+				await expect(
+					this.vendorV2.write.withdrawToken(
+						[this.mockcUSD.address, cUSDAmount, this.luca],
+						{
+							account: this.santiago
+						}
+					)
+				).to.be.rejectedWith('Restricted to admins.')
+			})
+		})
+	})
+
 	describe.skip('CollectioV2', function () {
 		const price: bigint = 500000000n // $5.00 USD
 		const newPrice: bigint = 600000000n // $6.00 USD
@@ -411,182 +591,348 @@ describe('VendorV2', function () {
 		})
 	})
 
-	describe.skip('WithdrawV2', function () {
-		const cUSDAmount: bigint = 1000000000n // 10 cUSD
-		const ethAmount: bigint = 1000000000n // 0.000000001 ETH
+	describe.skip('Group', function () {
+		const TEN_TOKENS: bigint = parseEther('10') // 10 tokens (wei)
+		const ONE_ETH: bigint = parseEther('1') // 1 ETH   (wei)
+		const P5000: bigint = 5000n // 50 %
+		const P2500: bigint = 2500n // 25 %
+		const P1250: bigint = 1250n // 12.5 %
 
 		beforeEach(async function () {
 			const fixture = await deployFixture()
-			this.vendorV2 = fixture.vendorV2
-			this.mockcUSD = fixture.mockcUSD
-			this.dataFeeds = fixture.dataFeeds
-			this.deployer = fixture.deployer
-			this.luca = fixture.luca
-			this.juan = fixture.juan
-			this.santiago = fixture.santiago
+			Object.assign(this, fixture)
 
 			await this.vendorV2.write.addAdmin([this.luca], {
 				account: this.deployer
 			})
 
-			await this.vendorV2.write.addAdmin([this.juan], {
-				account: this.deployer
-			})
-
-			await this.mockcUSD.write.transfer([this.vendorV2.address, cUSDAmount], {
+			await this.mockcUSD.write.mint([this.vendorV2.address, TEN_TOKENS], {
 				account: this.deployer
 			})
 
 			const wallet = await viem.getWalletClient(this.deployer)
-
 			await wallet.sendTransaction({
 				to: this.vendorV2.address,
-				value: ethAmount
+				value: ONE_ETH
 			})
 		})
 
-		describe('withdraw', function () {
-			it('Should revert if admin tries to withdraw with zero address', async function () {
+		describe('addGroup', function () {
+			it('Should revert if shared array is empty', async function () {
 				await expect(
-					this.vendorV2.write.withdraw([ethAmount, zeroAddress], {
+					this.vendorV2.write.addGroup(['VOID', true, []], {
 						account: this.luca
 					})
-				).to.be.rejectedWith('Invalid address')
+				).to.be.rejectedWith('AddGroup: Empty ArrayShared')
 			})
 
-			it('Should revert if admin tries to withdrarw with zero amount', async function () {
+			it('Should revert if non-admin tries to add a group', async function () {
+				const shared = [{ addr: this.juan, pcng: P5000 }]
 				await expect(
-					this.vendorV2.write.withdraw([0n, this.luca], {
-						account: this.luca
+					this.vendorV2.write.addGroup(['TEAM', true, shared], {
+						account: this.juan
 					})
-				).to.be.rejectedWith('Amount must be greater than zero')
-			})
-
-			it('Should revert if admin tries to withdraw more than balance', async function () {
-				await expect(
-					this.vendorV2.write.withdraw([cUSDAmount, this.luca], {
-						account: this.luca
-					})
-				).to.be.rejectedWith('Insufficient balance')
-			})
-
-			// TODO: Add test to test request: "Failed to withdraw contract fee" only if gas is set low
-
-			it('Should allow admin to withdraw ETH', async function () {
-				const publicClient = await viem.getPublicClient()
-
-				const initialBalance: bigint = await publicClient.getBalance({
-					address: this.luca,
-					blockTag: 'latest'
-				})
-
-				await this.vendorV2.write.withdraw([ethAmount, this.luca], {
-					account: this.deployer
-				})
-
-				const finalBalance: bigint = await publicClient.getBalance({
-					address: this.luca,
-					blockTag: 'latest'
-				})
-
-				expect(finalBalance).to.equal(initialBalance + ethAmount)
-			})
-
-			it('Should decrease contract balance after withdraw', async function () {
-				const publicClient = await viem.getPublicClient()
-
-				const balanceBefore: bigint = await publicClient.getBalance({
-					address: this.vendorV2.address
-				})
-
-				await this.vendorV2.write.withdraw([ethAmount, this.luca], {
-					account: this.deployer
-				})
-
-				const balanceAfter: bigint = await publicClient.getBalance({
-					address: this.vendorV2.address
-				})
-
-				expect(balanceAfter).to.equal(balanceBefore - ethAmount)
-			})
-		})
-
-		describe('withdrawToken', function () {
-			it('Should revert if admin tries to withdraw token with zero address', async function () {
-				await expect(
-					this.vendorV2.write.withdrawToken(
-						[this.mockcUSD.address, cUSDAmount, zeroAddress],
-						{
-							account: this.luca
-						}
-					)
-				).to.be.rejected
-			})
-
-			it('Should revert if admin tries to withdraw zero amount', async function () {
-				await expect(
-					this.vendorV2.write.withdrawToken(
-						[this.mockcUSD.address, 0n, this.luca],
-						{
-							account: this.luca
-						}
-					)
-				).to.be.rejected
-			})
-
-			it('Should revert if admin tries to withdraw more than token balance', async function () {
-				const tooMuch = cUSDAmount + 1_000_000n
-				await expect(
-					this.vendorV2.write.withdrawToken(
-						[this.mockcUSD.address, tooMuch, this.luca],
-						{
-							account: this.luca
-						}
-					)
-				).to.be.rejectedWith('Failed to withdraw contract fee')
-			})
-
-			it('Should allow admin to withdraw token', async function () {
-				const initialBalance = await this.mockcUSD.read.balanceOf([this.luca])
-
-				await this.vendorV2.write.withdrawToken(
-					[this.mockcUSD.address, cUSDAmount, this.luca],
-					{
-						account: this.luca
-					}
-				)
-
-				const finalBalance = await this.mockcUSD.read.balanceOf([this.luca])
-				expect(finalBalance).to.equal(initialBalance + cUSDAmount)
-			})
-
-			it('Should decrease token balance in contract after withdrawal', async function () {
-				const balanceBefore = await this.mockcUSD.read.balanceOf([
-					this.vendorV2.address
-				])
-
-				await this.vendorV2.write.withdrawToken(
-					[this.mockcUSD.address, cUSDAmount, this.luca],
-					{
-						account: this.luca
-					}
-				)
-
-				const balanceAfter = await this.mockcUSD.read.balanceOf([
-					this.vendorV2.address
-				])
-				expect(balanceAfter).to.equal(balanceBefore - cUSDAmount)
-			})
-
-			it('Should revert if called by non-admin', async function () {
-				await expect(
-					this.vendorV2.write.withdrawToken(
-						[this.mockcUSD.address, cUSDAmount, this.luca],
-						{
-							account: this.santiago
-						}
-					)
 				).to.be.rejectedWith('Restricted to admins.')
+			})
+
+			it('Should revert if admin tries to add an existing group', async function () {
+				const shared = [{ addr: this.juan, pcng: P5000 }]
+				await this.vendorV2.write.addGroup(['TEAM', true, shared], {
+					account: this.luca
+				})
+
+				await expect(
+					this.vendorV2.write.addGroup(['TEAM', true, shared], {
+						account: this.luca
+					})
+				).to.be.rejectedWith('AddGroup: Group Already Stored')
+			})
+
+			it('Should revert if total percentage exceeds 100 %', async function () {
+				const shared = [{ addr: this.juan, pcng: 12000n }]
+				await expect(
+					this.vendorV2.write.addGroup(['ODD', true, shared], {
+						account: this.luca
+					})
+				).to.be.rejectedWith('AddGroup: The Taximum Percentage Is Exceeded')
+			})
+
+			it('Should allow admin to add a valid group', async function () {
+				const shared = [{ addr: this.juan, pcng: P5000 }]
+				await this.vendorV2.write.addGroup(['TEAM', true, shared], {
+					account: this.luca
+				})
+
+				const g = await this.vendorV2.read.getGroup(['TEAM'])
+				expect(g.group).to.equal('TEAM')
+				expect(g.state).to.be.true
+				expect(g.arrayShared.length).to.equal(1)
+			})
+		})
+
+		describe('updateGroupStatus', function () {
+			beforeEach(async function () {
+				await this.vendorV2.write.addGroup(
+					['SWITCH', true, [{ addr: this.juan, pcng: P5000 }]],
+					{ account: this.deployer }
+				)
+			})
+
+			it('Should revert if non-admin tries to update status', async function () {
+				await expect(
+					this.vendorV2.write.updateGroupStatus(['SWITCH', false], {
+						account: this.juan
+					})
+				).to.be.rejectedWith('Restricted to admins.')
+			})
+
+			it('Should allow admin to toggle group status', async function () {
+				await this.vendorV2.write.updateGroupStatus(['SWITCH', false], {
+					account: this.luca
+				})
+				const g = await this.vendorV2.read.getGroup(['SWITCH'])
+				expect(g.state).to.be.false
+			})
+		})
+
+		describe('shared management', function () {
+			beforeEach(async function () {
+				await this.vendorV2.write.addGroup(
+					['CREW', true, [{ addr: this.juan, pcng: P2500 }]],
+					{ account: this.deployer }
+				)
+			})
+
+			it('Should revert if group does not exist when adding shared', async function () {
+				await expect(
+					this.vendorV2.write.addSharedOfGroup(
+						['NONE', { addr: this.santiago, pcng: P1250 }],
+						{ account: this.luca }
+					)
+				).to.be.rejectedWith('addSharedOfGroup: Group Not Already Stored')
+			})
+
+			it('Should revert if adding shared exceeds 100 % total', async function () {
+				await expect(
+					this.vendorV2.write.addSharedOfGroup(
+						['CREW', { addr: this.santiago, pcng: 8000n }],
+						{ account: this.luca }
+					)
+				).to.be.rejectedWith(
+					'addSharedOfGroup: The Taximum Percentage Is Exceeded'
+				)
+			})
+
+			it('Should allow admin to add shared to group', async function () {
+				await this.vendorV2.write.addSharedOfGroup(
+					['CREW', { addr: this.santiago, pcng: P1250 }],
+					{ account: this.luca }
+				)
+				const g = await this.vendorV2.read.getGroup(['CREW'])
+				expect(g.arrayShared.length).to.equal(2)
+			})
+
+			it('Should revert if index is out of bounds when removing shared', async function () {
+				await expect(
+					this.vendorV2.write.removeSharedOfGroup(['CREW', 3], {
+						account: this.luca
+					})
+				).to.be.rejectedWith('Index out of bounds')
+			})
+
+			it('Should allow admin to remove shared from group', async function () {
+				await this.vendorV2.write.removeSharedOfGroup(['CREW', 0], {
+					account: this.luca
+				})
+				const g = await this.vendorV2.read.getGroup(['CREW'])
+				expect(g.arrayShared.length).to.equal(0)
+			})
+
+			it('Should revert if updateSharedOfGroup idx out of range', async function () {
+				await expect(
+					this.vendorV2.write.updateSharedOfGroup(
+						['CREW', 3, 0, { addr: this.santiago, pcng: P1250 }],
+						{ account: this.luca }
+					)
+				).to.be.rejectedWith('updateSharedOfGroup: Index out of bounds')
+			})
+
+			it('Should allow admin to update shared addr and percentage', async function () {
+				await this.vendorV2.write.addSharedOfGroup(
+					['CREW', { addr: this.santiago, pcng: P1250 }],
+					{ account: this.luca }
+				)
+
+				await this.vendorV2.write.updateSharedOfGroup(
+					['CREW', 2, 1, { addr: this.santiago, pcng: P5000 }],
+					{ account: this.deployer }
+				)
+
+				const g: GroupStruct = await this.vendorV2.read.getGroup(['CREW'])
+				expect(g.arrayShared[1].addr).to.equal(this.santiago)
+				expect(g.arrayShared[1].pcng).to.equal(P5000)
+			})
+		})
+
+		it('Should return (amount * pct / 10000) in calculateFee', async function () {
+			const fee = await this.vendorV2.read.calculateFee([10000n, 2500])
+			expect(fee).to.equal(2500n)
+		})
+
+		describe('distribution', function () {
+			beforeEach(async function () {
+				await this.vendorV2.write.addGroup(
+					[
+						'PAY',
+						true,
+						[
+							{ addr: this.juan, pcng: 6000 },
+							{ addr: this.santiago, pcng: 4000 }
+						]
+					],
+					{ account: this.deployer }
+				)
+			})
+
+			it('Should revert if group does not exist', async function () {
+				await expect(
+					this.vendorV2.write.distribution(
+						['NOPE', ONE_ETH, true, zeroAddress],
+						{ account: this.deployer }
+					)
+				).to.be.rejectedWith('distribution: Group Not Already Stored')
+			})
+
+			it('Should revert if group is inactive', async function () {
+				await this.vendorV2.write.updateGroupStatus(['PAY', false], {
+					account: this.deployer
+				})
+				await expect(
+					this.vendorV2.write.distribution(
+						['PAY', ONE_ETH, true, zeroAddress],
+						{ account: this.deployer }
+					)
+				).to.be.rejectedWith('distribution: Group Not Already Available')
+			})
+
+			it('Should revert if contract balance is insufficient', async function () {
+				await expect(
+					this.vendorV2.write.distribution(
+						['PAY', ONE_ETH * 2n, true, zeroAddress],
+						{ account: this.deployer }
+					)
+				).to.be.rejectedWith('distribution: Not enough balance')
+			})
+
+			it('Should revert if shared percentages sum < 100 %', async function () {
+				await this.vendorV2.write.addGroup(
+					['LOW', true, [{ addr: this.juan, pcng: 9000 }]],
+					{ account: this.deployer }
+				)
+
+				await expect(
+					this.vendorV2.write.distribution(
+						['LOW', ONE_ETH, true, zeroAddress],
+						{
+							account: this.deployer
+						}
+					)
+				).to.be.rejectedWith('distribution: percentage sum mismatch')
+			})
+
+			it('Should revert if group has zero shared', async function () {
+				await this.vendorV2.write.addGroup(['EMPTY', true, []], {
+					account: this.deployer
+				})
+
+				await expect(
+					this.vendorV2.write.distribution(
+						['EMPTY', ONE_ETH, true, zeroAddress],
+						{ account: this.deployer }
+					)
+				).to.be.rejectedWith('distribution: No Shared found')
+			})
+
+			it('Should distribute ETH among beneficiaries', async function () {
+				const pub = await viem.getPublicClient()
+				const j0 = await pub.getBalance({ address: this.juan })
+				const s0 = await pub.getBalance({ address: this.santiago })
+
+				const tx = await this.vendorV2.write.distribution(
+					['PAY', ONE_ETH, true, zeroAddress],
+					{ account: this.deployer }
+				)
+
+				const logs = await this.vendorV2.getEvents.Distributed({
+					fromBlock: tx.blockNumber
+				})
+				expect(logs.length).to.equal(2)
+
+				const j1 = await pub.getBalance({ address: this.juan })
+				const s1 = await pub.getBalance({ address: this.santiago })
+
+				expect(j1).to.equal(j0 + (ONE_ETH * 6000n) / 10000n)
+				expect(s1).to.equal(s0 + (ONE_ETH * 4000n) / 10000n)
+			})
+
+			it('Should distribute ERC-20 tokens among beneficiaries', async function () {
+				const j0 = await this.mockcUSD.read.balanceOf([this.juan])
+				const s0 = await this.mockcUSD.read.balanceOf([this.santiago])
+
+				await this.vendorV2.write.distribution(
+					['PAY', TEN_TOKENS, false, this.mockcUSD.address],
+					{ account: this.deployer }
+				)
+
+				const j1 = await this.mockcUSD.read.balanceOf([this.juan])
+				const s1 = await this.mockcUSD.read.balanceOf([this.santiago])
+
+				expect(j1).to.equal(j0 + (TEN_TOKENS * 6000n) / 10000n)
+				expect(s1).to.equal(s0 + (TEN_TOKENS * 4000n) / 10000n)
+			})
+
+			it('Should revert when token transfer fails (sendToken)', async function () {
+				/* deploy mock token that always fails on transfer */
+				const MockFail = await viem.deployContract('MockErc20Fail', [])
+				await MockFail.write.mint([this.vendorV2.address, TEN_TOKENS], {
+					account: this.deployer
+				})
+
+				await this.vendorV2.write.addGroup(
+					['FAIL', true, [{ addr: this.juan, pcng: 10000 }]],
+					{ account: this.deployer }
+				)
+
+				await expect(
+					this.vendorV2.write.distribution(
+						['FAIL', TEN_TOKENS, false, MockFail.address],
+						{ account: this.deployer }
+					)
+				).to.be.rejectedWith('distribution: token transfer failed')
+			})
+		})
+
+		describe('getGroupListPaginated', function () {
+			beforeEach(async function () {
+				for (let i = 0; i < 5; i++) {
+					await this.vendorV2.write.addGroup(
+						[`G${i}`, true, [{ addr: this.juan, pcng: P2500 }]],
+						{ account: this.deployer }
+					)
+				}
+			})
+
+			it('Should revert if range is invalid', async function () {
+				await expect(
+					this.vendorV2.read.getGroupListPaginated([3n, 2n])
+				).to.be.rejectedWith('Invalid range')
+			})
+
+			it('Should return paginated group list', async function () {
+				const list = await this.vendorV2.read.getGroupListPaginated([1n, 4n])
+				expect(list.length).to.equal(3)
+				expect(list[0].group).to.equal('G1')
+				expect(list[2].group).to.equal('G3')
 			})
 		})
 	})
