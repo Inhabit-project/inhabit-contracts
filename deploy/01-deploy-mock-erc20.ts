@@ -1,5 +1,6 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { DeployFunction } from 'hardhat-deploy/types'
+import { parseEther } from 'viem'
 
 import { developmentChains, networkConfig } from '@/config/constants'
 import verify from '@/utils'
@@ -18,9 +19,9 @@ const deployMockErc20: DeployFunction = async function (
 
 	const name: string = 'CELO Dollar'
 	const symbol: string = 'cUSD'
-	const decimals: number = 18
+	const initialSupply: bigint = parseEther('100') // 100 cUSD
 
-	const args = [name, symbol, decimals]
+	const args = [name, symbol, initialSupply]
 
 	const mockErc20 = await deploy('MockErc20', {
 		from: deployer,
