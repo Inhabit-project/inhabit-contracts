@@ -1,12 +1,12 @@
 {
 	"name": "inhabit-vendor-contract",
 	"scripts": {
-		"chain": "hardhat node",
+		"chain": "hardhat node --tags localhost",
 		"compile": "hardhat compile",
 		"coverage": "SOLIDITY_COVERAGE=true hardhat coverage",
 		"deploy:celo": "hardhat run scripts/deploy.js --network celo",
 		"deploy:alfajores": "hardhat run scripts/deploy.js --network alfajores",
-		"deploy:local": "hardhat deploy --network localhost",
+		"deploy:localhost": "hardhat deploy --network localhost --tags localhost",
 		"format": "prettier --write .",
 		"lint": "eslint",
 		"lint:fix": "eslint --fix",

@@ -2,13 +2,33 @@ import '@nomicfoundation/hardhat-toolbox-viem'
 import 'hardhat-deploy'
 import 'tsconfig-paths/register'
 
+import dotenv from 'dotenv'
 import { HardhatUserConfig } from 'hardhat/types'
 
-// const PRIVATE_KEY = process.env.PRIVATE_KEY
-// const CELO_RPC_URL = process.env.CELO_RPC_URL
-// const ALFAJORES_RPC_URL = process.env.ALFAJORES_RPC_URL
-// const CELOSCAN_API_KEY = process.env.CELOSCAN_API_KEY
-// const COINMARKETCAP_API_KEY = process.env.COINMARKETCAP_API_KEY
+import { ensureEnvVar } from './utils/ensure-env-var'
+
+dotenv.config()
+
+const CELO_RPC_URL = ensureEnvVar(process.env.CELO_RPC_URL, 'CELO_RPC_URL')
+
+const CELO_ALFAJORES_RPC_URL = ensureEnvVar(
+	process.env.CELO_ALFAJORES_RPC_URL,
+	'CELO_ALFAJORES_RPC_URL'
+)
+
+const CELOSCAN_API_KEY = ensureEnvVar(
+	process.env.CELOSCAN_API_KEY,
+	'CELOSCAN_API_KEY'
+)
+
+const COINMARKETCAP_API_KEY = ensureEnvVar(
+	process.env.COINMARKETCAP_API_KEY,
+	'COINMARKETCAP_API_KEY'
+)
+
+const GAS_REPORT = process.env.REPORT_GAS === 'true' || false
+
+const PRIVATE_KEY = ensureEnvVar(process.env.PRIVATE_KEY, 'PRIVATE_KEY')
 
 const config: HardhatUserConfig = {
 	defaultNetwork: 'hardhat',
@@ -17,24 +37,24 @@ const config: HardhatUserConfig = {
 			allowUnlimitedContractSize: true,
 			chainId: 1337
 		},
+
 		localhost: {
 			allowUnlimitedContractSize: true,
 			chainId: 1337,
 			url: 'http://127.0.0.1:8545'
-		}
+		},
 
-		// celo: {
-		// 	url: CELO_RPC_URL || 'https://forno.celo.org',
-		// 	accounts: PRIVATE_KEY ? [PRIVATE_KEY] : [],
-		// 	chainId: 42220,
-		// 	gasPrice: 50000000000
-		// },
-		// alfajores: {
-		// 	url: ALFAJORES_RPC_URL || 'https://alfajores-forno.celo-testnet.org',
-		// 	accounts: PRIVATE_KEY ? [PRIVATE_KEY] : [],
-		// 	chainId: 44787,
-		// 	gasPrice: 1000000000
-		// },
+		celo: {
+			url: CELO_RPC_URL || 'https://forno.celo.org',
+			accounts: PRIVATE_KEY ? [PRIVATE_KEY] : [],
+			chainId: 42220
+		},
+
+		celoAlfajores: {
+			url: CELO_ALFAJORES_RPC_URL || 'https://alfajores-forno.celo-testnet.org',
+			accounts: PRIVATE_KEY ? [PRIVATE_KEY] : [],
+			chainId: 44787
+		}
 	},
 
 	namedAccounts: {
@@ -59,48 +79,41 @@ const config: HardhatUserConfig = {
 				enabled: true,
 				runs: 1000
 			}
-			// details: {
-			// 	yul: true,
-			// 	yulDetails: {
-			// 		stackAllocation: true,
-			// 		optimizerSteps: 'dhfoDgvulfnTUtnIf'
-			// 	}
-			// }
 		}
 	},
 
-	// etherscan: {
-	// 	apiKey: {
-	// 		celo: CELOSCAN_API_KEY || '',
-	// 		alfajores: CELOSCAN_API_KEY || ''
-	// 	},
-	// 	customChains: [
-	// 		{
-	// 			network: 'celo',
-	// 			chainId: 42220,
-	// 			urls: {
-	// 				apiURL: 'https://api.celoscan.io/api',
-	// 				browserURL: 'https://celoscan.io'
-	// 			}
-	// 		},
-	// 		{
-	// 			network: 'alfajores',
-	// 			chainId: 44787,
-	// 			urls: {
-	// 				apiURL: 'https://api-alfajores.celoscan.io/api',
-	// 				browserURL: 'https://alfajores.celoscan.io'
-	// 			}
-	// 		}
-	// 	]
-	// },
+	etherscan: {
+		apiKey: {
+			celo: CELOSCAN_API_KEY || '',
+			alfajores: CELOSCAN_API_KEY || ''
+		},
+		customChains: [
+			{
+				network: 'celo',
+				chainId: 42220,
+				urls: {
+					apiURL: 'https://api.celoscan.io/api',
+					browserURL: 'https://celoscan.io'
+				}
+			},
+			{
+				network: 'alfajores',
+				chainId: 44787,
+				urls: {
+					apiURL: 'https://api-alfajores.celoscan.io/api',
+					browserURL: 'https://alfajores.celoscan.io'
+				}
+			}
+		]
+	},
 
-	// gasReporter: {
-	// 	enabled: process.env.REPORT_GAS !== undefined,
-	// 	currency: 'USD',
-	// 	coinmarketcap: COINMARKETCAP_API_KEY,
-	// 	token: 'CELO',
-	// 	gasPrice: 100
-	// },
+	gasReporter: {
+		enabled: GAS_REPORT,
+		currency: 'USD',
+		coinmarketcap: COINMARKETCAP_API_KEY,
+		token: 'CELO'
+		// outputFile: 'gas-report.txt'
+	},
 
 	mocha: {
 		timeout: 200000
