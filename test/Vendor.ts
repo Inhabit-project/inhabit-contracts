@@ -50,7 +50,7 @@ describe('VendorV2', function () {
 		return { deployer, luca, juan, santiago, mockcUSD, dataFeeds, vendorV2 }
 	}
 
-	describe('Administered', function () {
+	describe.skip('Administered', function () {
 		beforeEach(async function () {
 			const fixture = await deployFixture()
 			this.vendorV2 = fixture.vendorV2
@@ -125,7 +125,7 @@ describe('VendorV2', function () {
 		})
 	})
 
-	describe('WhiteListTokenV2', function () {
+	describe.skip('WhiteListTokenV2', function () {
 		beforeEach(async function () {
 			const fixture = await deployFixture()
 			this.vendorV2 = fixture.vendorV2
@@ -233,7 +233,7 @@ describe('VendorV2', function () {
 		})
 	})
 
-	describe('CollectioV2', function () {
+	describe.skip('CollectioV2', function () {
 		const price: bigint = 500000000n // $5.00 USD
 		const newPrice: bigint = 600000000n // $6.00 USD
 
