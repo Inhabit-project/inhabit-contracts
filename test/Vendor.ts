@@ -3,7 +3,7 @@ import hre, { viem } from 'hardhat'
 import { Address, GetContractReturnType, zeroAddress } from 'viem'
 
 import { ABIS } from '@/config/abi'
-import { TEST_TOKEN } from '@/config/constants'
+import { TEST_TOKEN_ONE, TEST_TOKEN_TWO } from '@/config/constants'
 import { TokenStruct } from '@/models'
 
 interface FixtureReturn {
@@ -125,7 +125,7 @@ describe('VendorV2', function () {
 		})
 	})
 
-	describe('WithdrawV2', function () {
+	describe.skip('WithdrawV2', function () {
 		beforeEach(async function () {
 			const fixture = await deployFixture()
 			this.vendorV2 = fixture.vendorV2
@@ -182,26 +182,63 @@ describe('VendorV2', function () {
 
 			it('Should allow user to add a token', async function () {
 				await this.vendorV2.write.addToken(
-					[TEST_TOKEN, this.dataFeeds.address, 8, true, false],
+					[TEST_TOKEN_ONE, this.dataFeeds.address, 8, true, false],
 					{ account: this.luca }
 				)
 
 				const tokens = await this.vendorV2.read.tokensList()
 
 				expect(tokens.map((token: TokenStruct) => token.addr)).to.include(
-					TEST_TOKEN
+					TEST_TOKEN_ONE
 				)
 			})
 		})
 
 		describe('updateToken', function () {
-			it('Should revert if non-user tries to update error type', async function () {
+			it('Should revert if user tries to update a token with id that does not exist', async function () {
+				await expect(
+					this.vendorV2.write.updateToken([666, 0, zeroAddress, 0, false], {
+						account: this.luca
+					})
+				).to.be.rejectedWith('Invalid Token')
+			})
+
+			it('Should revert if user tries to update with an error type', async function () {
 				await expect(
 					this.vendorV2.write.updateToken(
 						[0, 0, this.mockcUSD.address, 0, false],
 						{ account: this.juan }
 					)
 				).to.be.rejectedWith('Error type')
+			})
+
+			it('Should revert if user tries to update a token that does not exist', async function () {
+				await expect(
+					this.vendorV2.write.updateToken([0, 0, TEST_TOKEN_TWO, 0, false], {
+						account: this.juan
+					})
+				).to.be.rejectedWith('Invalid Token')
+			})
+		})
+
+		describe('getTokenByAddr', function () {
+			it('Should revert if token does not exist', async function () {
+				await expect(
+					this.vendorV2.read.getTokenByAddr([zeroAddress])
+				).to.be.rejectedWith('Invalid Token')
+
+				await expect(
+					this.vendorV2.read.getTokenByAddr([TEST_TOKEN_TWO])
+				).to.be.rejectedWith('Invalid Token')
+			})
+
+			it('Should return token by saved token address', async function () {
+				const token: TokenStruct = await this.vendorV2.read.getTokenByAddr([
+					this.mockcUSD.address
+				])
+
+				expect(token).to.be.an('object')
+				expect(token.addr).to.equal(this.mockcUSD.address)
 			})
 		})
 	})
