@@ -25,3 +25,6 @@ pnpm-lock.yaml
 
 # VS Code
 .vscode
+
+# Inhabit
+safe-config.json
