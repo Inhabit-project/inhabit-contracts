@@ -34,12 +34,14 @@ export async function createSafeTransaction(
 		transactions,
 		options
 	})
+
+	console.log('Safe transaction created:', safeTransaction)
 }
 
 export async function createSafeMultisig(
 	rpcUrl: string,
 	privateKey: string
-): Promise<void> {
+): Promise<Safe> {
 	const provider = new ethers.JsonRpcProvider(rpcUrl)
 	const signer = new ethers.Wallet(privateKey, provider)
 
@@ -64,7 +66,7 @@ export async function createSafeMultisig(
 
 	const protocolKit = await Safe.init({
 		provider: RPC_URL,
-		signer: signer.address,
+		signer: privateKey,
 		predictedSafe: predictSafe
 	})
 
@@ -105,6 +107,8 @@ export async function createSafeMultisig(
 	)
 
 	console.log('✅ safe-config.json created')
+
+	return protocolKit
 }
 
 const RPC_URL = ensureEnvVar(

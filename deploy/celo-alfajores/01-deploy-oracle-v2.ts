@@ -1,5 +1,6 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { DeployFunction } from 'hardhat-deploy/types'
+import { parseGwei } from 'viem'
 
 import { developmentChains, networkConfig } from '@/config/constants'
 import { verify } from '@/utils/verify'
@@ -18,7 +19,8 @@ const deployOracleV2: DeployFunction = async function (
 		from: deployer,
 		args: [],
 		log: true,
-		waitConfirmations: networkConfig[network.name].blockConfirmations || 1
+		waitConfirmations: networkConfig[network.name].blockConfirmations || 1,
+		gasPrice: parseGwei('30').toString()
 	})
 
 	log(`OracleV2 contract at ${oracleV2.address}`)
