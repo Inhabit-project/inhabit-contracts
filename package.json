@@ -39,6 +39,7 @@
 		"assert": "^2.1.0",
 		"browserify-zlib": "^0.2.0",
 		"buffer": "^6.0.3",
+		"chai-bigint": "^0.2.0",
 		"crypto-browserify": "^3.12.1",
 		"dotenv": "^16.4.7",
 		"erc721a": "^4.3.0",

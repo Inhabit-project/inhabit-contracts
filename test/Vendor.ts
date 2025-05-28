@@ -1,10 +1,13 @@
 import { expect } from 'chai'
+import chai from 'chai'
+import chaiBigint from 'chai-bigint'
 import hre, { viem } from 'hardhat'
 import { Address, GetContractReturnType, parseEther, zeroAddress } from 'viem'
 
 import { ABIS } from '@/config/abi'
 import { TEST_TOKEN_ONE, TEST_TOKEN_TWO } from '@/config/constants'
 import { GroupStruct, TokenStruct } from '@/models'
+chai.use(chaiBigint)
 
 interface FixtureReturn {
 	deployer: string
@@ -13,6 +16,10 @@ interface FixtureReturn {
 	santiago: string
 	mockcUSD: GetContractReturnType<typeof ABIS.MockErc20>
 	dataFeeds: GetContractReturnType<typeof ABIS.MockOracleV2>
+	caracoli: GetContractReturnType<typeof ABIS.Inhabit>
+	jaguar: GetContractReturnType<typeof ABIS.Inhabit>
+	paujil: GetContractReturnType<typeof ABIS.Inhabit>
+	titi: GetContractReturnType<typeof ABIS.Inhabit>
 	vendorV2: GetContractReturnType<typeof ABIS.VendorV2>
 }
 
@@ -21,15 +28,27 @@ describe('VendorV2', function () {
 		const { deployments, getNamedAccounts } = hre
 		const { deployer, luca, juan, santiago } = await getNamedAccounts()
 
-		await deployments.fixture(['all'])
-
-		const vendorV2Address = (await deployments.get('VendorV2'))
-			.address as Address
+		await deployments.fixture(['localhost'])
 
 		const mockErc20Address = (await deployments.get('MockErc20'))
 			.address as Address
 
 		const mockOracleAddress = (await deployments.get('MockOracleV2'))
+			.address as Address
+
+		const inhabitCaracoliAddress = (await deployments.get('Inhabit_CARACOLI'))
+			.address as Address
+
+		const inhabitJaguarAddress = (await deployments.get('Inhabit_JAGUAR'))
+			.address as Address
+
+		const inhabitPaujilAddress = (await deployments.get('Inhabit_PAUJIL'))
+			.address as Address
+
+		const inhabitTitiAddress = (await deployments.get('Inhabit_TITI'))
+			.address as Address
+
+		const vendorV2Address = (await deployments.get('VendorV2'))
 			.address as Address
 
 		const mockcUSD = (await viem.getContractAt(
@@ -42,15 +61,47 @@ describe('VendorV2', function () {
 			mockOracleAddress
 		)) as unknown as GetContractReturnType<typeof ABIS.MockOracleV2>
 
+		const caracoli = (await viem.getContractAt(
+			'Inhabit',
+			inhabitCaracoliAddress
+		)) as unknown as GetContractReturnType<typeof ABIS.Inhabit>
+
+		const jaguar = (await viem.getContractAt(
+			'Inhabit',
+			inhabitJaguarAddress
+		)) as unknown as GetContractReturnType<typeof ABIS.Inhabit>
+
+		const paujil = (await viem.getContractAt(
+			'Inhabit',
+			inhabitPaujilAddress
+		)) as unknown as GetContractReturnType<typeof ABIS.Inhabit>
+
+		const titi = (await viem.getContractAt(
+			'Inhabit',
+			inhabitTitiAddress
+		)) as unknown as GetContractReturnType<typeof ABIS.Inhabit>
+
 		const vendorV2 = (await viem.getContractAt(
 			'VendorV2',
 			vendorV2Address
 		)) as unknown as GetContractReturnType<typeof ABIS.VendorV2>
 
-		return { deployer, luca, juan, santiago, mockcUSD, dataFeeds, vendorV2 }
+		return {
+			deployer,
+			luca,
+			juan,
+			santiago,
+			mockcUSD,
+			dataFeeds,
+			caracoli,
+			jaguar,
+			paujil,
+			titi,
+			vendorV2
+		}
 	}
 
-	describe.skip('Administered', function () {
+	describe('Administered', function () {
 		beforeEach(async function () {
 			const fixture = await deployFixture()
 			this.vendorV2 = fixture.vendorV2
@@ -125,7 +176,7 @@ describe('VendorV2', function () {
 		})
 	})
 
-	describe.skip('WhiteListTokenV2', function () {
+	describe('WhiteListTokenV2', function () {
 		beforeEach(async function () {
 			const fixture = await deployFixture()
 			this.vendorV2 = fixture.vendorV2
@@ -233,7 +284,7 @@ describe('VendorV2', function () {
 		})
 	})
 
-	describe.skip('WithdrawV2', function () {
+	describe('WithdrawV2', function () {
 		const cUSDAmount: bigint = 1000000000n // 10 cUSD
 		const ethAmount: bigint = 1000000000n // 0.000000001 ETH
 
@@ -413,7 +464,7 @@ describe('VendorV2', function () {
 		})
 	})
 
-	describe.skip('CollectioV2', function () {
+	describe('CollectioV2', function () {
 		const price: bigint = 500000000n // $5.00 USD
 		const newPrice: bigint = 600000000n // $6.00 USD
 
@@ -591,7 +642,7 @@ describe('VendorV2', function () {
 		})
 	})
 
-	describe.skip('Group', function () {
+	describe('Group', function () {
 		const TEN_TOKENS: bigint = parseEther('10') // 10 tokens (wei)
 		const ONE_ETH: bigint = parseEther('1') // 1 ETH   (wei)
 		const P5000: bigint = 5000n // 50 %
