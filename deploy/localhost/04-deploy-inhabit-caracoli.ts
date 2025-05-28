@@ -18,30 +18,30 @@ const deployInhabit: DeployFunction = async function (
 	const { address: vendorV2Address } = await deployments.get('VendorV2')
 
 	log('----------------------------------------------------')
-	log('Deploying Inhabit jaguar collection and waiting for confirmations...')
+	log('Deploying Inhabit caracoli collection and waiting for confirmations...')
 
-	const jaguarArgs = [
-		'INHABIT Ñuiyanzhi JAGUAR',
-		'JAGUAR',
-		5n,
-		NFT_COLLECTIONS.jaguar,
+	const caracoliArgs = [
+		'INHABIT Ñuiyanzhi CARACOLI',
+		'CARACOLI',
+		19n,
+		NFT_COLLECTIONS.caracoli,
 		vendorV2Address
 	]
 
-	const jaguarCollection = await deploy('Inhabit_JAGUAR', {
+	const caracoliCollection = await deploy('Inhabit_CARACOLI', {
 		contract: 'Inhabit',
 		from: deployer,
-		args: jaguarArgs,
+		args: caracoliArgs,
 		log: true,
 		waitConfirmations: networkConfig[network.name].blockConfirmations || 1
 	})
 
-	log(`Jaguar collection deployed at ${jaguarCollection.address}`)
+	log(`Caracoli collection deployed at ${caracoliCollection.address}`)
 
 	if (!developmentChains.includes(network.name)) {
-		await verify(jaguarCollection.address, jaguarArgs)
+		await verify(caracoliCollection.address, caracoliArgs)
 	}
 }
 
 export default deployInhabit
-deployInhabit.tags = ['celoAlfajores', 'ca-inhabitCollections', 'ca-jaguar']
+deployInhabit.tags = ['localhost', 'l-inhabitCollections', 'l-caracoli']

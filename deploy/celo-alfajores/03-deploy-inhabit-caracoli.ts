@@ -44,4 +44,4 @@ const deployInhabit: DeployFunction = async function (
 }
 
 export default deployInhabit
-deployInhabit.tags = ['celoAlfajores', 'inhabitCollections']
+deployInhabit.tags = ['celoAlfajores', 'ca-inhabitCollections', 'ca-caracoli']

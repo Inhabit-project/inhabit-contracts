@@ -29,4 +29,4 @@ const deployVendorV2: DeployFunction = async function (
 }
 
 export default deployVendorV2
-deployVendorV2.tags = ['celoAlfajores', 'vendorV2']
+deployVendorV2.tags = ['celoAlfajores', 'ca-vendorV2']

@@ -15,8 +15,6 @@ const deployMockErc20: DeployFunction = async function (
 	log('----------------------------------------------------')
 	log('Deploying MockErc20 and waiting for confirmations...')
 
-	// See: config gas options. Is it necessary to set gas options here?
-
 	const name: string = 'CELO Dollar'
 	const symbol: string = 'cUSD'
 	const initialSupply: bigint = parseEther('100') // 100 cUSD
@@ -38,4 +36,4 @@ const deployMockErc20: DeployFunction = async function (
 }
 
 export default deployMockErc20
-deployMockErc20.tags = ['localhost', 'mock-erc20']
+deployMockErc20.tags = ['localhost', 'l-mockErc20']

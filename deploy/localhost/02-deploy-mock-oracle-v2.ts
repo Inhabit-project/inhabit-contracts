@@ -14,8 +14,6 @@ const deployMockOracleV2: DeployFunction = async function (
 	log('----------------------------------------------------')
 	log('Deploying MockOracleV2 and waiting for confirmations...')
 
-	// See: config gas options. Is it necessary to set gas options here?
-
 	const mockOracleV2 = await deploy('MockOracleV2', {
 		from: deployer,
 		args: [],
@@ -31,4 +29,4 @@ const deployMockOracleV2: DeployFunction = async function (
 }
 
 export default deployMockOracleV2
-deployMockOracleV2.tags = ['localhost', 'mock-oracle-v2']
+deployMockOracleV2.tags = ['localhost', 'l-mockOracleV2']

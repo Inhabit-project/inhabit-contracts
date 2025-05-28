@@ -18,30 +18,29 @@ const deployInhabit: DeployFunction = async function (
 	const { address: vendorV2Address } = await deployments.get('VendorV2')
 
 	log('----------------------------------------------------')
-	log('Deploying Inhabit jaguar collection and waiting for confirmations...')
+	log('Deploying Inhabit paujil collection and waiting for confirmations...')
 
-	const jaguarArgs = [
-		'INHABIT Ñuiyanzhi JAGUAR',
-		'JAGUAR',
-		5n,
-		NFT_COLLECTIONS.jaguar,
+	const paujilArgs = [
+		'INHABIT Ñuiyanzhi PAUJIL',
+		'PAUJIL',
+		124n,
+		NFT_COLLECTIONS.paujil,
 		vendorV2Address
 	]
 
-	const jaguarCollection = await deploy('Inhabit_JAGUAR', {
+	const paujilCollection = await deploy('Inhabit_PAUJIL', {
 		contract: 'Inhabit',
 		from: deployer,
-		args: jaguarArgs,
+		args: paujilArgs,
 		log: true,
 		waitConfirmations: networkConfig[network.name].blockConfirmations || 1
 	})
 
-	log(`Jaguar collection deployed at ${jaguarCollection.address}`)
+	log(`Paujil collection deployed at ${paujilCollection.address}`)
 
 	if (!developmentChains.includes(network.name)) {
-		await verify(jaguarCollection.address, jaguarArgs)
+		await verify(paujilCollection.address, paujilArgs)
 	}
 }
-
 export default deployInhabit
-deployInhabit.tags = ['celoAlfajores', 'ca-inhabitCollections', 'ca-jaguar']
+deployInhabit.tags = ['localhost', 'l-inhabitCollections', 'l-paujil']

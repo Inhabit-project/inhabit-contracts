@@ -14,8 +14,6 @@ const deployVendorV2: DeployFunction = async function (
 	log('----------------------------------------------------')
 	log('Deploying VendorV2 and waiting for confirmations...')
 
-	// See: config gas options. Is it necessary to set gas options here?
-
 	const vendorV2 = await deploy('VendorV2', {
 		from: deployer,
 		args: [],
@@ -31,4 +29,4 @@ const deployVendorV2: DeployFunction = async function (
 }
 
 export default deployVendorV2
-deployVendorV2.tags = ['localhost', 'vendor-v2']
+deployVendorV2.tags = ['localhost', 'l-vendorV2']

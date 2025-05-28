@@ -202,4 +202,4 @@ const setupContracts: DeployFunction = async function (
 }
 
 export default setupContracts
-setupContracts.tags = ['celoAlfajores', 'setup']
+setupContracts.tags = ['celoAlfajores', 'ca-setup']

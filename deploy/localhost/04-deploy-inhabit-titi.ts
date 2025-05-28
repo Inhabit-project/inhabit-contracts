@@ -18,30 +18,30 @@ const deployInhabit: DeployFunction = async function (
 	const { address: vendorV2Address } = await deployments.get('VendorV2')
 
 	log('----------------------------------------------------')
-	log('Deploying Inhabit jaguar collection and waiting for confirmations...')
+	log('Deploying Inhabit titi collection and waiting for confirmations...')
 
-	const jaguarArgs = [
-		'INHABIT Ñuiyanzhi JAGUAR',
-		'JAGUAR',
-		5n,
-		NFT_COLLECTIONS.jaguar,
+	const titiArgs = [
+		'INHABIT Ñuiyanzhi TITI',
+		'TITI',
+		2483n,
+		NFT_COLLECTIONS.titi,
 		vendorV2Address
 	]
 
-	const jaguarCollection = await deploy('Inhabit_JAGUAR', {
+	const titiCollection = await deploy('Inhabit_TITI', {
 		contract: 'Inhabit',
 		from: deployer,
-		args: jaguarArgs,
+		args: titiArgs,
 		log: true,
 		waitConfirmations: networkConfig[network.name].blockConfirmations || 1
 	})
 
-	log(`Jaguar collection deployed at ${jaguarCollection.address}`)
+	log(`Titi collection deployed at ${titiCollection.address}`)
 
 	if (!developmentChains.includes(network.name)) {
-		await verify(jaguarCollection.address, jaguarArgs)
+		await verify(titiCollection.address, titiArgs)
 	}
 }
 
 export default deployInhabit
-deployInhabit.tags = ['celoAlfajores', 'ca-inhabitCollections', 'ca-jaguar']
+deployInhabit.tags = ['localhost', 'l-inhabitCollections', 'l-titi']

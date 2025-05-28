@@ -1,7 +1,11 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { DeployFunction } from 'hardhat-deploy/types'
 
-import { developmentChains, networkConfig } from '@/config/constants'
+import {
+	developmentChains,
+	networkConfig,
+	NFT_COLLECTIONS
+} from '@/config/constants'
 import { verify } from '@/utils/verify'
 
 const deployInhabit: DeployFunction = async function (
@@ -14,31 +18,30 @@ const deployInhabit: DeployFunction = async function (
 	const { address: vendorV2Address } = await deployments.get('VendorV2')
 
 	log('----------------------------------------------------')
-	log('Deploying Inhabit and waiting for confirmations...')
+	log('Deploying Inhabit jaguar collection and waiting for confirmations...')
 
-	// See: config gas options. Is it necessary to set gas options here?
+	const jaguarArgs = [
+		'INHABIT Ñuiyanzhi JAGUAR',
+		'JAGUAR',
+		5n,
+		NFT_COLLECTIONS.jaguar,
+		vendorV2Address
+	]
 
-	const name: string = 'Inhabit'
-	const symbol: string = 'INHABIT'
-	const maxSupply: bigint = 100n
-	const baseTokenURI: string = 'https://api.inhabit.com/metadata'
-	const scVendorAddress: string = vendorV2Address
-
-	const args = [name, symbol, maxSupply, baseTokenURI, scVendorAddress]
-
-	const inhabit = await deploy('Inhabit', {
+	const jaguarCollection = await deploy('Inhabit_JAGUAR', {
+		contract: 'Inhabit',
 		from: deployer,
-		args,
+		args: jaguarArgs,
 		log: true,
 		waitConfirmations: networkConfig[network.name].blockConfirmations || 1
 	})
 
-	log(`VendorV2 contract at ${inhabit.address}`)
+	log(`Jaguar collection deployed at ${jaguarCollection.address}`)
 
 	if (!developmentChains.includes(network.name)) {
-		await verify(inhabit.address, [])
+		await verify(jaguarCollection.address, jaguarArgs)
 	}
 }
 
 export default deployInhabit
-deployInhabit.tags = ['localhost', 'vendor-v2']
+deployInhabit.tags = ['localhost', 'l-inhabitCollections', 'l-jaguar']
