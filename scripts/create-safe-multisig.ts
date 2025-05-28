@@ -10,8 +10,6 @@ import { writeFileSync } from 'fs'
 import path from 'path'
 import { TransactionReceipt } from 'viem'
 
-import { ensureEnvVar } from '@/utils/ensure-env-var'
-
 config()
 
 export async function createSafeTransaction(
@@ -65,7 +63,7 @@ export async function createSafeMultisig(
 	}
 
 	const protocolKit = await Safe.init({
-		provider: RPC_URL,
+		provider: rpcUrl,
 		signer: privateKey,
 		predictedSafe: predictSafe
 	})
@@ -110,15 +108,3 @@ export async function createSafeMultisig(
 
 	return protocolKit
 }
-
-const RPC_URL = ensureEnvVar(
-	process.env.CELO_ALFAJORES_RPC_URL,
-	'CELO_ALFAJORES_RPC_URL'
-)
-
-const PRIVATE_KEY = ensureEnvVar(process.env.PRIVATE_KEY, 'PRIVATE_KEY')
-
-createSafeMultisig(RPC_URL, PRIVATE_KEY).catch(error => {
-	console.error('❌ Error:', error)
-	process.exit(1)
-})
