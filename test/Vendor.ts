@@ -6,7 +6,7 @@ import { Address, GetContractReturnType, parseEther, zeroAddress } from 'viem'
 
 import { ABIS } from '@/config/abi'
 import { TEST_TOKEN_ONE, TEST_TOKEN_TWO } from '@/config/constants'
-import { GroupStruct, TokenStruct } from '@/models'
+import { GroupStruct } from '@/models'
 chai.use(chaiBigint)
 
 interface FixtureReturn {
@@ -258,13 +258,8 @@ describe('VendorV2', function () {
 			this.juan = fixture.juan
 			this.santiago = fixture.santiago
 
-			await this.vendorV2.write.addUser([this.luca], {
-				account: this.deployer
-			})
-
-			await this.vendorV2.write.addUser([this.juan], {
-				account: this.deployer
-			})
+			await this.vendorV2.write.addUser([this.luca], { account: this.deployer })
+			await this.vendorV2.write.addUser([this.juan], { account: this.deployer })
 		})
 
 		describe('tokenList', function () {
@@ -284,7 +279,7 @@ describe('VendorV2', function () {
 				).to.be.rejectedWith('Restricted to users.')
 			})
 
-			it('Should revert if user tries to add an zero address', async function () {
+			it('Should revert if user tries to add zero address', async function () {
 				await expect(
 					this.vendorV2.write.addToken(
 						[zeroAddress, this.dataFeeds.address, 8, true, false],
@@ -293,7 +288,7 @@ describe('VendorV2', function () {
 				).to.be.rejectedWith('Token already exist')
 			})
 
-			it('Should revert if user tries to add a existing token', async function () {
+			it('Should revert if user tries to add an existing token', async function () {
 				await expect(
 					this.vendorV2.write.addToken(
 						[this.mockcUSD.address, this.dataFeeds.address, 8, true, false],
@@ -302,11 +297,18 @@ describe('VendorV2', function () {
 				).to.be.rejectedWith('Token already exist')
 			})
 
-			// TODO: Add test to add a token.
+			it('Should allow user to add a valid new token', async function () {
+				const tokenAddr = TEST_TOKEN_ONE
+				const tx = await this.vendorV2.write.addToken(
+					[tokenAddr, this.dataFeeds.address, 8, true, false],
+					{ account: this.luca }
+				)
+				expect(tx).to.exist
+			})
 		})
 
 		describe('updateToken', function () {
-			it('Should revert if user tries to update a token with id that does not exist', async function () {
+			it('Should revert if user tries to update non-existent token id', async function () {
 				await expect(
 					this.vendorV2.write.updateToken([666, 1, TEST_TOKEN_ONE, 0, false], {
 						account: this.luca
@@ -314,7 +316,7 @@ describe('VendorV2', function () {
 				).to.be.rejectedWith('Invalid Token')
 			})
 
-			it('Should revert if user tries to update with an error type', async function () {
+			it('Should revert if type is 0 (invalid type)', async function () {
 				await expect(
 					this.vendorV2.write.updateToken([1, 0, TEST_TOKEN_ONE, 0, false], {
 						account: this.juan
@@ -322,7 +324,7 @@ describe('VendorV2', function () {
 				).to.be.rejectedWith('Error type')
 			})
 
-			it('Should revert if user tries to update a token that does not exist', async function () {
+			it('Should revert if token does not exist by address', async function () {
 				await expect(
 					this.vendorV2.write.updateToken([1, 1, TEST_TOKEN_TWO, 0, false], {
 						account: this.juan
@@ -330,25 +332,64 @@ describe('VendorV2', function () {
 				).to.be.rejectedWith('Invalid Token')
 			})
 
-			// TODO: Add test to update a token.
+			it('Should update oracle address', async function () {
+				await this.vendorV2.write.updateToken([1, 1, this.juan, 0, false], {
+					account: this.luca
+				})
+				const token = await this.vendorV2.read.getTokenByAddr([
+					this.mockcUSD.address
+				])
+				expect(token.oracle).to.equal(this.juan)
+			})
+
+			it('Should update oracle decimals', async function () {
+				await this.vendorV2.write.updateToken([1, 2, zeroAddress, 10, false], {
+					account: this.luca
+				})
+				const token = await this.vendorV2.read.getTokenByAddr([
+					this.mockcUSD.address
+				])
+				expect(token.orcDecimals).to.equal(10n)
+			})
+
+			it('Should update active status', async function () {
+				await this.vendorV2.write.updateToken([1, 3, zeroAddress, 0, false], {
+					account: this.luca
+				})
+				const token = await this.vendorV2.read.getTokenByAddr([
+					this.mockcUSD.address
+				])
+				expect(token.active).to.be.false
+			})
+
+			it('Should update native status', async function () {
+				await this.vendorV2.write.updateToken([1, 4, zeroAddress, 0, true], {
+					account: this.luca
+				})
+				const token = await this.vendorV2.read.getTokenByAddr([
+					this.mockcUSD.address
+				])
+				expect(token.isNative).to.be.true
+			})
 		})
 
 		describe('getTokenByAddr', function () {
-			it('Should revert if token does not exist', async function () {
+			it('Should revert if token does not exist (zero address)', async function () {
 				await expect(
 					this.vendorV2.read.getTokenByAddr([zeroAddress])
 				).to.be.rejectedWith('Invalid Token')
+			})
 
+			it('Should revert if token does not exist (random address)', async function () {
 				await expect(
 					this.vendorV2.read.getTokenByAddr([TEST_TOKEN_TWO])
 				).to.be.rejectedWith('Invalid Token')
 			})
 
-			it('Should return token by saved token address', async function () {
-				const token: TokenStruct = await this.vendorV2.read.getTokenByAddr([
+			it('Should return token by address if exists', async function () {
+				const token = await this.vendorV2.read.getTokenByAddr([
 					this.mockcUSD.address
 				])
-
 				expect(token).to.be.an('object')
 				expect(token.addr).to.equal(this.mockcUSD.address)
 			})
