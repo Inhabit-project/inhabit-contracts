@@ -108,11 +108,18 @@ const config: HardhatUserConfig = {
 	},
 
 	gasReporter: {
-		enabled: GAS_REPORT,
+		enabled: true,
 		currency: 'USD',
-		coinmarketcap: COINMARKETCAP_API_KEY,
-		token: 'CELO'
-		// outputFile: 'gas-report.txt'
+		currencyDisplayPrecision: 5,
+		token: 'CELO',
+		tokenPrice: '0.4',
+		gasPrice: 0.5,
+		offline: true,
+		includeIntrinsicGas: true,
+		reportFormat: 'terminal',
+		darkMode: true,
+		showMethodSig: true,
+		outputFile: 'gas-report.txt'
 	},
 
 	mocha: {
