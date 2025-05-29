@@ -105,8 +105,6 @@ describe('VendorV2', function () {
 		beforeEach(async function () {
 			const fixture = await deployFixture()
 			this.vendorV2 = fixture.vendorV2
-			this.mockcUSD = fixture.mockcUSD
-			this.dataFeeds = fixture.dataFeeds
 			this.deployer = fixture.deployer
 			this.luca = fixture.luca
 			this.juan = fixture.juan
@@ -114,21 +112,29 @@ describe('VendorV2', function () {
 		})
 
 		describe('isAdmin', function () {
-			it('Should return true for deployer', async function () {
+			it('Should return true for default admin (deployer)', async function () {
 				const isAdmin = await this.vendorV2.read.isAdmin([this.deployer])
 				expect(isAdmin).to.be.true
 			})
 
-			it('Should return false for non-admin', async function () {
+			it('Should return false for non-admin address', async function () {
 				const isAdmin = await this.vendorV2.read.isAdmin([this.juan])
 				expect(isAdmin).to.be.false
 			})
 		})
 
 		describe('isUser', function () {
-			it('Should return false for address not in USER_ROLE', async function () {
+			it('Should return false for address not added as user', async function () {
 				const isUser = await this.vendorV2.read.isUser([this.juan])
 				expect(isUser).to.be.false
+			})
+
+			it('Should return true for address added as user', async function () {
+				await this.vendorV2.write.addUser([this.juan], {
+					account: this.deployer
+				})
+				const isUser = await this.vendorV2.read.isUser([this.juan])
+				expect(isUser).to.be.true
 			})
 		})
 
@@ -137,22 +143,22 @@ describe('VendorV2', function () {
 				await this.vendorV2.write.addAdmin([this.juan], {
 					account: this.deployer
 				})
-
 				const isAdmin = await this.vendorV2.read.isAdmin([this.juan])
 				expect(isAdmin).to.be.true
 			})
 
 			it('Should revert if non-admin tries to add an admin', async function () {
 				await expect(
-					this.vendorV2.write.addAdmin([this.juan], { account: this.luca })
+					this.vendorV2.write.addAdmin([this.luca], {
+						account: this.luca
+					})
 				).to.be.rejectedWith('Restricted to admins.')
 			})
 
-			it('Should revert if admin adds same address twice', async function () {
+			it('Should revert if admin tries to add existing admin again', async function () {
 				await this.vendorV2.write.addAdmin([this.juan], {
 					account: this.deployer
 				})
-
 				await expect(
 					this.vendorV2.write.addAdmin([this.juan], {
 						account: this.deployer
@@ -162,28 +168,28 @@ describe('VendorV2', function () {
 		})
 
 		describe('addUser', function () {
-			it('Should allow admin to add a user', async function () {
-				await this.vendorV2.write.addUser([this.juan], {
+			it('Should allow admin to add user', async function () {
+				await this.vendorV2.write.addUser([this.luca], {
 					account: this.deployer
 				})
-
-				const isUser = await this.vendorV2.read.isUser([this.juan])
+				const isUser = await this.vendorV2.read.isUser([this.luca])
 				expect(isUser).to.be.true
 			})
 
-			it('Should revert if non-admin tries to add a user', async function () {
+			it('Should revert if non-admin tries to add user', async function () {
 				await expect(
-					this.vendorV2.write.addUser([this.juan], { account: this.luca })
+					this.vendorV2.write.addUser([this.luca], {
+						account: this.luca
+					})
 				).to.be.rejectedWith('Restricted to admins.')
 			})
 
 			it('Should revert if admin tries to add user twice', async function () {
-				await this.vendorV2.write.addUser([this.juan], {
+				await this.vendorV2.write.addUser([this.luca], {
 					account: this.deployer
 				})
-
 				await expect(
-					this.vendorV2.write.addUser([this.juan], {
+					this.vendorV2.write.addUser([this.luca], {
 						account: this.deployer
 					})
 				).to.be.rejectedWith('AccessControl: account')
@@ -192,25 +198,25 @@ describe('VendorV2', function () {
 
 		describe('removeUser', function () {
 			it('Should allow admin to remove user', async function () {
-				await this.vendorV2.write.addUser([this.juan], {
+				await this.vendorV2.write.addUser([this.luca], {
 					account: this.deployer
 				})
-
-				await this.vendorV2.write.removeUser([this.juan], {
+				await this.vendorV2.write.removeUser([this.luca], {
 					account: this.deployer
 				})
-
-				const isUser = await this.vendorV2.read.isUser([this.juan])
+				const isUser = await this.vendorV2.read.isUser([this.luca])
 				expect(isUser).to.be.false
 			})
 
-			it('Should revert if non-admin tries to remove a user', async function () {
+			it('Should revert if non-admin tries to remove user', async function () {
 				await expect(
-					this.vendorV2.write.removeUser([this.juan], { account: this.luca })
+					this.vendorV2.write.removeUser([this.juan], {
+						account: this.luca
+					})
 				).to.be.rejectedWith('Restricted to admins.')
 			})
 
-			it('Should revert if trying to remove non-existent user', async function () {
+			it('Should revert if user does not exist', async function () {
 				await expect(
 					this.vendorV2.write.removeUser([this.juan], {
 						account: this.deployer
@@ -220,21 +226,22 @@ describe('VendorV2', function () {
 		})
 
 		describe('renounceAdmin', function () {
-			it('Should allow an admin to renounce role', async function () {
+			it('Should allow admin to renounce their own admin role', async function () {
 				await this.vendorV2.write.addAdmin([this.juan], {
 					account: this.deployer
 				})
-
-				await this.vendorV2.write.renounceAdmin([], { account: this.juan })
-
+				await this.vendorV2.write.renounceAdmin([], {
+					account: this.juan
+				})
 				const isAdmin = await this.vendorV2.read.isAdmin([this.juan])
 				expect(isAdmin).to.be.false
 			})
 
-			it('Should not throw if a non-admin calls renounceAdmin', async function () {
-				await this.vendorV2.write.renounceAdmin([], { account: this.luca })
-
-				const isAdmin = await this.vendorV2.read.isAdmin([this.luca])
+			it('Should not revert if a non-admin calls renounceAdmin', async function () {
+				await this.vendorV2.write.renounceAdmin([], {
+					account: this.santiago
+				})
+				const isAdmin = await this.vendorV2.read.isAdmin([this.santiago])
 				expect(isAdmin).to.be.false
 			})
 		})

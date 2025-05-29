@@ -111,7 +111,7 @@ const setupContracts: DeployFunction = async function (
 
 	const arrayShared = [
 		{
-			addr: deployer as Address,
+			addr: (await safe.getAddress()) as Address,
 			pcng: 100n
 		}
 	]
@@ -175,30 +175,30 @@ const setupContracts: DeployFunction = async function (
 
 	log(`Inhabit Titi collection added. tx hash: ${txAddTitiCollection}`)
 
-	log('----------------------------------------------------')
-	log('Removing deployer user role...')
+	// log('----------------------------------------------------')
+	// log('Removing deployer user role...')
 
-	const txremoveUser = await vendorV2.write.removeUser(
-		[deployer as Address],
-		gasOption
-	)
+	// const txremoveUser = await vendorV2.write.removeUser(
+	// 	[deployer as Address],
+	// 	gasOption
+	// )
 
-	await publicClient.waitForTransactionReceipt({
-		hash: txremoveUser
-	})
+	// await publicClient.waitForTransactionReceipt({
+	// 	hash: txremoveUser
+	// })
 
-	log(`Deployer admin role revoked. tx hash: ${txremoveUser}`)
+	// log(`Deployer admin role revoked. tx hash: ${txremoveUser}`)
 
-	log('----------------------------------------------------')
-	log('Renouncing deployer admin role...')
+	// log('----------------------------------------------------')
+	// log('Renouncing deployer admin role...')
 
-	const txRenounceAdmin = await vendorV2.write.renounceAdmin(gasOption)
+	// const txRenounceAdmin = await vendorV2.write.renounceAdmin(gasOption)
 
-	await publicClient.waitForTransactionReceipt({
-		hash: txRenounceAdmin
-	})
+	// await publicClient.waitForTransactionReceipt({
+	// 	hash: txRenounceAdmin
+	// })
 
-	log(`Deployer admin role renounced. tx hash: ${txRenounceAdmin}`)
+	// log(`Deployer admin role renounced. tx hash: ${txRenounceAdmin}`)
 }
 
 export default setupContracts
