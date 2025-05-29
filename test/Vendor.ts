@@ -576,6 +576,392 @@ describe('VendorV2', function () {
 		})
 	})
 
+	describe.skip('Group', function () {
+		const TEN_TOKENS: bigint = parseEther('10')
+		const ONE_ETH: bigint = parseEther('1')
+		const P5000: bigint = 5000n
+		const P2500: bigint = 2500n
+		const P1250: bigint = 1250n
+
+		beforeEach(async function () {
+			const fixture = await deployFixture()
+			Object.assign(this, fixture)
+
+			await this.vendorV2.write.addAdmin([this.luca], {
+				account: this.deployer
+			})
+
+			await this.mockcUSD.write.mint([this.vendorV2.address, TEN_TOKENS], {
+				account: this.deployer
+			})
+
+			const wallet = await viem.getWalletClient(this.deployer)
+			await wallet.sendTransaction({
+				to: this.vendorV2.address,
+				value: ONE_ETH
+			})
+		})
+
+		describe('addGroup', function () {
+			it('Should revert if group name is empty', async function () {
+				await expect(
+					this.vendorV2.write.addGroup(
+						['', true, [{ addr: this.juan, pcng: 10000n }]],
+						{
+							account: this.deployer
+						}
+					)
+				).to.be.rejectedWith('AddGroup: Group Already Stored')
+			})
+
+			it('Should revert if shared array is empty', async function () {
+				await expect(
+					this.vendorV2.write.addGroup(['VOID', true, []], {
+						account: this.luca
+					})
+				).to.be.rejectedWith('AddGroup: Empty ArrayShared')
+			})
+
+			it('Should revert if non-admin tries to add a group', async function () {
+				const shared = [{ addr: this.juan, pcng: P5000 }]
+				await expect(
+					this.vendorV2.write.addGroup(['TEAM', true, shared], {
+						account: this.juan
+					})
+				).to.be.rejectedWith('Restricted to admins.')
+			})
+
+			it('Should revert if admin tries to add an existing group', async function () {
+				const shared = [{ addr: this.juan, pcng: P5000 }]
+				await this.vendorV2.write.addGroup(['TEAM', true, shared], {
+					account: this.luca
+				})
+
+				await expect(
+					this.vendorV2.write.addGroup(['TEAM', true, shared], {
+						account: this.luca
+					})
+				).to.be.rejectedWith('AddGroup: Group Already Stored')
+			})
+
+			it('Should revert if total percentage exceeds 100 %', async function () {
+				const shared = [{ addr: this.juan, pcng: 12000n }]
+				await expect(
+					this.vendorV2.write.addGroup(['ODD', true, shared], {
+						account: this.luca
+					})
+				).to.be.rejectedWith('AddGroup: The Taximum Percentage Is Exceeded')
+			})
+
+			it('Should allow admin to add a valid group', async function () {
+				const shared = [{ addr: this.juan, pcng: P5000 }]
+				await this.vendorV2.write.addGroup(['TEAM', true, shared], {
+					account: this.luca
+				})
+
+				const g = await this.vendorV2.read.getGroup(['TEAM'])
+				expect(g.group).to.equal('TEAM')
+				expect(g.state).to.be.true
+				expect(g.arrayShared.length).to.equal(1)
+			})
+		})
+
+		describe('updateGroupStatus', function () {
+			beforeEach(async function () {
+				await this.vendorV2.write.addGroup(
+					['SWITCH', true, [{ addr: this.juan, pcng: P5000 }]],
+					{ account: this.deployer }
+				)
+			})
+
+			it('Should revert if non-admin tries to update status', async function () {
+				await expect(
+					this.vendorV2.write.updateGroupStatus(['SWITCH', false], {
+						account: this.juan
+					})
+				).to.be.rejectedWith('Restricted to admins.')
+			})
+
+			it('Should allow admin to toggle group status', async function () {
+				await this.vendorV2.write.updateGroupStatus(['SWITCH', false], {
+					account: this.luca
+				})
+				const g = await this.vendorV2.read.getGroup(['SWITCH'])
+				expect(g.state).to.be.false
+			})
+
+			it('Should revert if group does not exist', async function () {
+				await expect(
+					this.vendorV2.write.updateGroupStatus(['NOEXIST', true], {
+						account: this.deployer
+					})
+				).to.be.rejected
+			})
+		})
+
+		describe('shared management', function () {
+			// beforeEach(async function () {
+			// 	await this.vendorV2.write.addGroup(
+			// 		['CREW', true, [{ addr: this.juan, pcng: P2500 }]],
+			// 		{ account: this.deployer }
+			// 	)
+			// })
+
+			it('Should revert if group does not exist when adding shared', async function () {
+				await expect(
+					this.vendorV2.write.addSharedOfGroup(
+						['NONE', { addr: this.santiago, pcng: P1250 }],
+						{ account: this.luca }
+					)
+				).to.be.rejectedWith('addSharedOfGroup: Group Not Already Stored')
+			})
+
+			it('Should revert if adding shared exceeds 100 % total', async function () {
+				await expect(
+					this.vendorV2.write.addSharedOfGroup(
+						['CREW', { addr: this.santiago, pcng: 8000n }],
+						{ account: this.luca }
+					)
+				).to.be.rejectedWith(
+					'addSharedOfGroup: The Taximum Percentage Is Exceeded'
+				)
+			})
+
+			it('Should allow admin to add shared to group', async function () {
+				await this.vendorV2.write.addSharedOfGroup(
+					['CREW', { addr: this.santiago, pcng: P1250 }],
+					{ account: this.luca }
+				)
+				const g = await this.vendorV2.read.getGroup(['CREW'])
+				expect(g.arrayShared.length).to.equal(2)
+			})
+
+			it('Should revert if index is out of bounds when removing shared', async function () {
+				await expect(
+					this.vendorV2.write.removeSharedOfGroup(['CREW', 3], {
+						account: this.luca
+					})
+				).to.be.rejectedWith('Index out of bounds')
+			})
+
+			it('Should allow admin to remove shared from group', async function () {
+				await this.vendorV2.write.removeSharedOfGroup(['CREW', 0], {
+					account: this.luca
+				})
+				const g = await this.vendorV2.read.getGroup(['CREW'])
+				expect(g.arrayShared.length).to.equal(0)
+			})
+
+			it('Should revert if updateSharedOfGroup idx out of range', async function () {
+				await expect(
+					this.vendorV2.write.updateSharedOfGroup(
+						['CREW', 3, 0, { addr: this.santiago, pcng: P1250 }],
+						{ account: this.luca }
+					)
+				).to.be.rejectedWith('updateSharedOfGroup: Index out of bounds')
+			})
+
+			it('Should revert if group does not exist when updating shared', async function () {
+				await expect(
+					this.vendorV2.write.updateSharedOfGroup(
+						['MISSING', 1, 0, { addr: this.santiago, pcng: P1250 }],
+						{ account: this.luca }
+					)
+				).to.be.rejected
+			})
+
+			it('Should allow admin to update shared addr and percentage', async function () {
+				await this.vendorV2.write.addSharedOfGroup(
+					['CREW', { addr: this.santiago, pcng: P1250 }],
+					{ account: this.luca }
+				)
+
+				await this.vendorV2.write.updateSharedOfGroup(
+					['CREW', 2, 1, { addr: this.santiago, pcng: P5000 }],
+					{ account: this.deployer }
+				)
+
+				const g: GroupStruct = await this.vendorV2.read.getGroup(['CREW'])
+				expect(g.arrayShared[1].addr).to.equal(this.santiago)
+				expect(g.arrayShared[1].pcng).to.equal(P5000)
+			})
+		})
+
+		describe('calculateFee', function () {
+			it('Should return (amount * pct / 10000)', async function () {
+				const fee = await this.vendorV2.read.calculateFee([10000n, 2500])
+				expect(fee).to.equal(2500n)
+			})
+
+			it('Should return 0 when porcentaje is 0', async function () {
+				const fee = await this.vendorV2.read.calculateFee([10000n, 0])
+				expect(fee).to.equal(0n)
+			})
+
+			it('Should return 0 when amount is 0', async function () {
+				const fee = await this.vendorV2.read.calculateFee([0n, 5000])
+				expect(fee).to.equal(0n)
+			})
+		})
+
+		describe('distribution', function () {
+			beforeEach(async function () {
+				await this.vendorV2.write.addGroup(
+					[
+						'PAY',
+						true,
+						[
+							{ addr: this.juan, pcng: 6000 },
+							{ addr: this.santiago, pcng: 4000 }
+						]
+					],
+					{ account: this.deployer }
+				)
+			})
+
+			it('Should revert if group does not exist', async function () {
+				await expect(
+					this.vendorV2.write.distribution(
+						['NOPE', ONE_ETH, true, zeroAddress],
+						{ account: this.deployer }
+					)
+				).to.be.rejectedWith('distribution: Group Not Already Stored')
+			})
+
+			it('Should revert if group is inactive', async function () {
+				await this.vendorV2.write.updateGroupStatus(['PAY', false], {
+					account: this.deployer
+				})
+				await expect(
+					this.vendorV2.write.distribution(
+						['PAY', ONE_ETH, true, zeroAddress],
+						{ account: this.deployer }
+					)
+				).to.be.rejectedWith('distribution: Group Not Already Available')
+			})
+
+			it('Should revert if contract balance is insufficient', async function () {
+				await expect(
+					this.vendorV2.write.distribution(
+						['PAY', ONE_ETH * 2n, true, zeroAddress],
+						{ account: this.deployer }
+					)
+				).to.be.rejectedWith('distribution: Not enough balance')
+			})
+
+			it('Should revert if shared percentages sum < 100 %', async function () {
+				await this.vendorV2.write.addGroup(
+					['LOW', true, [{ addr: this.juan, pcng: 9000 }]],
+					{ account: this.deployer }
+				)
+
+				await expect(
+					this.vendorV2.write.distribution(
+						['LOW', ONE_ETH, true, zeroAddress],
+						{
+							account: this.deployer
+						}
+					)
+				).to.be.rejectedWith('distribution: percentage sum mismatch')
+			})
+
+			it('Should revert if group has zero shared', async function () {
+				await this.vendorV2.write.addGroup(['EMPTY', true, []], {
+					account: this.deployer
+				})
+
+				await expect(
+					this.vendorV2.write.distribution(
+						['EMPTY', ONE_ETH, true, zeroAddress],
+						{ account: this.deployer }
+					)
+				).to.be.rejectedWith('distribution: No Shared found')
+			})
+
+			it('Should distribute ETH among beneficiaries', async function () {
+				const pub = await viem.getPublicClient()
+				const j0 = await pub.getBalance({ address: this.juan })
+				const s0 = await pub.getBalance({ address: this.santiago })
+
+				const tx = await this.vendorV2.write.distribution(
+					['PAY', ONE_ETH, true, zeroAddress],
+					{ account: this.deployer }
+				)
+
+				const logs = await this.vendorV2.getEvents.Distributed({
+					fromBlock: tx.blockNumber
+				})
+				expect(logs.length).to.equal(2)
+
+				const j1 = await pub.getBalance({ address: this.juan })
+				const s1 = await pub.getBalance({ address: this.santiago })
+
+				expect(j1).to.equal(j0 + (ONE_ETH * 6000n) / 10000n)
+				expect(s1).to.equal(s0 + (ONE_ETH * 4000n) / 10000n)
+			})
+
+			it('Should distribute ERC-20 tokens among beneficiaries', async function () {
+				const j0 = await this.mockcUSD.read.balanceOf([this.juan])
+				const s0 = await this.mockcUSD.read.balanceOf([this.santiago])
+
+				await this.vendorV2.write.distribution(
+					['PAY', TEN_TOKENS, false, this.mockcUSD.address],
+					{ account: this.deployer }
+				)
+
+				const j1 = await this.mockcUSD.read.balanceOf([this.juan])
+				const s1 = await this.mockcUSD.read.balanceOf([this.santiago])
+
+				expect(j1).to.equal(j0 + (TEN_TOKENS * 6000n) / 10000n)
+				expect(s1).to.equal(s0 + (TEN_TOKENS * 4000n) / 10000n)
+			})
+
+			it('Should revert when token transfer fails (sendToken)', async function () {
+				/* deploy mock token that always fails on transfer */
+				const MockFail = await viem.deployContract('MockErc20Fail', [])
+				await MockFail.write.mint([this.vendorV2.address, TEN_TOKENS], {
+					account: this.deployer
+				})
+
+				await this.vendorV2.write.addGroup(
+					['FAIL', true, [{ addr: this.juan, pcng: 10000 }]],
+					{ account: this.deployer }
+				)
+
+				await expect(
+					this.vendorV2.write.distribution(
+						['FAIL', TEN_TOKENS, false, MockFail.address],
+						{ account: this.deployer }
+					)
+				).to.be.rejectedWith('distribution: token transfer failed')
+			})
+		})
+
+		describe('getGroupListPaginated', function () {
+			beforeEach(async function () {
+				for (let i = 0; i < 5; i++) {
+					await this.vendorV2.write.addGroup(
+						[`G${i}`, true, [{ addr: this.juan, pcng: P2500 }]],
+						{ account: this.deployer }
+					)
+				}
+			})
+
+			it('Should revert if range is invalid', async function () {
+				await expect(
+					this.vendorV2.read.getGroupListPaginated([3n, 2n])
+				).to.be.rejectedWith('Invalid range')
+			})
+
+			it('Should return paginated group list', async function () {
+				const list = await this.vendorV2.read.getGroupListPaginated([1n, 4n])
+				expect(list.length).to.equal(3)
+				expect(list[0].group).to.equal('G1')
+				expect(list[2].group).to.equal('G3')
+			})
+		})
+	})
+
 	describe.skip('CollectioV2', function () {
 		const price: bigint = 500000000n // $5.00 USD
 		const newPrice: bigint = 600000000n // $6.00 USD
@@ -750,352 +1136,6 @@ describe('VendorV2', function () {
 					expect(collection).to.be.an('object')
 					expect(collection.addr).to.equal(this.mockcUSD.address)
 				})
-			})
-		})
-	})
-
-	describe.skip('Group', function () {
-		const TEN_TOKENS: bigint = parseEther('10') // 10 tokens (wei)
-		const ONE_ETH: bigint = parseEther('1') // 1 ETH   (wei)
-		const P5000: bigint = 5000n // 50 %
-		const P2500: bigint = 2500n // 25 %
-		const P1250: bigint = 1250n // 12.5 %
-
-		beforeEach(async function () {
-			const fixture = await deployFixture()
-			Object.assign(this, fixture)
-
-			await this.vendorV2.write.addAdmin([this.luca], {
-				account: this.deployer
-			})
-
-			await this.mockcUSD.write.mint([this.vendorV2.address, TEN_TOKENS], {
-				account: this.deployer
-			})
-
-			const wallet = await viem.getWalletClient(this.deployer)
-			await wallet.sendTransaction({
-				to: this.vendorV2.address,
-				value: ONE_ETH
-			})
-		})
-
-		describe('addGroup', function () {
-			it('Should revert if shared array is empty', async function () {
-				await expect(
-					this.vendorV2.write.addGroup(['VOID', true, []], {
-						account: this.luca
-					})
-				).to.be.rejectedWith('AddGroup: Empty ArrayShared')
-			})
-
-			it('Should revert if non-admin tries to add a group', async function () {
-				const shared = [{ addr: this.juan, pcng: P5000 }]
-				await expect(
-					this.vendorV2.write.addGroup(['TEAM', true, shared], {
-						account: this.juan
-					})
-				).to.be.rejectedWith('Restricted to admins.')
-			})
-
-			it('Should revert if admin tries to add an existing group', async function () {
-				const shared = [{ addr: this.juan, pcng: P5000 }]
-				await this.vendorV2.write.addGroup(['TEAM', true, shared], {
-					account: this.luca
-				})
-
-				await expect(
-					this.vendorV2.write.addGroup(['TEAM', true, shared], {
-						account: this.luca
-					})
-				).to.be.rejectedWith('AddGroup: Group Already Stored')
-			})
-
-			it('Should revert if total percentage exceeds 100 %', async function () {
-				const shared = [{ addr: this.juan, pcng: 12000n }]
-				await expect(
-					this.vendorV2.write.addGroup(['ODD', true, shared], {
-						account: this.luca
-					})
-				).to.be.rejectedWith('AddGroup: The Taximum Percentage Is Exceeded')
-			})
-
-			it('Should allow admin to add a valid group', async function () {
-				const shared = [{ addr: this.juan, pcng: P5000 }]
-				await this.vendorV2.write.addGroup(['TEAM', true, shared], {
-					account: this.luca
-				})
-
-				const g = await this.vendorV2.read.getGroup(['TEAM'])
-				expect(g.group).to.equal('TEAM')
-				expect(g.state).to.be.true
-				expect(g.arrayShared.length).to.equal(1)
-			})
-		})
-
-		describe('updateGroupStatus', function () {
-			beforeEach(async function () {
-				await this.vendorV2.write.addGroup(
-					['SWITCH', true, [{ addr: this.juan, pcng: P5000 }]],
-					{ account: this.deployer }
-				)
-			})
-
-			it('Should revert if non-admin tries to update status', async function () {
-				await expect(
-					this.vendorV2.write.updateGroupStatus(['SWITCH', false], {
-						account: this.juan
-					})
-				).to.be.rejectedWith('Restricted to admins.')
-			})
-
-			it('Should allow admin to toggle group status', async function () {
-				await this.vendorV2.write.updateGroupStatus(['SWITCH', false], {
-					account: this.luca
-				})
-				const g = await this.vendorV2.read.getGroup(['SWITCH'])
-				expect(g.state).to.be.false
-			})
-		})
-
-		describe('shared management', function () {
-			beforeEach(async function () {
-				await this.vendorV2.write.addGroup(
-					['CREW', true, [{ addr: this.juan, pcng: P2500 }]],
-					{ account: this.deployer }
-				)
-			})
-
-			it('Should revert if group does not exist when adding shared', async function () {
-				await expect(
-					this.vendorV2.write.addSharedOfGroup(
-						['NONE', { addr: this.santiago, pcng: P1250 }],
-						{ account: this.luca }
-					)
-				).to.be.rejectedWith('addSharedOfGroup: Group Not Already Stored')
-			})
-
-			it('Should revert if adding shared exceeds 100 % total', async function () {
-				await expect(
-					this.vendorV2.write.addSharedOfGroup(
-						['CREW', { addr: this.santiago, pcng: 8000n }],
-						{ account: this.luca }
-					)
-				).to.be.rejectedWith(
-					'addSharedOfGroup: The Taximum Percentage Is Exceeded'
-				)
-			})
-
-			it('Should allow admin to add shared to group', async function () {
-				await this.vendorV2.write.addSharedOfGroup(
-					['CREW', { addr: this.santiago, pcng: P1250 }],
-					{ account: this.luca }
-				)
-				const g = await this.vendorV2.read.getGroup(['CREW'])
-				expect(g.arrayShared.length).to.equal(2)
-			})
-
-			it('Should revert if index is out of bounds when removing shared', async function () {
-				await expect(
-					this.vendorV2.write.removeSharedOfGroup(['CREW', 3], {
-						account: this.luca
-					})
-				).to.be.rejectedWith('Index out of bounds')
-			})
-
-			it('Should allow admin to remove shared from group', async function () {
-				await this.vendorV2.write.removeSharedOfGroup(['CREW', 0], {
-					account: this.luca
-				})
-				const g = await this.vendorV2.read.getGroup(['CREW'])
-				expect(g.arrayShared.length).to.equal(0)
-			})
-
-			it('Should revert if updateSharedOfGroup idx out of range', async function () {
-				await expect(
-					this.vendorV2.write.updateSharedOfGroup(
-						['CREW', 3, 0, { addr: this.santiago, pcng: P1250 }],
-						{ account: this.luca }
-					)
-				).to.be.rejectedWith('updateSharedOfGroup: Index out of bounds')
-			})
-
-			it('Should allow admin to update shared addr and percentage', async function () {
-				await this.vendorV2.write.addSharedOfGroup(
-					['CREW', { addr: this.santiago, pcng: P1250 }],
-					{ account: this.luca }
-				)
-
-				await this.vendorV2.write.updateSharedOfGroup(
-					['CREW', 2, 1, { addr: this.santiago, pcng: P5000 }],
-					{ account: this.deployer }
-				)
-
-				const g: GroupStruct = await this.vendorV2.read.getGroup(['CREW'])
-				expect(g.arrayShared[1].addr).to.equal(this.santiago)
-				expect(g.arrayShared[1].pcng).to.equal(P5000)
-			})
-		})
-
-		it('Should return (amount * pct / 10000) in calculateFee', async function () {
-			const fee = await this.vendorV2.read.calculateFee([10000n, 2500])
-			expect(fee).to.equal(2500n)
-		})
-
-		describe('distribution', function () {
-			beforeEach(async function () {
-				await this.vendorV2.write.addGroup(
-					[
-						'PAY',
-						true,
-						[
-							{ addr: this.juan, pcng: 6000 },
-							{ addr: this.santiago, pcng: 4000 }
-						]
-					],
-					{ account: this.deployer }
-				)
-			})
-
-			it('Should revert if group does not exist', async function () {
-				await expect(
-					this.vendorV2.write.distribution(
-						['NOPE', ONE_ETH, true, zeroAddress],
-						{ account: this.deployer }
-					)
-				).to.be.rejectedWith('distribution: Group Not Already Stored')
-			})
-
-			it('Should revert if group is inactive', async function () {
-				await this.vendorV2.write.updateGroupStatus(['PAY', false], {
-					account: this.deployer
-				})
-				await expect(
-					this.vendorV2.write.distribution(
-						['PAY', ONE_ETH, true, zeroAddress],
-						{ account: this.deployer }
-					)
-				).to.be.rejectedWith('distribution: Group Not Already Available')
-			})
-
-			it('Should revert if contract balance is insufficient', async function () {
-				await expect(
-					this.vendorV2.write.distribution(
-						['PAY', ONE_ETH * 2n, true, zeroAddress],
-						{ account: this.deployer }
-					)
-				).to.be.rejectedWith('distribution: Not enough balance')
-			})
-
-			it('Should revert if shared percentages sum < 100 %', async function () {
-				await this.vendorV2.write.addGroup(
-					['LOW', true, [{ addr: this.juan, pcng: 9000 }]],
-					{ account: this.deployer }
-				)
-
-				await expect(
-					this.vendorV2.write.distribution(
-						['LOW', ONE_ETH, true, zeroAddress],
-						{
-							account: this.deployer
-						}
-					)
-				).to.be.rejectedWith('distribution: percentage sum mismatch')
-			})
-
-			it('Should revert if group has zero shared', async function () {
-				await this.vendorV2.write.addGroup(['EMPTY', true, []], {
-					account: this.deployer
-				})
-
-				await expect(
-					this.vendorV2.write.distribution(
-						['EMPTY', ONE_ETH, true, zeroAddress],
-						{ account: this.deployer }
-					)
-				).to.be.rejectedWith('distribution: No Shared found')
-			})
-
-			it('Should distribute ETH among beneficiaries', async function () {
-				const pub = await viem.getPublicClient()
-				const j0 = await pub.getBalance({ address: this.juan })
-				const s0 = await pub.getBalance({ address: this.santiago })
-
-				const tx = await this.vendorV2.write.distribution(
-					['PAY', ONE_ETH, true, zeroAddress],
-					{ account: this.deployer }
-				)
-
-				const logs = await this.vendorV2.getEvents.Distributed({
-					fromBlock: tx.blockNumber
-				})
-				expect(logs.length).to.equal(2)
-
-				const j1 = await pub.getBalance({ address: this.juan })
-				const s1 = await pub.getBalance({ address: this.santiago })
-
-				expect(j1).to.equal(j0 + (ONE_ETH * 6000n) / 10000n)
-				expect(s1).to.equal(s0 + (ONE_ETH * 4000n) / 10000n)
-			})
-
-			it('Should distribute ERC-20 tokens among beneficiaries', async function () {
-				const j0 = await this.mockcUSD.read.balanceOf([this.juan])
-				const s0 = await this.mockcUSD.read.balanceOf([this.santiago])
-
-				await this.vendorV2.write.distribution(
-					['PAY', TEN_TOKENS, false, this.mockcUSD.address],
-					{ account: this.deployer }
-				)
-
-				const j1 = await this.mockcUSD.read.balanceOf([this.juan])
-				const s1 = await this.mockcUSD.read.balanceOf([this.santiago])
-
-				expect(j1).to.equal(j0 + (TEN_TOKENS * 6000n) / 10000n)
-				expect(s1).to.equal(s0 + (TEN_TOKENS * 4000n) / 10000n)
-			})
-
-			it('Should revert when token transfer fails (sendToken)', async function () {
-				/* deploy mock token that always fails on transfer */
-				const MockFail = await viem.deployContract('MockErc20Fail', [])
-				await MockFail.write.mint([this.vendorV2.address, TEN_TOKENS], {
-					account: this.deployer
-				})
-
-				await this.vendorV2.write.addGroup(
-					['FAIL', true, [{ addr: this.juan, pcng: 10000 }]],
-					{ account: this.deployer }
-				)
-
-				await expect(
-					this.vendorV2.write.distribution(
-						['FAIL', TEN_TOKENS, false, MockFail.address],
-						{ account: this.deployer }
-					)
-				).to.be.rejectedWith('distribution: token transfer failed')
-			})
-		})
-
-		describe('getGroupListPaginated', function () {
-			beforeEach(async function () {
-				for (let i = 0; i < 5; i++) {
-					await this.vendorV2.write.addGroup(
-						[`G${i}`, true, [{ addr: this.juan, pcng: P2500 }]],
-						{ account: this.deployer }
-					)
-				}
-			})
-
-			it('Should revert if range is invalid', async function () {
-				await expect(
-					this.vendorV2.read.getGroupListPaginated([3n, 2n])
-				).to.be.rejectedWith('Invalid range')
-			})
-
-			it('Should return paginated group list', async function () {
-				const list = await this.vendorV2.read.getGroupListPaginated([1n, 4n])
-				expect(list.length).to.equal(3)
-				expect(list[0].group).to.equal('G1')
-				expect(list[2].group).to.equal('G3')
 			})
 		})
 	})
