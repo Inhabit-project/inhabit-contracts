@@ -6,7 +6,7 @@ import { Address, GetContractReturnType, parseEther, zeroAddress } from 'viem'
 
 import { ABIS } from '@/config/abi'
 import { TEST_TOKEN_ONE, TEST_TOKEN_TWO } from '@/config/constants'
-import { GroupStruct } from '@/models'
+import { CollectionStruct, GroupStruct } from '@/models'
 chai.use(chaiBigint)
 
 interface FixtureReturn {
@@ -962,7 +962,7 @@ describe('VendorV2', function () {
 		})
 	})
 
-	describe.skip('CollectioV2', function () {
+	describe.skip('CollectionV2', function () {
 		const price: bigint = 500000000n // $5.00 USD
 		const newPrice: bigint = 600000000n // $6.00 USD
 
@@ -986,7 +986,7 @@ describe('VendorV2', function () {
 		})
 
 		describe('addCollection', function () {
-			it('Should revert if user tries to add a collection existing', async function () {
+			it('Should revert if user tries to add a collection that already exists', async function () {
 				await this.vendorV2.write.addCollection(
 					[this.mockcUSD.address, price, true],
 					{ account: this.luca }
@@ -1000,7 +1000,7 @@ describe('VendorV2', function () {
 				).to.be.rejectedWith('Collection already stored')
 			})
 
-			it('Should revert if user tries to add a collection with zero address', async function () {
+			it('Should revert if address is zero', async function () {
 				await expect(
 					this.vendorV2.write.addCollection([zeroAddress, price, true], {
 						account: this.luca
@@ -1008,7 +1008,7 @@ describe('VendorV2', function () {
 				).to.be.rejectedWith('Invalid collection address')
 			})
 
-			it('Should revert if user tries to add a collection with zero price', async function () {
+			it('Should revert if price is zero', async function () {
 				await expect(
 					this.vendorV2.write.addCollection([this.mockcUSD.address, 0n, true], {
 						account: this.luca
@@ -1016,7 +1016,7 @@ describe('VendorV2', function () {
 				).to.be.rejectedWith('Price must be greater than zero')
 			})
 
-			it('Should allow user to add a collection', async function () {
+			it('Should allow user to add a valid collection', async function () {
 				await this.vendorV2.write.addCollection(
 					[this.mockcUSD.address, price, true],
 					{ account: this.luca }
@@ -1026,14 +1026,13 @@ describe('VendorV2', function () {
 					this.mockcUSD.address
 				])
 
-				expect(collection).to.be.an('object')
 				expect(collection.addr).to.equal(this.mockcUSD.address)
 				expect(collection.price).to.equal(price)
 				expect(collection.active).to.be.true
 			})
 		})
 
-		describe('add collection to test next functions', function () {
+		describe('updateCollection', function () {
 			beforeEach(async function () {
 				await this.vendorV2.write.addCollection(
 					[this.mockcUSD.address, price, true],
@@ -1041,101 +1040,101 @@ describe('VendorV2', function () {
 				)
 			})
 
-			describe('updateCollection', function () {
-				it('Should revert if user tries to update a collection with id that does not exist', async function () {
-					await expect(
-						this.vendorV2.write.updateCollection(
-							[666, 1, TEST_TOKEN_ONE, price, true],
-							{
-								account: this.luca
-							}
-						)
-					).to.be.rejectedWith('Invalid collection address')
-				})
-
-				it('Should revert if user tries to update with an error type', async function () {
-					await expect(
-						this.vendorV2.write.updateCollection(
-							[1, 0, TEST_TOKEN_ONE, price, true],
-							{
-								account: this.juan
-							}
-						)
-					).to.be.rejectedWith('Error type')
-				})
-
-				it('Should revert if user tries to update a collection that does not exist', async function () {
-					await expect(
-						this.vendorV2.write.updateCollection(
-							[1, 1, zeroAddress, price, true],
-							{
-								account: this.luca
-							}
-						)
-					).to.be.rejectedWith('Invalid collection address')
-
-					await expect(
-						this.vendorV2.write.updateCollection(
-							[1, 1, TEST_TOKEN_TWO, price, true],
-							{
-								account: this.luca
-							}
-						)
-					).to.be.rejectedWith('Invalid collection address')
-				})
-
-				it('Should allow user to update a collection', async function () {
-					await this.vendorV2.write.updateCollection(
-						[0, 1, TEST_TOKEN_ONE, newPrice, false],
+			it('Should revert if user tries to update a non-existent collection', async function () {
+				await expect(
+					this.vendorV2.write.updateCollection(
+						[666, 1, TEST_TOKEN_ONE, price, true],
 						{ account: this.luca }
 					)
-
-					await this.vendorV2.write.updateCollection(
-						[0, 2, TEST_TOKEN_ONE, newPrice, false],
-						{ account: this.luca }
-					)
-
-					await this.vendorV2.write.updateCollection(
-						[0, 3, TEST_TOKEN_ONE, newPrice, false],
-						{ account: this.luca }
-					)
-
-					const updated = await this.vendorV2.read.getCollectionByAddr([
-						this.mockcUSD.address
-					])
-
-					expect(updated.price).to.equal(newPrice)
-					expect(updated.addr).to.equal(TEST_TOKEN_ONE)
-					expect(updated.active).to.be.false
-				})
+				).to.be.rejectedWith('Invalid collection address')
 			})
 
-			describe('collectionList', function () {
-				it('Should show collections list', async function () {
-					const collections = await this.vendorV2.read.collectionList()
-					expect(collections).to.be.an('array').that.is.not.empty
-				})
+			it('Should revert if type is invalid', async function () {
+				await expect(
+					this.vendorV2.write.updateCollection(
+						[0, 0, TEST_TOKEN_ONE, price, true],
+						{ account: this.luca }
+					)
+				).to.be.rejectedWith('Error type')
 			})
 
-			describe('getCollectionByAddr', function () {
-				it('Should revert if collection does not exist', async function () {
-					await expect(
-						this.vendorV2.read.getCollectionByAddr([zeroAddress])
-					).to.be.rejectedWith('Invalid Collection')
+			it('Should allow user to update price', async function () {
+				await this.vendorV2.write.updateCollection(
+					[0, 1, TEST_TOKEN_ONE, newPrice, false],
+					{ account: this.luca }
+				)
 
-					await expect(
-						this.vendorV2.read.getCollectionByAddr([TEST_TOKEN_TWO])
-					).to.be.rejectedWith('Invalid Collection')
-				})
+				const collection = await this.vendorV2.read.getCollectionByAddr([
+					this.mockcUSD.address
+				])
+				expect(collection.price).to.equal(newPrice)
+			})
 
-				it('Should return collection by saved collection address', async function () {
-					const collection = await this.vendorV2.read.getCollectionByAddr([
-						this.mockcUSD.address
-					])
+			it('Should allow user to update address', async function () {
+				await this.vendorV2.write.updateCollection(
+					[0, 2, TEST_TOKEN_ONE, newPrice, false],
+					{ account: this.luca }
+				)
 
-					expect(collection).to.be.an('object')
-					expect(collection.addr).to.equal(this.mockcUSD.address)
-				})
+				const collection = await this.vendorV2.read.getCollectionByAddr([
+					TEST_TOKEN_ONE
+				])
+				expect(collection.addr).to.equal(TEST_TOKEN_ONE)
+			})
+
+			it('Should allow user to update status', async function () {
+				await this.vendorV2.write.updateCollection(
+					[0, 3, TEST_TOKEN_ONE, newPrice, false],
+					{ account: this.luca }
+				)
+
+				const updated = await this.vendorV2.read.getCollectionByAddr([
+					TEST_TOKEN_ONE
+				])
+				expect(updated.active).to.be.false
+			})
+		})
+
+		describe('collectionList', function () {
+			it('Should return the list of collections', async function () {
+				await this.vendorV2.write.addCollection(
+					[this.mockcUSD.address, price, true],
+					{ account: this.luca }
+				)
+
+				const collections = await this.vendorV2.read.collectionList()
+				expect(collections).to.be.an('array').that.is.not.empty
+				const found = collections.find(
+					(c: CollectionStruct) => c.addr === this.mockcUSD.address
+				)
+				expect(found).to.not.be.undefined
+				expect(found.price).to.equal(price)
+			})
+		})
+
+		describe('getCollectionByAddr', function () {
+			it('Should revert if collection does not exist', async function () {
+				await expect(
+					this.vendorV2.read.getCollectionByAddr([zeroAddress])
+				).to.be.rejectedWith('Invalid Collection')
+
+				await expect(
+					this.vendorV2.read.getCollectionByAddr([TEST_TOKEN_TWO])
+				).to.be.rejectedWith('Invalid Collection')
+			})
+
+			it('Should return correct collection data by address', async function () {
+				await this.vendorV2.write.addCollection(
+					[this.mockcUSD.address, price, true],
+					{ account: this.luca }
+				)
+
+				const collection = await this.vendorV2.read.getCollectionByAddr([
+					this.mockcUSD.address
+				])
+				expect(collection.addr).to.equal(this.mockcUSD.address)
+				expect(collection.price).to.equal(price)
+				expect(collection.active).to.be.true
 			})
 		})
 	})
