@@ -108,7 +108,8 @@ const config: HardhatUserConfig = {
 	},
 
 	gasReporter: {
-		enabled: true,
+		enabled: GAS_REPORT,
+		coinmarketcap: COINMARKETCAP_API_KEY || '',
 		currency: 'USD',
 		currencyDisplayPrecision: 5,
 		token: 'CELO',
