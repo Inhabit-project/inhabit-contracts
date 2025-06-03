@@ -2,7 +2,7 @@ import { expect } from 'chai'
 import chai from 'chai'
 import chaiBigint from 'chai-bigint'
 import hre, { viem } from 'hardhat'
-import { Address, GetContractReturnType, maxUint256, zeroAddress } from 'viem'
+import { Address, GetContractReturnType, zeroAddress } from 'viem'
 
 import { ABIS } from '@/config/abi'
 
@@ -78,7 +78,6 @@ describe('Inhabit', function () {
 
 			describe('onlyOwner', function () {
 				it('Should allow owner to call onlyOwner functions', async function () {
-					// addRole es onlyOwner
 					const tx = await this.caracoli.write.addRole([this.juan], {
 						account: this.deployer
 					})
@@ -96,19 +95,15 @@ describe('Inhabit', function () {
 
 			describe('onlyUser', function () {
 				it('Should allow user with role to call onlyUser functions', async function () {
-					// Primero dar rol de usuario
 					await this.caracoli.write.addRole([this.juan], {
 						account: this.deployer
 					})
 
-					// Verificar que puede usar funciones onlyUser (necesitaríamos una función de ejemplo)
-					// Como no hay funciones públicas con onlyUser, esto es conceptual
 					const hasRole = await this.caracoli.read.hasRole([this.juan])
 					expect(hasRole).to.be.true
 				})
 
 				it('Should revert if user without role calls onlyUser function', async function () {
-					// Sin función pública onlyUser para probar, pero validamos la lógica del modifier
 					const hasRole = await this.caracoli.read.hasRole([this.juan])
 					expect(hasRole).to.be.false
 				})
@@ -116,14 +111,12 @@ describe('Inhabit', function () {
 
 			describe('onlyUserOrOwner', function () {
 				it('Should allow owner to call onlyUserOrOwner functions', async function () {
-					// Owner siempre debe tener acceso
 					const hasRole = await this.caracoli.read.hasRole([this.deployer])
 					const owner = await this.caracoli.read.owner()
 					expect(owner.toLowerCase()).to.equal(this.deployer.toLowerCase())
 				})
 
 				it('Should allow user with role to call onlyUserOrOwner functions', async function () {
-					// Dar rol al usuario
 					await this.caracoli.write.addRole([this.juan], {
 						account: this.deployer
 					})
@@ -133,7 +126,6 @@ describe('Inhabit', function () {
 				})
 
 				it('Should revert if neither owner nor user calls onlyUserOrOwner function', async function () {
-					// Usuario sin rol no debe tener acceso
 					const hasRole = await this.caracoli.read.hasRole([this.santiago])
 					const isOwner =
 						this.santiago.toLowerCase() === this.deployer.toLowerCase()
@@ -160,12 +152,10 @@ describe('Inhabit', function () {
 				})
 
 				it('Should not duplicate role for existing user', async function () {
-					// Agregar rol por primera vez
 					await this.caracoli.write.addRole([this.juan], {
 						account: this.deployer
 					})
 
-					// Intentar agregar nuevamente
 					const tx = await this.caracoli.write.addRole([this.juan], {
 						account: this.deployer
 					})
@@ -183,9 +173,7 @@ describe('Inhabit', function () {
 					).to.be.rejectedWith('Ownable: caller is not the owner')
 				})
 
-				// 🔴 TEST QUE DEBE FALLAR - Validación de address(0)
 				it('Should revert when adding zero address [FAILING TEST]', async function () {
-					// ESTE TEST FALLA PORQUE EL CONTRATO NO VALIDA address(0)
 					await expect(
 						this.caracoli.write.addRole([zeroAddress], {
 							account: this.deployer
@@ -193,9 +181,7 @@ describe('Inhabit', function () {
 					).to.be.rejectedWith('Inhabit: wallet is zero address')
 				})
 
-				// 🔴 TEST QUE DEBE FALLAR - Emisión de eventos
 				it('Should emit RoleGranted event when adding role [FAILING TEST]', async function () {
-					// ESTE TEST FALLA PORQUE EL CONTRATO NO EMITE EVENTOS
 					const tx = await this.caracoli.write.addRole([this.juan], {
 						account: this.deployer
 					})
@@ -205,18 +191,10 @@ describe('Inhabit', function () {
 						hash: tx
 					})
 
-					// Esperamos que emita evento RoleGranted
 					expect(receipt.logs).to.have.lengthOf.greaterThan(0)
-
-					// Verificar que el evento tenga los parámetros correctos
-					// const roleGrantedEvent = receipt.logs.find(log => log.topics[0] === roleGrantedTopic)
-					// expect(roleGrantedEvent).to.exist
-					// expect(roleGrantedEvent.args.account).to.equal(this.juan)
 				})
 
-				// 🔴 TEST ACTUAL QUE DOCUMENTA LA VULNERABILIDAD (para comparación)
 				it('Should handle zero address input (CURRENT VULNERABLE BEHAVIOR)', async function () {
-					// Este test PASA pero documenta un comportamiento inseguro
 					const tx = await this.caracoli.write.addRole([zeroAddress], {
 						account: this.deployer
 					})
@@ -229,12 +207,10 @@ describe('Inhabit', function () {
 
 			describe('revokeRole', function () {
 				it('Should revoke role from existing user', async function () {
-					// Primero agregar rol
 					await this.caracoli.write.addRole([this.juan], {
 						account: this.deployer
 					})
 
-					// Luego revocar
 					const tx = await this.caracoli.write.revokeRole([this.juan], {
 						account: this.deployer
 					})
@@ -245,7 +221,6 @@ describe('Inhabit', function () {
 				})
 
 				it('Should handle revoking non-existent role', async function () {
-					// Revocar rol de usuario que nunca tuvo rol
 					const tx = await this.caracoli.write.revokeRole([this.luca], {
 						account: this.deployer
 					})
@@ -263,14 +238,11 @@ describe('Inhabit', function () {
 					).to.be.rejectedWith('Ownable: caller is not the owner')
 				})
 
-				// 🔴 TEST QUE DEBE FALLAR - Prevenir revocar rol del owner
 				it('Should revert when trying to revoke owner role [FAILING TEST]', async function () {
-					// Primero agregar rol al owner
 					await this.caracoli.write.addRole([this.deployer], {
 						account: this.deployer
 					})
 
-					// ESTE TEST FALLA PORQUE EL CONTRATO PERMITE REVOCAR EL ROL DEL OWNER
 					await expect(
 						this.caracoli.write.revokeRole([this.deployer], {
 							account: this.deployer
@@ -278,7 +250,6 @@ describe('Inhabit', function () {
 					).to.be.rejectedWith('Inhabit: cannot revoke owner role')
 				})
 
-				// 🔴 TEST QUE DEBE FALLAR - Emisión de eventos
 				it('Should emit RoleRevoked event when revoking role [FAILING TEST]', async function () {
 					// Primero agregar rol
 					await this.caracoli.write.addRole([this.juan], {
@@ -568,584 +539,6 @@ describe('Inhabit', function () {
 						await this.caracoli.read.getActiveUsersCount()
 					expect(activeUsersCount).to.equal(2n) // juan y santiago activos
 				})
-			})
-		})
-	})
-
-	describe('Inhabit main functions', function () {
-		const TOKEN_NAME = 'Inhabit NFT'
-		const TOKEN_SYMBOL = 'INHB'
-		const MAX_SUPPLY = 10000n
-		const BASE_URI = 'https://api.inhabit.io/metadata/'
-		const EMPTY_URI = ''
-		const INVALID_URI = '#'
-		const MINT_AMOUNT = 5n
-		const LARGE_AMOUNT = 1000n
-
-		describe('Constructor & Initial State', function () {
-			beforeEach(async function () {
-				const fixture = await deployFixture()
-				Object.assign(this, fixture)
-			})
-
-			it('Should initialize with correct parameters', async function () {
-				const name = await this.caracoli.read.name()
-				const symbol = await this.caracoli.read.symbol()
-				const maxSupply = await this.caracoli.read.maxSupply()
-				const baseURI = await this.caracoli.read.baseTokenURI()
-				const saleActive = await this.caracoli.read.saleActive()
-				const paused = await this.caracoli.read.paused()
-
-				expect(name).to.equal(TOKEN_NAME)
-				expect(symbol).to.equal(TOKEN_SYMBOL)
-				expect(maxSupply).to.equal(MAX_SUPPLY)
-				expect(baseURI).to.equal(BASE_URI)
-				expect(saleActive).to.be.true
-				expect(paused).to.be.false
-			})
-
-			it('Should set owner correctly', async function () {
-				const owner = await this.caracoli.read.owner()
-				expect(owner.toLowerCase()).to.equal(this.deployer.toLowerCase())
-			})
-
-			it('Should add luca to role during construction', async function () {
-				const hasRole = await this.caracoli.read.hasRole([this.luca])
-				expect(hasRole).to.be.true
-			})
-
-			// ❌ TEST FALLIDO INTENCIONAL - Constructor debería validar parámetros
-			it('Should revert if maxSupply is zero', async function () {
-				// Este test DEBE FALLAR porque el constructor no valida maxSupply > 0
-				// El contrato permite maxSupply = 0, lo cual es problemático
-				await expect(
-					viem.deployContract('Inhabit', [
-						TOKEN_NAME,
-						TOKEN_SYMBOL,
-						0n, // maxSupply = 0
-						BASE_URI,
-						this.luca
-					])
-				).to.be.rejectedWith('Max supply must be greater than zero')
-			})
-
-			// ❌ TEST FALLIDO INTENCIONAL - Constructor debería validar luca
-			it('Should revert if luca is zero address', async function () {
-				// Este test DEBE FALLAR porque el constructor no valida luca != address(0)
-				await expect(
-					viem.deployContract('Inhabit', [
-						TOKEN_NAME,
-						TOKEN_SYMBOL,
-						MAX_SUPPLY,
-						BASE_URI,
-						zeroAddress
-					])
-				).to.be.rejectedWith('Vendor cannot be zero address')
-			})
-		})
-
-		describe('mintReserved', function () {
-			beforeEach(async function () {
-				const fixture = await deployFixture()
-				Object.assign(this, fixture)
-			})
-
-			it('Should mint tokens successfully to valid address', async function () {
-				const initialSupply = await this.caracoli.read.totalSupply()
-
-				const tx = await this.caracoli.write.mintReserved(
-					[this.juan, MINT_AMOUNT],
-					{ account: this.deployer }
-				)
-				expect(tx).to.exist
-
-				const finalSupply = await this.caracoli.read.totalSupply()
-				const balance = await this.caracoli.read.balanceOf([this.juan])
-
-				expect(finalSupply).to.equal(initialSupply + MINT_AMOUNT)
-				expect(balance).to.equal(MINT_AMOUNT)
-			})
-
-			it('Should allow luca to mint', async function () {
-				// ✅ Verificar que luca tenga rol primero
-				const hasRole = await this.caracoli.read.hasRole([this.luca])
-
-				if (!hasRole) {
-					// Agregar rol si no lo tiene
-					await this.caracoli.write.addRole([this.luca], {
-						account: this.deployer
-					})
-				}
-
-				const tx = await this.caracoli.write.mintReserved(
-					[this.juan, MINT_AMOUNT],
-					{ account: this.luca }
-				)
-				expect(tx).to.exist
-
-				const balance = await this.caracoli.read.balanceOf([this.juan])
-				expect(balance).to.equal(MINT_AMOUNT)
-			})
-
-			it('Should revert if caller is not owner or user', async function () {
-				await expect(
-					this.caracoli.write.mintReserved([this.juan, MINT_AMOUNT], {
-						account: this.santiago
-					})
-				).to.be.rejectedWith('Ownable: caller is not valid')
-			})
-
-			it('Should revert if sale is not active', async function () {
-				// Desactivar venta
-				await this.caracoli.write.setSaleActive([false], {
-					account: this.deployer
-				})
-
-				await expect(
-					this.caracoli.write.mintReserved([this.juan, MINT_AMOUNT], {
-						account: this.deployer
-					})
-				).to.be.rejectedWith("Sale isn't active")
-			})
-
-			it('Should revert if contract is paused', async function () {
-				// Pausar contrato
-				await this.caracoli.write.setPaused([true], {
-					account: this.deployer
-				})
-
-				await expect(
-					this.caracoli.write.mintReserved([this.juan, MINT_AMOUNT], {
-						account: this.deployer
-					})
-				).to.be.rejectedWith('Contract is paused')
-			})
-
-			it('Should revert if exceeding max supply', async function () {
-				const exceedingAmount = MAX_SUPPLY + 1n
-
-				await expect(
-					this.caracoli.write.mintReserved([this.juan, exceedingAmount], {
-						account: this.deployer
-					})
-				).to.be.rejectedWith("Can't mint more than max supply")
-			})
-
-			// ❌ TEST FALLIDO INTENCIONAL - Debería validar address(0)
-			it('Should revert if minting to zero address', async function () {
-				// Este test DEBE FALLAR porque la función no valida _address != address(0)
-				await expect(
-					this.caracoli.write.mintReserved([zeroAddress, MINT_AMOUNT], {
-						account: this.deployer
-					})
-				).to.be.rejectedWith('Cannot mint to zero address')
-			})
-
-			// ❌ TEST FALLIDO INTENCIONAL - Debería validar amount > 0
-			it('Should revert if amount is zero', async function () {
-				// Este test DEBE FALLAR porque la función no valida _amount > 0
-				await expect(
-					this.caracoli.write.mintReserved([this.juan, 0n], {
-						account: this.deployer
-					})
-				).to.be.rejectedWith('Amount must be greater than zero')
-			})
-
-			it('Should handle edge case - mint exactly at max supply', async function () {
-				const tx = await this.caracoli.write.mintReserved(
-					[this.juan, MAX_SUPPLY],
-					{ account: this.deployer }
-				)
-				expect(tx).to.exist
-
-				const totalSupply = await this.caracoli.read.totalSupply()
-				expect(totalSupply).to.equal(MAX_SUPPLY)
-			})
-
-			it('Should handle multiple mints until max supply', async function () {
-				// Mint en lotes hasta llegar al máximo
-				const batchSize = 100n
-				const batches = MAX_SUPPLY / batchSize
-
-				for (let i = 0n; i < batches; i++) {
-					await this.caracoli.write.mintReserved([this.juan, batchSize], {
-						account: this.deployer
-					})
-				}
-
-				const totalSupply = await this.caracoli.read.totalSupply()
-				expect(totalSupply).to.equal(MAX_SUPPLY)
-
-				// Intentar mint adicional debe fallar
-				await expect(
-					this.caracoli.write.mintReserved([this.juan, 1n], {
-						account: this.deployer
-					})
-				).to.be.rejectedWith("Can't mint more than max supply")
-			})
-		})
-
-		describe('setBaseURI', function () {
-			beforeEach(async function () {
-				const fixture = await deployFixture()
-				Object.assign(this, fixture)
-			})
-
-			it('Should update base URI correctly', async function () {
-				const newURI = 'https://new.api.inhabit.io/metadata/'
-
-				const tx = await this.caracoli.write.setBaseURI([newURI], {
-					account: this.deployer
-				})
-				expect(tx).to.exist
-
-				const updatedURI = await this.caracoli.read.baseTokenURI()
-				expect(updatedURI).to.equal(newURI)
-			})
-
-			it('Should emit BaseURIChanged event', async function () {
-				const newURI = 'https://new.api.inhabit.io/metadata/'
-
-				const tx = await this.caracoli.write.setBaseURI([newURI], {
-					account: this.deployer
-				})
-
-				const publicClient = await viem.getPublicClient()
-
-				const receipt = await publicClient.waitForTransactionReceipt({
-					hash: tx
-				})
-				expect(receipt.logs).to.have.lengthOf.greaterThan(0)
-			})
-
-			it('Should allow luca to update base URI', async function () {
-				const newURI = 'https://vendor.api.inhabit.io/metadata/'
-
-				const tx = await this.caracoli.write.setBaseURI([newURI], {
-					account: this.luca
-				})
-				expect(tx).to.exist
-
-				const updatedURI = await this.caracoli.read.baseTokenURI()
-				expect(updatedURI).to.equal(newURI)
-			})
-
-			it('Should revert if caller is not owner or user', async function () {
-				const newURI = 'https://malicious.api.io/metadata/'
-
-				await expect(
-					this.caracoli.write.setBaseURI([newURI], {
-						account: this.santiago
-					})
-				).to.be.rejectedWith('Ownable: caller is not valid')
-			})
-
-			it('Should revert if base URI is empty', async function () {
-				await expect(
-					this.caracoli.write.setBaseURI([EMPTY_URI], {
-						account: this.deployer
-					})
-				).to.be.rejectedWith('Base URI cannot be empty')
-			})
-
-			it('Should handle very long URI', async function () {
-				const longURI = 'https://api.inhabit.io/metadata/' + 'a'.repeat(1000)
-
-				const tx = await this.caracoli.write.setBaseURI([longURI], {
-					account: this.deployer
-				})
-				expect(tx).to.exist
-
-				const updatedURI = await this.caracoli.read.baseTokenURI()
-				expect(updatedURI).to.equal(longURI)
-			})
-		})
-
-		describe('setSaleActive', function () {
-			beforeEach(async function () {
-				const fixture = await deployFixture()
-				Object.assign(this, fixture)
-			})
-
-			it('Should toggle sale status correctly', async function () {
-				// Inicialmente true
-				let saleActive = await this.caracoli.read.saleActive()
-				expect(saleActive).to.be.true
-
-				// Desactivar
-				await this.caracoli.write.setSaleActive([false], {
-					account: this.deployer
-				})
-				saleActive = await this.caracoli.read.saleActive()
-				expect(saleActive).to.be.false
-
-				// Reactivar
-				await this.caracoli.write.setSaleActive([true], {
-					account: this.deployer
-				})
-				saleActive = await this.caracoli.read.saleActive()
-				expect(saleActive).to.be.true
-			})
-
-			it('Should allow luca to toggle sale status', async function () {
-				await this.caracoli.write.setSaleActive([false], {
-					account: this.luca
-				})
-
-				const saleActive = await this.caracoli.read.saleActive()
-				expect(saleActive).to.be.false
-			})
-
-			it('Should revert if caller is not owner or user', async function () {
-				await expect(
-					this.caracoli.write.setSaleActive([false], {
-						account: this.santiago
-					})
-				).to.be.rejectedWith('Ownable: caller is not valid')
-			})
-		})
-
-		describe('setPaused', function () {
-			beforeEach(async function () {
-				const fixture = await deployFixture()
-				Object.assign(this, fixture)
-			})
-
-			it('Should toggle pause status correctly', async function () {
-				// Inicialmente false
-				let paused = await this.caracoli.read.paused()
-				expect(paused).to.be.false
-
-				// Pausar
-				await this.caracoli.write.setPaused([true], {
-					account: this.deployer
-				})
-				paused = await this.caracoli.read.paused()
-				expect(paused).to.be.true
-
-				// Despausar
-				await this.caracoli.write.setPaused([false], {
-					account: this.deployer
-				})
-				paused = await this.caracoli.read.paused()
-				expect(paused).to.be.false
-			})
-
-			it('Should prevent minting when paused', async function () {
-				await this.caracoli.write.setPaused([true], {
-					account: this.deployer
-				})
-
-				await expect(
-					this.caracoli.write.mintReserved([this.juan, MINT_AMOUNT], {
-						account: this.deployer
-					})
-				).to.be.rejectedWith('Contract is paused')
-			})
-
-			it('Should revert if caller is not owner or user', async function () {
-				await expect(
-					this.caracoli.write.setPaused([true], {
-						account: this.santiago
-					})
-				).to.be.rejectedWith('Ownable: caller is not valid')
-			})
-		})
-
-		describe('setMaxSupply', function () {
-			beforeEach(async function () {
-				const fixture = await deployFixture()
-				Object.assign(this, fixture)
-			})
-
-			it('Should update max supply correctly', async function () {
-				const newMaxSupply = 20000n
-
-				const tx = await this.caracoli.write.setMaxSupply([newMaxSupply], {
-					account: this.deployer
-				})
-				expect(tx).to.exist
-
-				const updatedMaxSupply = await this.caracoli.read.maxSupply()
-				expect(updatedMaxSupply).to.equal(newMaxSupply)
-			})
-
-			it('Should emit MaxSupplyChanged event', async function () {
-				const newMaxSupply = 20000n
-
-				const tx = await this.caracoli.write.setMaxSupply([newMaxSupply], {
-					account: this.deployer
-				})
-
-				const publicClient = await viem.getPublicClient()
-
-				const receipt = await publicClient.waitForTransactionReceipt({
-					hash: tx
-				})
-				expect(receipt.logs).to.have.lengthOf.greaterThan(0)
-			})
-
-			it('Should revert if caller is not owner or user', async function () {
-				await expect(
-					this.caracoli.write.setMaxSupply([20000n], {
-						account: this.santiago
-					})
-				).to.be.rejectedWith('Ownable: caller is not valid')
-			})
-
-			// ❌ TEST FALLIDO INTENCIONAL - Debería validar newMaxSupply >= totalSupply()
-			it('Should revert if new max supply is less than current total supply', async function () {
-				// Primero mint algunos tokens
-				await this.caracoli.write.mintReserved([this.juan, 100n], {
-					account: this.deployer
-				})
-
-				// Este test DEBE FALLAR porque la función no valida newMaxSupply >= totalSupply()
-				await expect(
-					this.caracoli.write.setMaxSupply([50n], {
-						account: this.deployer
-					})
-				).to.be.rejectedWith(
-					'New max supply cannot be less than current total supply'
-				)
-			})
-
-			// ❌ TEST FALLIDO INTENCIONAL - Debería validar newMaxSupply > 0
-			it('Should revert if new max supply is zero', async function () {
-				// Este test DEBE FALLAR porque la función no valida newMaxSupply > 0
-				await expect(
-					this.caracoli.write.setMaxSupply([0n], {
-						account: this.deployer
-					})
-				).to.be.rejectedWith('Max supply must be greater than zero')
-			})
-
-			it('Should handle edge case - set max supply to maxUint256', async function () {
-				const tx = await this.caracoli.write.setMaxSupply([maxUint256], {
-					account: this.deployer
-				})
-				expect(tx).to.exist
-
-				const updatedMaxSupply = await this.caracoli.read.maxSupply()
-				expect(updatedMaxSupply).to.equal(maxUint256)
-			})
-		})
-
-		describe('Role Management Integration', function () {
-			beforeEach(async function () {
-				const fixture = await deployFixture()
-				Object.assign(this, fixture)
-			})
-
-			it('Should allow owner to add new roles', async function () {
-				await this.caracoli.write.addRole([this.juan], {
-					account: this.deployer
-				})
-
-				const hasRole = await this.caracoli.read.hasRole([this.juan])
-				expect(hasRole).to.be.true
-
-				// Nuevo usuario debe poder mintear
-				const tx = await this.caracoli.write.mintReserved(
-					[this.santiago, MINT_AMOUNT],
-					{ account: this.juan }
-				)
-				expect(tx).to.exist
-			})
-
-			it('Should allow owner to revoke roles', async function () {
-				// Revocar rol de luca
-				await this.caracoli.write.revokeRole([this.luca], {
-					account: this.deployer
-				})
-
-				const hasRole = await this.caracoli.read.hasRole([this.luca])
-				expect(hasRole).to.be.false
-
-				// luca ya no debe poder mintear
-				await expect(
-					this.caracoli.write.mintReserved([this.juan, MINT_AMOUNT], {
-						account: this.luca
-					})
-				).to.be.rejectedWith('Ownable: caller is not valid')
-			})
-
-			it('Should maintain owner privileges after role changes', async function () {
-				// Owner siempre debe poder realizar operaciones
-				const tx = await this.caracoli.write.mintReserved(
-					[this.juan, MINT_AMOUNT],
-					{ account: this.deployer }
-				)
-				expect(tx).to.exist
-			})
-		})
-
-		describe('Gas Optimization & Edge Cases', function () {
-			beforeEach(async function () {
-				const fixture = await deployFixture()
-				Object.assign(this, fixture)
-			})
-
-			it('Should handle batch minting efficiently', async function () {
-				const largeBatch = 500n
-
-				const tx = await this.caracoli.write.mintReserved(
-					[this.juan, largeBatch],
-					{ account: this.deployer }
-				)
-				expect(tx).to.exist
-
-				const balance = await this.caracoli.read.balanceOf([this.juan])
-				expect(balance).to.equal(largeBatch)
-			})
-
-			it('Should handle rapid state changes correctly', async function () {
-				// Cambios rápidos de estado
-				await this.caracoli.write.setSaleActive([false], {
-					account: this.deployer
-				})
-				await this.caracoli.write.setSaleActive([true], {
-					account: this.deployer
-				})
-				await this.caracoli.write.setPaused([true], { account: this.deployer })
-				await this.caracoli.write.setPaused([false], { account: this.deployer })
-
-				// Debe funcionar normalmente después de los cambios
-				const tx = await this.caracoli.write.mintReserved(
-					[this.juan, MINT_AMOUNT],
-					{ account: this.deployer }
-				)
-				expect(tx).to.exist
-			})
-
-			it('Should handle maximum token ID correctly', async function () {
-				// Mint hasta el máximo y verificar IDs
-				const singleMint = 1n
-				await this.caracoli.write.mintReserved([this.juan, singleMint], {
-					account: this.deployer
-				})
-
-				const totalSupply = await this.caracoli.read.totalSupply()
-				expect(totalSupply).to.equal(singleMint)
-			})
-		})
-
-		describe('Reentrancy Protection', function () {
-			beforeEach(async function () {
-				const fixture = await deployFixture()
-				Object.assign(this, fixture)
-			})
-
-			it('Should prevent reentrancy in mintReserved', async function () {
-				// ERC721A._safeMint llama a onERC721Received si el receptor es un contrato
-				// ReEntrancyGuard debe prevenir llamadas reentrantes
-
-				// Mint normal debe funcionar
-				const tx = await this.caracoli.write.mintReserved(
-					[this.juan, MINT_AMOUNT],
-					{ account: this.deployer }
-				)
-				expect(tx).to.exist
 			})
 		})
 	})

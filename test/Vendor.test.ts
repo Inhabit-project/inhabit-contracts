@@ -101,7 +101,7 @@ describe('VendorV2', function () {
 		}
 	}
 
-	describe.skip('Administered', function () {
+	describe('Administered', function () {
 		beforeEach(async function () {
 			const fixture = await deployFixture()
 			this.vendorV2 = fixture.vendorV2
@@ -247,7 +247,7 @@ describe('VendorV2', function () {
 		})
 	})
 
-	describe.skip('WhiteListTokenV2', function () {
+	describe('WhiteListTokenV2', function () {
 		beforeEach(async function () {
 			const fixture = await deployFixture()
 			this.vendorV2 = fixture.vendorV2
@@ -396,7 +396,7 @@ describe('VendorV2', function () {
 		})
 	})
 
-	describe.skip('WithdrawV2', function () {
+	describe('WithdrawV2', function () {
 		const cUSDAmount: bigint = 1000000000n // 10 cUSD
 		const ethAmount: bigint = 1000000000n // 0.000000001 ETH
 
@@ -576,7 +576,7 @@ describe('VendorV2', function () {
 		})
 	})
 
-	describe.skip('Group', function () {
+	describe('Group', function () {
 		const TEN_TOKENS: bigint = parseEther('10')
 		const ONE_ETH: bigint = parseEther('1')
 		const P5000: bigint = 5000n
@@ -962,7 +962,7 @@ describe('VendorV2', function () {
 		})
 	})
 
-	describe.skip('CollectionV2', function () {
+	describe('CollectionV2', function () {
 		const price: bigint = 500000000n // $5.00 USD
 		const newPrice: bigint = 600000000n // $6.00 USD
 
