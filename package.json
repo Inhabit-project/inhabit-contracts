@@ -17,8 +17,6 @@
 	"dependencies": {
 		"@chainlink/contracts": "^0.8.0",
 		"@openzeppelin/contracts": "^4.9.3",
-		"@types/chai": "^5.2.2",
-		"@types/mocha": "^10.0.10",
 		"or": "^0.2.0"
 	},
 	"devDependencies": {
