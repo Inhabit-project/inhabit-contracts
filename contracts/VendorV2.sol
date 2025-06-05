@@ -16,20 +16,19 @@ import '@openzeppelin/contracts/utils/math/SafeMath.sol';
 import './factories/CollectionV2.sol';
 
 /// @dev helpers
-import './helpers/OracleV2.sol';
-import './helpers/WithdrawV2.sol';
 import './Interfaces/INFTCollection.sol';
+
+import './libraries/Transfer.sol';
 
 /// @dev partner
 import './patners/Group.sol';
 
 contract Inhabit is
-	RoleManager,
-	WithdrawV2,
 	ReentrancyGuard,
+	Transfer,
+	RoleManager,
+	Group,
 	CollectionV2,
-	OracleV2,
-	Group
 {
 	/// @dev Mapeo para registrar las compras
 	mapping(address => mapping(address => uint256)) private investments;
@@ -300,6 +299,5 @@ contract Inhabit is
 		updateCollection(collectionIdx.index, 3, address(0), 0, _status);
 	}
 
-	// Permite recibir Celo directamente sin llamar a una función específica
 	receive() external payable {}
 }
