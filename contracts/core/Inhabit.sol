@@ -44,6 +44,17 @@ contract Inhabit is
 	/// == External / Public Functions ==
 	/// =================================
 
+	/// @notice Main functions
+
+	function buyNFT(
+		uint256 _campaignId,
+		address _collection,
+		uint256 _amount,
+		string calldata _referral
+	) external nonReentrant {
+		// _buyNFT(_campaignId, _collection, _amount);
+	}
+
 	/// @notice Group functions
 
 	function createGroup(

@@ -52,11 +52,14 @@ abstract contract BaseStrategy is Native, Transfer, Errors {
 		collectionId = _collectionId;
 	}
 
-	/// =========================
-	/// == Internal Functions ===
-	/// =========================
+	/// =================================
+	/// == External / Public Functions ==
+	/// =================================
 
-	function recoverFunds(address _token, address _to) internal onlyInhabit {
+	function recoverFunds(
+		address _token,
+		address _to
+	) public virtual onlyInhabit {
 		_isZeroAddress(_to);
 
 		uint256 amount = _token == NATIVE

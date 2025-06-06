@@ -40,6 +40,7 @@ contract NFTCollection is
 		__ERC721URIStorage_init();
 		__BaseStrategy_init(_params.id, msg.sender);
 
+		collectionId = _params.id;
 		supply = _params.supply;
 		price = _params.price;
 		state = _params.state;
@@ -52,7 +53,7 @@ contract NFTCollection is
 
 	function safeMint(address _to) external onlyInhabit returns (uint256) {
 		_isZeroAddress(_to);
-		if (supply > tokenCount) revert INVALID_SUPPLY();
+		if (tokenCount >= supply) revert INVALID_SUPPLY();
 		if (!state) revert COLLECTION_NOT_ACTIVE();
 
 		_safeMint(_to, ++tokenCount);
@@ -95,6 +96,14 @@ contract NFTCollection is
 		return baseURI;
 	}
 
+	/// @notice Override required due to multiple inheritance
+	function recoverFunds(
+		address token,
+		address to
+	) public override(BaseStrategy, INFTCollection) onlyInhabit {
+		super.recoverFunds(token, to);
+	}
+
 	// The following functions are overrides required by Solidity.
 
 	function tokenURI(
@@ -102,7 +111,7 @@ contract NFTCollection is
 	)
 		public
 		view
-		override(ERC721Upgradeable, ERC721URIStorageUpgradeable)
+		override(ERC721Upgradeable, ERC721URIStorageUpgradeable, INFTCollection)
 		returns (string memory)
 	{
 		return super.tokenURI(tokenId);
@@ -113,7 +122,7 @@ contract NFTCollection is
 	)
 		public
 		view
-		override(ERC721Upgradeable, ERC721URIStorageUpgradeable)
+		override(ERC721Upgradeable, ERC721URIStorageUpgradeable, INFTCollection)
 		returns (bool)
 	{
 		return super.supportsInterface(interfaceId);

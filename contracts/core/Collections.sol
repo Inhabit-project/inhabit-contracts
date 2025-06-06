@@ -75,15 +75,18 @@ contract Collections is ICollections, Errors {
 				nonces[msg.sender]++
 			);
 
-			INFTCollection(newCollection).initialize(
-				params.name,
-				params.symbol,
-				params.uri,
-				params.supply,
-				params.price,
-				params.state,
-				msg.sender
-			);
+			INFTCollection.CollectionParams memory initParams = INFTCollection
+				.CollectionParams({
+					id: campaignCount,
+					name: params.name,
+					symbol: params.symbol,
+					uri: params.uri,
+					supply: params.supply,
+					price: params.price,
+					state: params.state
+				});
+
+			INFTCollection(newCollection).initialize(initParams);
 
 			campaign.collections.push(newCollection);
 
