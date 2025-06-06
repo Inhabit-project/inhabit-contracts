@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import {RoleManager} from './RoleManager.sol';
-import {Transfer} from './libraries/Transfer.sol';
-import {Erros} from './libraries/Errors.sol';
+import {ERC20} from 'solady/src/tokens/ERC20.sol';
 
-contract Groups is RoleManager, Transfer, Errors {
+import {Transfer} from './libraries/Transfer.sol';
+import {Errors} from './libraries/Errors.sol';
+
+contract Groups is Transfer, Errors {
 	/// =========================
 	/// ======== Structs ========
 	/// =========================
@@ -27,8 +28,9 @@ contract Groups is RoleManager, Transfer, Errors {
 
 	mapping(string => Group) public groups;
 	mapping(uint256 => string) public groupList;
+	mapping(address => bool) private tokens;
 
-	uint256 public immutable pncg = 10000; // 100% in basis points
+	uint256 public immutable pncg = 10000;
 	uint256 public groupCount = 0;
 
 	/// =========================
@@ -42,18 +44,14 @@ contract Groups is RoleManager, Transfer, Errors {
 	);
 
 	event GroupStatusUpdated(string indexed referral, bool status);
-
 	event EmbassadorsAdded(string indexed referral, Embassador[] embassadors);
-
 	event EmbassadorsUpdated(string indexed referral, Embassador[] embassadors);
-
 	event EmbassadorsRemoved(string indexed referral, address[] accounts);
-
 	event Distributed(address indexed embassador, uint256 amount);
 
-	// =========================
-	// ==== View Functions =====
-	// =========================
+	/// =========================
+	/// ==== View Functions =====
+	/// =========================
 
 	function getGroup(
 		string calldata _referral
@@ -72,132 +70,63 @@ contract Groups is RoleManager, Transfer, Errors {
 	/// == External / Public Functions ==
 	/// =================================
 
-	function Group(
+	// Funciones públicas/externas sin modificadores de rol
+	// Los modificadores de rol se aplicarán en Inhabit
+
+	function createGroup(
 		string calldata _referral,
 		bool _state,
 		Embassador[] memory _embassadors
-	) external onlyRole(ADMIN_ROLE) {
+	) external {
 		_isEmptyString(_referral);
 		_isGroupExist(_referral);
 		_validateFeeArray(_embassadors);
 
-		groups[_referral] = Group({
-			referral: _referral,
-			state: _state,
-			embassadors: _embassadors
-		});
+		Group storage newGroup = groups[_referral];
+		newGroup.referral = _referral;
+		newGroup.state = _state;
+
+		for (uint256 i = 0; i < _embassadors.length; i++) {
+			newGroup.embassadors.push(_embassadors[i]);
+		}
 
 		groupList[++groupCount] = _referral;
 		emit GroupCreated(_referral, _state, _embassadors);
 	}
 
-	function updateGroupStatus(
-		string calldata _referral,
-		bool _status
-	) external onlyRole(ADMIN_ROLE) {
+	function updateGroupStatus(string calldata _referral, bool _status) external {
 		_isNotGroupExist(_referral);
-
 		Group storage group = groups[_referral];
 		if (group.state == _status) revert SAME_STATE();
-
 		group.state = _status;
 		emit GroupStatusUpdated(_referral, _status);
 	}
 
-	function addEmbassadors(
-		string calldata _referal,
-		Embassador[] calldata _embassadors
-	) external onlyRole(ADMIN_ROLE) {
-		_isNotGroupExist(_referal);
-		_isEmptyArray(_embassadors);
-
-		Group storage group = groups[_referal];
-
-		for (uint256 i; i < _embassadors.length; ) {
-			_isZeroAddress(_embassadors[i].account);
-			group.embassadors.push(_embassadors[i]);
-
-			unchecked {
-				++i;
-			}
-		}
-
-		_validateFee(group);
-		emit EmbassadorsAdded(_referal, _embassadors);
+	function removeFromTokens(address _token) external {
+		_isZeroAddress(_token);
+		tokens[_token] = false;
 	}
 
-	function updateEmbassadors(
-		string calldata _referral,
-		Embassador[] calldata _embassadors
-	) external onlyRole(ADMIN_ROLE) {
-		_isNotGroupExist(_referral);
-		_isEmptyArray(_embassadors);
+	function recoverFunds(address _token, address _to) external {
+		_isZeroAddress(_to);
 
-		Group storage group = groups[_referral];
+		uint256 amount = _token == NATIVE
+			? address(this).balance
+			: ERC20(_token).balanceOf(address(this));
 
-		for (uint256 i; i < _embassadors.length; ) {
-			_isZeroAddress(_embassadors[i].account);
-
-			bool found = false;
-			for (uint256 j; j < group.embassadors.length; ) {
-				if (group.embassadors[j].account == _embassadors[i].account) {
-					group.embassadors[j].fee = _embassadors[i].fee;
-					found = true;
-					break;
-				}
-
-				unchecked {
-					++j;
-				}
-			}
-
-			if (!found) revert EMBASSADOR_NOT_FOUND();
-
-			unchecked {
-				++i;
-			}
-		}
-
-		_validateFee(group);
-		emit EmbassadorsUpdated(_referral, _embassadors);
+		_transferAmount(_token, _to, amount);
 	}
 
-	function removeEmbassadors(
-		string calldata _referral,
-		address[] calldata _accounts
-	) external onlyRole(ADMIN_ROLE) {
-		_isNotGroupExist(_referral);
-		if (_accounts.length == 0) revert EMPTY_ARRAY();
-
-		Group storage group = groups[_referral];
-
-		for (uint256 i; i < _accounts.length; ) {
-			if (_accounts[i] == address(0)) revert ZERO_ADDRESS();
-
-			bool found = false;
-			for (uint256 j; j < group.embassadors.length; ) {
-				if (group.embassadors[j].account == _accounts[i]) {
-					group.embassadors[j] = group.embassadors[
-						group.embassadors.length - 1
-					];
-					group.embassadors.pop();
-					found = true;
-					break;
-				}
-
-				unchecked {
-					++j;
-				}
-			}
-
-			if (!found) revert EMBASSADOR_NOT_FOUND();
+	function addToTokens(address[] calldata _tokens) external {
+		// todo: check if token is already added, if it is, revert
+		for (uint256 i = 0; i < _tokens.length; i++) {
+			_isZeroAddress(_tokens[i]);
+			tokens[_tokens[i]] = true;
 
 			unchecked {
 				++i;
 			}
 		}
-
-		emit EmbassadorsRemoved(_referral, _accounts);
 	}
 
 	/// =========================
@@ -245,22 +174,11 @@ contract Groups is RoleManager, Transfer, Errors {
 		if (bytes(groups[_referral].referral).length == 0) revert GROUP_NOT_FOUND();
 	}
 
-	function _validateFee(Group storage group) internal view {
-		uint256 totalFee = 0;
-		for (uint256 i; i < group.embassadors.length; ) {
-			totalFee += group.embassadors[i].fee;
-
-			unchecked {
-				++i;
-			}
-		}
-
-		if (totalFee > pncg) revert PERCENTAGE_ERROR();
-	}
-
 	function _validateFeeArray(Embassador[] memory _embassadors) internal pure {
+		if (_embassadors.length == 0) revert EMPTY_ARRAY();
+
 		uint256 totalFee = 0;
-		for (uint256 i; i < _embassadors.length; ) {
+		for (uint256 i = 0; i < _embassadors.length; ) {
 			_isZeroAddress(_embassadors[i].account);
 			totalFee += _embassadors[i].fee;
 			unchecked {
@@ -269,4 +187,6 @@ contract Groups is RoleManager, Transfer, Errors {
 		}
 		if (totalFee > 10000) revert PERCENTAGE_ERROR();
 	}
+
+	receive() external payable {}
 }

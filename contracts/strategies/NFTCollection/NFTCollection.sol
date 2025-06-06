@@ -16,6 +16,20 @@ contract NFTCollection is
 	BaseStrategy
 {
 	/// =========================
+	/// ======== Structs ========
+	/// =========================
+
+	struct CollectionParams {
+		uint256 id;
+		string name;
+		string symbol;
+		string uri;
+		uint256 supply;
+		uint256 price;
+		bool state;
+	}
+
+	/// =========================
 	/// === Storage Variables ===
 	/// =========================
 
@@ -23,11 +37,16 @@ contract NFTCollection is
 	uint256 public supply;
 	uint256 public price;
 	bool public state;
-	string public uri;
+	string public baseURI;
 
-  /// =========================
+	/// =========================
 	/// ======== Events =========
 	/// =========================
+
+	event BaseURIUpdated(string newBaseURI);
+	event PriceUpdated(uint256 newPrice);
+	event StateUpdated(bool newState);
+	event SupplyUpdated(uint256 newSupply);
 
 	/// =========================
 	/// ====== Constructor ======
@@ -42,67 +61,67 @@ contract NFTCollection is
 	/// =========================
 
 	function initialize(
-		uint256 _id,
-		string calldata _name,
-		string calldata _symbol,
-		string calldata _uri,
-		uint256 _supply,
-		uint256 _price,
-		bool _state,
+		CollectionParams calldata _params,
 		address _initialOwner
 	) public initializer {
 		__Ownable_init(_initialOwner);
-		__ERC721_init(_name, _symbol);
+		__ERC721_init(_params.name, _params.symbol);
 		__ERC721URIStorage_init();
-		__BaseStrategy_init(id, msg.sender);
+		__BaseStrategy_init(_params.id, msg.sender);
 
-		supply = _supply;
-		price = _price;
-		state = _state;
-		uri = _uri;
+		supply = _params.supply;
+		price = _params.price;
+		state = _params.state;
+		baseURI = _params.uri;
 	}
 
 	/// =================================
 	/// == External / Public Functions ==
 	/// =================================
 
-	function safeMint(
-		address _to,
-	) external onlyOwner returns (uint256) {
-        _isEmptyAddress(_to);
-		if (tokenCount > supply) revert INVALID_SUPPLY();
+	function safeMint(address _to) external onlyOwner /*returns (uint256)*/ {
+		_isZeroAddress(_to);
+		if (supply > tokenCount) revert INVALID_SUPPLY();
 		if (!state) revert COLLECTION_NOT_ACTIVE();
 
 		_safeMint(_to, ++tokenCount);
-		return tokenCount;
+		//return tokenCount;
 	}
 
-	function setBaseURI(string calldata _uri) external onlyOwner {
-		_isEmptyString(_uri);
-		uri = _uri;
+	function setBaseURI(string calldata uri) external onlyOwner {
+		_isEmptyString(uri);
+		baseURI = uri;
+
+		emit BaseURIUpdated(uri);
 	}
 
 	function setPrice(uint256 _price) external onlyOwner {
 		if (_price == 0) revert INVALID_PRICE();
 		price = _price;
+
+		emit PriceUpdated(_price);
 	}
 
 	function setState(bool _state) external onlyOwner {
-		if (group.state == _status) revert SAME_STATE();
+		if (state == _state) revert SAME_STATE();
 		state = _state;
+
+		emit StateUpdated(_state);
 	}
 
 	function setSupply(uint256 _supply) external onlyOwner {
 		if (_supply < tokenCount) revert INVALID_SUPPLY();
 		supply = _supply;
+
+		emit SupplyUpdated(_supply);
 	}
 
 	/// =========================
 	/// ===== View Functions ====
 	/// =========================
 
-	function _uri() internal view override returns (string memory) {
-		return uri;
+	function _baseURI() internal view override returns (string memory) {
+		return baseURI;
 	}
 
 	// The following functions are overrides required by Solidity.

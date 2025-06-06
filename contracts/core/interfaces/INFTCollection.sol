@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-interface INFTCollection {interfaces
+interface INFTCollection {
 	/// =========================
 	/// ===== View Functions ====
 	/// =========================
@@ -137,6 +137,15 @@ interface INFTCollection {interfaces
 	function renounceOwnership() external;
 
 	/**
+	 * @dev Recover funds from the contract (ETH or ERC20 tokens)
+	 * @param _token Address of the token to recover (address(0) for ETH)
+	 * @param _recipient Address to send the recovered funds to
+	 * @notice Only contract owner can call this function
+	 * @notice Useful for recovering accidentally sent tokens or ETH
+	 */
+	function recoverFunds(address _token, address _recipient) external;
+
+	/**
 	 * @dev Standard ERC721 transfer function
 	 * @param from Address sending the token
 	 * @param to Address receiving the token
@@ -236,4 +245,16 @@ interface INFTCollection {interfaces
 	 * @param tokenId ID of the minted token
 	 */
 	event TokenMinted(address indexed to, uint256 indexed tokenId);
+
+	/**
+	 * @dev Emitted when funds are recovered from the contract
+	 * @param token Address of the recovered token (address(0) for ETH)
+	 * @param recipient Address that received the recovered funds
+	 * @param amount Amount of funds recovered
+	 */
+	event FundsRecovered(
+		address indexed token,
+		address indexed recipient,
+		uint256 amount
+	);
 }

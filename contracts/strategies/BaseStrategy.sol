@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
+import {ERC20} from 'solady/src/tokens/ERC20.sol';
 import {IInhabit} from '../core/interfaces/IInhabit.sol';
 
 import {Transfer} from '../core/libraries/Transfer.sol';
 import {Native} from '../core/libraries/Native.sol';
-import {Erross} from '../core/libraries/Errors.sol';
+import {Errors} from '../core/libraries/Errors.sol';
 
 abstract contract BaseStrategy is Errors, Native, Transfer {
 	/// =========================
@@ -59,11 +60,11 @@ abstract contract BaseStrategy is Errors, Native, Transfer {
 	/// ==== View Functions =====
 	/// =========================
 
-	function getInhabit() external view override returns (address) {
+	function getInhabit() external view virtual returns (address) {
 		return address(inhabit);
 	}
 
-	function getCollectionId() external view override returns (uint256) {
+	function getCollectionId() external view virtual returns (uint256) {
 		return collectionId;
 	}
 

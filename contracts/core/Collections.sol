@@ -2,12 +2,10 @@
 pragma solidity ^0.8.28;
 
 import {INFTCollection} from './interfaces/INFTCollection.sol';
-
-import {RoleManager} from './RoleManager.sol';
 import {Errors} from './libraries/Errors.sol';
 import {Clone} from './libraries/Clone.sol';
 
-contract Collections is RoleManager, Errors {
+contract Collections is Errors {
 	/// =========================
 	/// ======== Structs ========
 	/// =========================
@@ -57,9 +55,7 @@ contract Collections is RoleManager, Errors {
 		address indexed creator,
 		CollectionParams[] collections
 	);
-
 	event CampaignStatusUpdated(uint256 indexed campaignId, bool status);
-
 	event CollectionCreated(
 		address indexed collection,
 		address indexed creator,
@@ -70,14 +66,11 @@ contract Collections is RoleManager, Errors {
 	);
 
 	/// =========================
-	/// ====== Modifiers ========
+	/// ====== Constructor ======
 	/// =========================
 
-	modifier onlyCampaignCreator(uint256 _campaignId) {
-		_InvalidCampaignId(_campaignId);
-
-		if (campaigns[_campaignId].creator != msg.sender) revert UNAUTHORIZED();
-		_;
+	constructor() {
+		// Constructor vacío, roles manejados por contrato padre
 	}
 
 	/// =========================
@@ -87,70 +80,8 @@ contract Collections is RoleManager, Errors {
 	function getCampaign(
 		uint256 _campaignId
 	) external view returns (Campaign memory) {
-		_InvalidCampaignId(_campaignId);
+		_invalidCampaignId(_campaignId);
 		return campaigns[_campaignId];
-	}
-
-	function getCollection(
-		uint256 _campaignId,
-		uint256 _collectionIndex
-	) external view returns (Collection memory) {
-		_InvalidCampaignId(_campaignId);
-
-		if (_collectionIndex >= campaigns[_campaignId].collections.length)
-			revert INVALID_INDEX();
-
-		address collectionAddress = campaigns[_campaignId].collections[
-			_collectionIndex
-		];
-
-		INFTCollection collection = INFTCollection(collectionAddress);
-
-		return
-			Collection({
-				name: collection.name(),
-				symbol: collection.symbol(),
-				uri: collection._baseTokenURI(),
-				supply: collection.supply(),
-				price: collection.price(),
-				state: collection.state(),
-				creator: campaigns[_campaignId].creator,
-				tokenCount: collection.tokenCount()
-			});
-	}
-
-	function getCollections(
-		uint256 _campaignId
-	) external view returns (Collection[] memory) {
-		_InvalidCampaignId(_campaignId);
-
-		Campaign storage campaign = campaigns[_campaignId];
-
-		Collection[] memory collections = new Collection[](
-			campaign.collections.length
-		);
-
-		for (uint256 i; i < campaign.collections.length; ) {
-			address collectionAddress = campaign.collections[i];
-			INFTCollection collection = INFTCollection(collectionAddress);
-
-			collections[i] = Collection({
-				name: collection.name(),
-				symbol: collection.symbol(),
-				uri: collection._baseTokenURI(),
-				supply: collection.supply(),
-				price: collection.price(),
-				state: collection.state(),
-				creator: campaign.creator,
-				tokenCount: collection.tokenCount()
-			});
-
-			unchecked {
-				++i;
-			}
-		}
-
-		return collections;
 	}
 
 	/// =================================
@@ -159,14 +90,14 @@ contract Collections is RoleManager, Errors {
 
 	function createCampaign(
 		CollectionParams[] memory _collectionsParams
-	) external onlyRole(USER_ROLE) {
+	) external {
 		if (_collectionsParams.length == 0) revert EMPTY_ARRAY();
 
 		Campaign storage campaign = campaigns[++campaignCount];
 		campaign.state = true;
 		campaign.creator = msg.sender;
 
-		for (uint256 i; i < _collectionsParams.length; ) {
+		for (uint256 i = 0; i < _collectionsParams.length; ) {
 			CollectionParams memory params = _collectionsParams[i];
 
 			_isEmptyString(params.name);
@@ -176,7 +107,7 @@ contract Collections is RoleManager, Errors {
 			if (params.price == 0) revert INVALID_PRICE();
 
 			address newCollection = Clone.createClone(
-				nftCollection,
+				address(nftCollection),
 				msg.sender,
 				nonces[msg.sender]++
 			);
@@ -187,7 +118,8 @@ contract Collections is RoleManager, Errors {
 				params.uri,
 				params.supply,
 				params.price,
-				params.state
+				params.state,
+				msg.sender
 			);
 
 			campaign.collections.push(newCollection);
@@ -209,124 +141,32 @@ contract Collections is RoleManager, Errors {
 		emit CampaignCreated(campaignCount, msg.sender, _collectionsParams);
 	}
 
-	function updateCampaignStatus(
-		uint256 _campaignId,
-		bool _status
-	) external onlyRole(USER_ROLE) onlyCampaignCreator(_campaignId) {
-		_InvalidCampaignId(_campaignId);
-
-		Campaign storage campaign = campaigns[_campaignId];
-
-		if (campaign.creator != msg.sender) revert UNAUTHORIZED();
-		if (campaign.state == _status) revert SAME_STATE();
-
-		campaign.state = _status;
-		emit CampaignStatusUpdated(_campaignId, _status);
-	}
-
-	function setCollectionBaseURI(
-		uint256 _campaignId,
-		address _collection,
-		string calldata _baseURI
-	) external onlyRole(USER_ROLE) onlyCampaignCreator(_campaignId) {
-		_isZeroAddress(_collection);
-
-		for (uint256 i; i < campaigns[_campaignId].collections.length; ) {
-			if (campaigns[_campaignId].collections[i] == _collection) {
-				INFTCollection(_collection).setBaseURI(_baseURI);
-				return;
-			}
-
-			unchecked {
-				++i;
-			}
-		}
-	}
-
-	function setCollectionPrice(
-		uint256 _campaignId,
-		address _collection,
-		uint256 _price
-	) external onlyRole(USER_ROLE) onlyCampaignCreator(_campaignId) {
-		_isZeroAddress(_collection);
-		if (_price == 0) revert INVALID_PRICE();
-
-		for (uint256 i; i < campaigns[_campaignId].collections.length; ) {
-			if (campaigns[_campaignId].collections[i] == _collection) {
-				INFTCollection(_collection).setPrice(_price);
-				return;
-			}
-
-			unchecked {
-				++i;
-			}
-		}
-	}
-
-	function setCollectionState(
-		uint256 _campaignId,
-		address _collection,
-		bool _state
-	) external onlyRole(USER_ROLE) onlyCampaignCreator(_campaignId) {
-		_isZeroAddress(_collection);
-
-		for (uint256 i; i < campaigns[_campaignId].collections.length; ) {
-			if (campaigns[_campaignId].collections[i] == _collection) {
-				INFTCollection(_collection).setState(_state);
-				return;
-			}
-
-			unchecked {
-				++i;
-			}
-		}
-	}
-
-	function setCollectionSupply(
-		uint256 _campaignId,
-		address _collection,
-		uint256 _supply
-	) external onlyRole(USER_ROLE) onlyCampaignCreator(_campaignId) {
-		_isZeroAddress(_collection);
-		if (_supply == 0) revert INVALID_SUPPLY();
-
-		for (uint256 i; i < campaigns[_campaignId].collections.length; ) {
-			if (campaigns[_campaignId].collections[i] == _collection) {
-				INFTCollection(_collection).setSupply(_supply);
-				return;
-			}
-
-			unchecked {
-				++i;
-			}
-		}
-	}
-
-	function setNFTCollection(
-		INFTCollection _nftCollection
-	) external onlyRole(ADMIN_ROLE) {
+	function setNFTCollection(INFTCollection _nftCollection) external {
 		_isZeroAddress(address(_nftCollection));
 		nftCollection = _nftCollection;
 	}
 
-	function recoverFunds(
+	function recoverCollectionFunds(
+		uint256 _campaignId,
 		address _token,
-		address _recipient
-	) external onlyRole(ADMIN_ROLE) {
-		_isZeroAddress(_recipient);
+		address _to
+	) external {
+		_invalidCampaignId(_campaignId);
+		Campaign storage campaign = campaigns[_campaignId];
 
-		uint256 amount = _token == NATIVE
-			? address(this).balance
-			: ERC20(_token).balanceOf(address(this));
+		if (msg.sender != campaign.creator) revert UNAUTHORIZED();
 
-		_transferAmount(_token, _recipient, amount);
+		INFTCollection selectedNftCollection = INFTCollection(_token);
+
+		selectedNftCollection.recoverFunds(_token, _to);
 	}
 
 	/// =========================
 	/// == Internal Functions ===
 	/// =========================
 
-	function _InvalidCampaignId(uint256 _campaignId) internal pure {
-		_InvalidCampaignId(_campaignId);
+	function _invalidCampaignId(uint256 _campaignId) internal view {
+		if (_campaignId == 0 || _campaignId > campaignCount)
+			revert INVALID_CAMPAIGN_ID();
 	}
 }

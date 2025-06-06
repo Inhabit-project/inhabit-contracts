@@ -6,8 +6,10 @@ contract Errors {
 	/// ====== Generic =======
 	/// ======================
 
+	error ALREADY_INITIALIZED();
 	error EMPTY_STRING();
 	error EMPTY_ARRAY();
+	error INVALID();
 	error INVALID_INDEX();
 	error INVALID_PRICE();
 	error INVALID_SUPPLY();
@@ -15,10 +17,6 @@ contract Errors {
 	error SAME_STATE();
 	error UNAUTHORIZED();
 	error ZERO_ADDRESS();
-
-	function _isEmptyArray(bytes memory _array) internal pure {
-		if (_array.length == 0) revert EMPTY_ARRAY();
-	}
 
 	function _isEmptyString(string memory _str) internal pure {
 		if (bytes(_str).length == 0) revert EMPTY_STRING();
@@ -42,6 +40,7 @@ contract Errors {
 	error GROUP_ALREADY_EXISTS();
 	error GROUP_NOT_FOUND();
 	error GROUP_NOT_ACTIVE();
+	error PERCENTAGE_ERROR();
 
 	/// ======================
 	/// ==== Collections =====
