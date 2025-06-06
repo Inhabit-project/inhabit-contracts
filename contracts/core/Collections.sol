@@ -2,75 +2,30 @@
 pragma solidity ^0.8.28;
 
 import {INFTCollection} from './interfaces/INFTCollection.sol';
+import {ICollections} from './interfaces/ICollections.sol';
 import {Errors} from './libraries/Errors.sol';
 import {Clone} from './libraries/Clone.sol';
 
-contract Collections is Errors {
-	/// =========================
-	/// ======== Structs ========
-	/// =========================
-
-	struct CollectionParams {
-		string name;
-		string symbol;
-		string uri;
-		uint256 supply;
-		uint256 price;
-		bool state;
-	}
-
-	struct Collection {
-		string name;
-		string symbol;
-		string uri;
-		uint256 supply;
-		uint256 price;
-		bool state;
-		address creator;
-		uint256 tokenCount;
-	}
-
-	struct Campaign {
-		address[] collections;
-		bool state;
-		address creator;
-	}
-
+contract Collections is ICollections, Errors {
 	/// =========================
 	/// === Storage Variables ===
 	/// =========================
 
-	mapping(address => uint256) public nonces;
-	mapping(uint256 => Campaign) public campaigns;
+	mapping(address => uint256) private nonces;
+	mapping(uint256 => Campaign) private campaigns;
 
 	INFTCollection public nftCollection;
 	uint256 public campaignCount = 0;
 
 	/// =========================
-	/// ======== Events =========
+	/// ====== Modifiers ========
 	/// =========================
 
-	event CampaignCreated(
-		uint256 indexed campaignId,
-		address indexed creator,
-		CollectionParams[] collections
-	);
-	event CampaignStatusUpdated(uint256 indexed campaignId, bool status);
-	event CollectionCreated(
-		address indexed collection,
-		address indexed creator,
-		string name,
-		string symbol,
-		uint256 supply,
-		uint256 price
-	);
+	modifier onlyCampaignCreator(uint256 _campaignId) {
+		_invalidCampaignId(_campaignId);
 
-	/// =========================
-	/// ====== Constructor ======
-	/// =========================
-
-	constructor() {
-		// Constructor vacío, roles manejados por contrato padre
+		if (campaigns[_campaignId].creator != msg.sender) revert UNAUTHORIZED();
+		_;
 	}
 
 	/// =========================
@@ -79,25 +34,29 @@ contract Collections is Errors {
 
 	function getCampaign(
 		uint256 _campaignId
-	) external view returns (Campaign memory) {
+	) internal view returns (Campaign memory) {
 		_invalidCampaignId(_campaignId);
 		return campaigns[_campaignId];
 	}
 
-	/// =================================
-	/// == External / Public Functions ==
-	/// =================================
+	function getNonce(address _account) internal view returns (uint256) {
+		return nonces[_account];
+	}
 
-	function createCampaign(
+	/// =========================
+	/// == Internal Functions ===
+	/// =========================
+
+	function _createCampaign(
 		CollectionParams[] memory _collectionsParams
-	) external {
+	) internal {
 		if (_collectionsParams.length == 0) revert EMPTY_ARRAY();
 
 		Campaign storage campaign = campaigns[++campaignCount];
 		campaign.state = true;
 		campaign.creator = msg.sender;
 
-		for (uint256 i = 0; i < _collectionsParams.length; ) {
+		for (uint256 i; i < _collectionsParams.length; ) {
 			CollectionParams memory params = _collectionsParams[i];
 
 			_isEmptyString(params.name);
@@ -141,31 +100,141 @@ contract Collections is Errors {
 		emit CampaignCreated(campaignCount, msg.sender, _collectionsParams);
 	}
 
-	function setNFTCollection(INFTCollection _nftCollection) external {
-		_isZeroAddress(address(_nftCollection));
-		nftCollection = _nftCollection;
+	function _updateCampaignStatus(
+		uint256 _campaignId,
+		bool _status
+	) internal onlyCampaignCreator(_campaignId) {
+		_invalidCampaignId(_campaignId);
+
+		Campaign storage campaign = campaigns[_campaignId];
+
+		if (campaign.creator != msg.sender) revert UNAUTHORIZED();
+		if (campaign.state == _status) revert SAME_STATE();
+
+		campaign.state = _status;
+		emit CampaignStatusUpdated(_campaignId, _status);
 	}
 
-	function recoverCollectionFunds(
+	function _setCollectionBaseURI(
 		uint256 _campaignId,
+		address _collection,
+		string calldata _baseURI
+	) internal onlyCampaignCreator(_campaignId) {
+		_isZeroAddress(_collection);
+
+		for (uint256 i; i < campaigns[_campaignId].collections.length; ) {
+			if (campaigns[_campaignId].collections[i] == _collection) {
+				INFTCollection(_collection).setBaseURI(_baseURI);
+				emit CollectionBaseURIUpdated(_campaignId, _collection, _baseURI);
+				break;
+			}
+
+			unchecked {
+				++i;
+			}
+		}
+	}
+
+	function _setCollectionPrice(
+		uint256 _campaignId,
+		address _collection,
+		uint256 _price
+	) internal onlyCampaignCreator(_campaignId) {
+		_isZeroAddress(_collection);
+		if (_price == 0) revert INVALID_PRICE();
+
+		for (uint256 i; i < campaigns[_campaignId].collections.length; ) {
+			if (campaigns[_campaignId].collections[i] == _collection) {
+				INFTCollection(_collection).setPrice(_price);
+				emit CollectionPriceUpdated(_campaignId, _collection, _price);
+				break;
+			}
+
+			unchecked {
+				++i;
+			}
+		}
+	}
+
+	function _setCollectionState(
+		uint256 _campaignId,
+		address _collection,
+		bool _state
+	) internal onlyCampaignCreator(_campaignId) {
+		_isZeroAddress(_collection);
+
+		for (uint256 i; i < campaigns[_campaignId].collections.length; ) {
+			if (campaigns[_campaignId].collections[i] == _collection) {
+				INFTCollection(_collection).setState(_state);
+				emit CollectionStateUpdated(_campaignId, _collection, _state);
+				break;
+			}
+
+			unchecked {
+				++i;
+			}
+		}
+	}
+
+	function _setCollectionSupply(
+		uint256 _campaignId,
+		address _collection,
+		uint256 _supply
+	) internal onlyCampaignCreator(_campaignId) {
+		_isZeroAddress(_collection);
+		if (_supply == 0) revert INVALID_SUPPLY();
+
+		for (uint256 i; i < campaigns[_campaignId].collections.length; ) {
+			if (campaigns[_campaignId].collections[i] == _collection) {
+				INFTCollection(_collection).setSupply(_supply);
+				emit CollectionSupplyUpdated(_campaignId, _collection, _supply);
+				break;
+			}
+
+			unchecked {
+				++i;
+			}
+		}
+	}
+
+	function _setNFTCollection(address _nftCollection) internal {
+		_isZeroAddress(_nftCollection);
+		nftCollection = INFTCollection(_nftCollection);
+		emit NftCollectionSet(_nftCollection);
+	}
+
+	function _recoverCollectionFunds(
+		uint256 _campaignId,
+		address _collectionAddress,
 		address _token,
 		address _to
-	) external {
+	) internal {
 		_invalidCampaignId(_campaignId);
 		Campaign storage campaign = campaigns[_campaignId];
 
 		if (msg.sender != campaign.creator) revert UNAUTHORIZED();
 
-		INFTCollection selectedNftCollection = INFTCollection(_token);
+		for (uint256 i; i < campaign.collections.length; ) {
+			if (_collectionAddress == campaign.collections[i]) {
+				INFTCollection findedNftCollection = INFTCollection(
+					campaign.collections[i]
+				);
 
-		selectedNftCollection.recoverFunds(_token, _to);
+				findedNftCollection.recoverFunds(_token, _to);
+				break;
+			}
+
+			unchecked {
+				++i;
+			}
+		}
 	}
 
 	/// =========================
-	/// == Internal Functions ===
+	/// === Private Functions ===
 	/// =========================
 
-	function _invalidCampaignId(uint256 _campaignId) internal view {
+	function _invalidCampaignId(uint256 _campaignId) private view {
 		if (_campaignId == 0 || _campaignId > campaignCount)
 			revert INVALID_CAMPAIGN_ID();
 	}

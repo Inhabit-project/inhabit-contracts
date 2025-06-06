@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import {ReentrancyGuard} from '@openzeppelin/contracts/utils/ReentrancyGuard.sol';
 import {Initializable} from '@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol';
 import {AccessControlUpgradeable} from '@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol';
+import {ReentrancyGuard} from '@openzeppelin/contracts/utils/ReentrancyGuard.sol';
 
 import {Groups} from './Groups.sol';
 import {Collections} from './Collections.sol';
@@ -100,4 +100,64 @@ contract Inhabit is
 	}
 
 	/// @notice Collection functions
+
+	function createCampaign(
+		CollectionParams[] memory _collectionsParams
+	) external onlyRole(USER_ROLE) {
+		_createCampaign(_collectionsParams);
+	}
+
+	function updateCampaignStatus(
+		uint256 _campaignId,
+		bool _status
+	) external onlyRole(USER_ROLE) {
+		_updateCampaignStatus(_campaignId, _status);
+	}
+
+	function setCollectionBaseURI(
+		uint256 _campaignId,
+		address _collection,
+		string calldata _baseURI
+	) external onlyRole(USER_ROLE) {
+		_setCollectionBaseURI(_campaignId, _collection, _baseURI);
+	}
+
+	function setCollectionPrice(
+		uint256 _campaignId,
+		address _collection,
+		uint256 _price
+	) external onlyRole(USER_ROLE) {
+		_setCollectionPrice(_campaignId, _collection, _price);
+	}
+
+	function setCollectionState(
+		uint256 _campaignId,
+		address _collection,
+		bool _state
+	) external onlyRole(USER_ROLE) {
+		_setCollectionState(_campaignId, _collection, _state);
+	}
+
+	function setCollectionSupply(
+		uint256 _campaignId,
+		address _collection,
+		uint256 _supply
+	) external onlyRole(USER_ROLE) {
+		_setCollectionSupply(_campaignId, _collection, _supply);
+	}
+
+	function setNFTCollection(
+		address _nftCollection
+	) external onlyRole(USER_ROLE) {
+		_setNFTCollection(_nftCollection);
+	}
+
+	function recoverCollectionFunds(
+		uint256 _campaignId,
+		address _collectionAddress,
+		address _token,
+		address _to
+	) external onlyRole(USER_ROLE) {
+		_recoverCollectionFunds(_campaignId, _collectionAddress, _token, _to);
+	}
 }
