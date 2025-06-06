@@ -3,121 +3,94 @@ pragma solidity ^0.8.28;
 
 import {ERC20} from 'solady/src/tokens/ERC20.sol';
 
+import {IGroups} from './interfaces/IGroups.sol';
 import {Transfer} from './libraries/Transfer.sol';
 import {Errors} from './libraries/Errors.sol';
 
-contract Groups is Transfer, Errors {
-	/// =========================
-	/// ======== Structs ========
-	/// =========================
-
-	struct Group {
-		string referral;
-		bool state;
-		Embassador[] embassadors;
-	}
-
-	struct Embassador {
-		address account;
-		uint256 fee;
-	}
-
+contract Groups is IGroups, Transfer, Errors {
 	/// =========================
 	/// === Storage Variables ===
 	/// =========================
 
-	mapping(string => Group) public groups;
-	mapping(uint256 => string) public groupList;
+	/// @dev Collection of groups
+	mapping(string => Group) private groups;
+
+	/// @dev Collection of group referral
+	mapping(uint256 => string) private groupList;
+
+	/// @dev Collection of supported tokens
 	mapping(address => bool) private tokens;
 
+	/**
+	 * @dev Gets the maximum percentage value (basis points)
+	 * @return uint256 Maximum percentage value (10000 = 100%)
+	 */
 	uint256 public immutable pncg = 10000;
+
+	/**
+	 * @dev Gets the total number of created groups
+	 * @return uint256 Total number of groups
+	 */
 	uint256 public groupCount = 0;
 
-	/// =========================
-	/// ======== Events =========
-	/// =========================
-
-	event GroupCreated(
-		string indexed referral,
-		bool state,
-		Embassador[] embassadors
-	);
-
-	event GroupStatusUpdated(string indexed referral, bool status);
-	event EmbassadorsAdded(string indexed referral, Embassador[] embassadors);
-	event EmbassadorsUpdated(string indexed referral, Embassador[] embassadors);
-	event EmbassadorsRemoved(string indexed referral, address[] accounts);
-	event Distributed(address indexed embassador, uint256 amount);
+	receive() external payable {}
 
 	/// =========================
 	/// ==== View Functions =====
 	/// =========================
 
+	/**
+	 * @dev Gets complete information of a group by its referral code
+	 * @param _referral Group's referral code
+	 * @return Group Complete group structure
+	 */
 	function getGroup(
 		string calldata _referral
 	) public view returns (Group memory) {
 		return groups[_referral];
 	}
 
+	/**
+	 * @dev Gets a group's referral code by its index
+	 * @param _id Group index in the list
+	 * @return string Group's referral code
+	 */
+	function getGroupReferral(uint256 _id) public view returns (string memory) {
+		return groupList[_id];
+	}
+
+	/**
+	 * @dev Checks if a token is supported by the contract
+	 * @param _token Token address to verify
+	 * @return bool True if the token is supported, false otherwise
+	 */
+	function isTokenSupported(address _token) public view returns (bool) {
+		return tokens[_token];
+	}
+
+	/**
+	 * @dev Calculates commission based on amount and percentage
+	 * @param _amount Total amount on which to calculate the commission
+	 * @param _porcentaje Commission percentage in basis points (10000 = 100%)
+	 * @return fee Calculated commission amount
+	 */
 	function calculateFee(
-		uint256 amount,
-		uint256 porcentaje
+		uint256 _amount,
+		uint256 _porcentaje
 	) public pure returns (uint256 fee) {
-		return (amount * porcentaje) / 10000;
+		return (_amount * _porcentaje) / pncg;
 	}
 
-	/// =================================
-	/// == External / Public Functions ==
-	/// =================================
+	/// =========================
+	/// == Internal Functions ===
+	/// =========================
 
-	// Funciones públicas/externas sin modificadores de rol
-	// Los modificadores de rol se aplicarán en Inhabit
-
-	function createGroup(
-		string calldata _referral,
-		bool _state,
-		Embassador[] memory _embassadors
-	) external {
-		_isEmptyString(_referral);
-		_isGroupExist(_referral);
-		_validateFeeArray(_embassadors);
-
-		Group storage newGroup = groups[_referral];
-		newGroup.referral = _referral;
-		newGroup.state = _state;
-
-		for (uint256 i = 0; i < _embassadors.length; i++) {
-			newGroup.embassadors.push(_embassadors[i]);
-		}
-
-		groupList[++groupCount] = _referral;
-		emit GroupCreated(_referral, _state, _embassadors);
-	}
-
-	function updateGroupStatus(string calldata _referral, bool _status) external {
-		_isNotGroupExist(_referral);
-		Group storage group = groups[_referral];
-		if (group.state == _status) revert SAME_STATE();
-		group.state = _status;
-		emit GroupStatusUpdated(_referral, _status);
-	}
-
-	function removeFromTokens(address _token) external {
-		_isZeroAddress(_token);
-		tokens[_token] = false;
-	}
-
-	function recoverFunds(address _token, address _to) external {
-		_isZeroAddress(_to);
-
-		uint256 amount = _token == NATIVE
-			? address(this).balance
-			: ERC20(_token).balanceOf(address(this));
-
-		_transferAmount(_token, _to, amount);
-	}
-
-	function addToTokens(address[] calldata _tokens) external {
+	/**
+	 * @dev Adds supported tokens to the contract
+	 * @param _tokens Array of token addresses to add
+	 * @notice Can only be called by the contract owner
+	 */
+	function _addToTokens(address[] calldata _tokens) internal {
 		// todo: check if token is already added, if it is, revert
 		for (uint256 i = 0; i < _tokens.length; i++) {
 			_isZeroAddress(_tokens[i]);
@@ -129,18 +102,214 @@ contract Groups is Transfer, Errors {
 		}
 	}
 
-	/// =========================
-	/// == Internal Functions ===
-	/// =========================
+	/**
+	 * @dev Removes a supported token from the contract
+	 * @param _token Token address to remove
+	 * @notice Can only be called by the contract owner
+	 */
+	function _removeFromTokens(address _token) internal {
+		_isZeroAddress(_token);
+		tokens[_token] = false;
+	}
 
+	/**
+	 * @dev Recovers funds from the contract
+	 * @param _token Token address to recover (use address(0) for native ETH)
+	 * @param _to Destination address to send the funds
+	 * @notice Can only be called by the contract owner
+	 */
+	function _recoverFunds(address _token, address _to) internal {
+		_isZeroAddress(_to);
+
+		uint256 amount = _token == NATIVE
+			? address(this).balance
+			: ERC20(_token).balanceOf(address(this));
+
+		_transferAmount(_token, _to, amount);
+	}
+
+	/**
+	 * @dev Creates a new group with ambassadors
+	 * @param _referral Unique referral code for the group
+	 * @param _state Initial group state (true = active, false = inactive)
+	 * @param _ambassadors Array of ambassadors with their respective commissions
+	 * @notice Total commission sum must not exceed 10000 basis points (100%)
+	 * @notice Can only be called by the contract owner
+	 */
+	function _createGroup(
+		string calldata _referral,
+		bool _state,
+		Embassador[] memory _ambassadors
+	) internal {
+		_isEmptyString(_referral);
+		_isGroupExist(_referral);
+		_validateFeeArray(_ambassadors);
+
+		Group storage newGroup = groups[_referral];
+		newGroup.referral = _referral;
+		newGroup.state = _state;
+
+		for (uint256 i = 0; i < _ambassadors.length; i++) {
+			newGroup.embassadors.push(_ambassadors[i]);
+		}
+
+		groupList[++groupCount] = _referral;
+		emit GroupCreated(_referral, _state, _ambassadors);
+	}
+
+	/**
+	 * @dev Updates the status of an existing group
+	 * @param _referral Group's referral code
+	 * @param _status New group status
+	 * @notice Can only be called by the contract owner
+	 */
+
+	function _updateGroupStatus(
+		string calldata _referral,
+		bool _status
+	) internal {
+		_isNotGroupExist(_referral);
+		Group storage group = groups[_referral];
+		if (group.state == _status) revert SAME_STATE();
+		group.state = _status;
+		emit GroupStatusUpdated(_referral, _status);
+	}
+
+	/**
+	 * @dev Adds ambassadors to an existing group
+	 * @param _referral Group's referral code
+	 * @param _ambassadors Array of ambassadors to add
+	 * @notice Total commission sum after adding must not exceed 10000 basis points
+	 * @notice Can only be called by the contract owner
+	 */
+	function _addEmbassadors(
+		string calldata _referral,
+		Embassador[] calldata _ambassadors
+	) internal {
+		_isNotGroupExist(_referral);
+		_isEmptyEmbassador(_ambassadors);
+
+		Group storage group = groups[_referral];
+
+		for (uint256 i; i < _ambassadors.length; ) {
+			_isZeroAddress(_ambassadors[i].account);
+			group.embassadors.push(_ambassadors[i]);
+
+			unchecked {
+				++i;
+			}
+		}
+
+		_validateFee(group);
+		emit EmbassadorsAdded(_referral, _ambassadors);
+	}
+
+	/**
+	 * @dev Updates commissions of existing ambassadors in a group
+	 * @param _referral Group's referral code
+	 * @param _ambassadors Array of ambassadors with their new commissions
+	 * @notice Ambassadors must already exist in the group
+	 * @notice Total commission sum after updating must not exceed 10000 basis points
+	 * @notice Can only be called by the contract owner
+	 */
+	function _updateEmbassadors(
+		string calldata _referral,
+		Embassador[] calldata _ambassadors
+	) internal {
+		_isNotGroupExist(_referral);
+		_isEmptyEmbassador(_ambassadors);
+
+		Group storage group = groups[_referral];
+
+		for (uint256 i; i < _ambassadors.length; ) {
+			_isZeroAddress(_ambassadors[i].account);
+
+			bool found = false;
+			for (uint256 j; j < group.embassadors.length; ) {
+				if (group.embassadors[j].account == _ambassadors[i].account) {
+					group.embassadors[j].fee = _ambassadors[i].fee;
+					found = true;
+					break;
+				}
+
+				unchecked {
+					++j;
+				}
+			}
+
+			if (!found) revert EMBASSADOR_NOT_FOUND();
+
+			unchecked {
+				++i;
+			}
+		}
+
+		_validateFee(group);
+		emit EmbassadorsUpdated(_referral, _ambassadors);
+	}
+
+	/**
+	 * @dev Removes ambassadors from a group
+	 * @param _referral Group's referral code
+	 * @param _accounts Array of ambassador addresses to remove
+	 * @notice Ambassadors must exist in the group
+	 * @notice Can only be called by the contract owner
+	 */
+	function _removeEmbassadors(
+		string calldata _referral,
+		address[] calldata _accounts
+	) internal {
+		_isNotGroupExist(_referral);
+		if (_accounts.length == 0) revert EMPTY_ARRAY();
+
+		Group storage group = groups[_referral];
+
+		for (uint256 i; i < _accounts.length; ) {
+			if (_accounts[i] == address(0)) revert ZERO_ADDRESS();
+
+			bool found = false;
+			for (uint256 j; j < group.embassadors.length; ) {
+				if (group.embassadors[j].account == _accounts[i]) {
+					group.embassadors[j] = group.embassadors[
+						group.embassadors.length - 1
+					];
+					group.embassadors.pop();
+					found = true;
+					break;
+				}
+
+				unchecked {
+					++j;
+				}
+			}
+
+			if (!found) revert EMBASSADOR_NOT_FOUND();
+
+			unchecked {
+				++i;
+			}
+		}
+
+		emit EmbassadorsRemoved(_referral, _accounts);
+	}
+
+	/**
+	 * @dev Distributes commissions to group ambassadors
+	 * @param _referral Group's referral code
+	 * @param _token Token address to distribute (use address(0) for native ETH)
+	 * @param _amount Total amount to distribute
+	 * @notice Group must be active
+	 * @notice Token must be supported by the contract
+	 * @notice Caller must have sufficient balance and allowance for the token
+	 */
 	function _distribution(
-		string calldata _referal,
+		string calldata _referral,
 		address _token,
 		uint256 _amount
 	) internal {
-		_isNotGroupExist(_referal);
+		_isNotGroupExist(_referral);
 
-		Group storage group = groups[_referal];
+		Group storage group = groups[_referral];
 		if (!group.state) revert GROUP_NOT_ACTIVE();
 
 		TransferData[] memory transfers = new TransferData[](
@@ -165,22 +334,64 @@ contract Groups is Transfer, Errors {
 		_transferAmountsFrom(_token, transfers);
 	}
 
-	function _isGroupExist(string calldata _referral) internal view {
+	/// =========================
+	/// === Private Functions ===
+	/// =========================
+
+	/**
+	 * @dev Validates that a group exists
+	 * @param _referral Group's referral code to validate
+	 * @notice Reverts if group does not exist with the given referral code
+	 * @notice Used before group operations to ensure target exists
+	 */
+	function _isGroupExist(string calldata _referral) private view {
 		if (bytes(groups[_referral].referral).length != 0)
 			revert GROUP_ALREADY_EXISTS();
 	}
 
-	function _isNotGroupExist(string calldata _referral) internal view {
+	/**
+	 * @dev Validates that a group does not already exist
+	 * @param _referral Group's referral code to validate
+	 * @notice Reverts if group already exists with the given referral code
+	 * @notice Used before group creation to prevent duplicates
+	 */
+	function _isNotGroupExist(string calldata _referral) private view {
 		if (bytes(groups[_referral].referral).length == 0) revert GROUP_NOT_FOUND();
 	}
 
-	function _validateFeeArray(Embassador[] memory _embassadors) internal pure {
-		if (_embassadors.length == 0) revert EMPTY_ARRAY();
-
+	/**
+	 * @dev Validates that total commission fees do not exceed maximum allowed
+	 * @param group Storage reference to the group being validated
+	 * @notice Reverts if total fees exceed 10000 basis points (100%)
+	 * @notice This function performs O(n) iteration over all ambassadors
+	 * @dev Consider caching total fees in group struct for gas optimization
+	 */
+	function _validateFee(Group storage group) private view {
 		uint256 totalFee = 0;
-		for (uint256 i = 0; i < _embassadors.length; ) {
-			_isZeroAddress(_embassadors[i].account);
-			totalFee += _embassadors[i].fee;
+		for (uint256 i; i < group.embassadors.length; ) {
+			totalFee += group.embassadors[i].fee;
+
+			unchecked {
+				++i;
+			}
+		}
+
+		if (totalFee > pncg) revert PERCENTAGE_ERROR();
+	}
+
+	/**
+	 * @dev Validates an array of ambassadors before processing
+	 * @param _ambassadors Array of ambassadors to validate
+	 * @notice Validates that no ambassador has zero address
+	 * @notice Validates that total fees do not exceed maximum percentage
+	 * @notice Validates that no duplicate addresses exist in array
+	 * @dev This is a pure function for standalone array validation
+	 */
+	function _validateFeeArray(Embassador[] memory _ambassadors) private pure {
+		uint256 totalFee = 0;
+		for (uint256 i; i < _ambassadors.length; ) {
+			_isZeroAddress(_ambassadors[i].account);
+			totalFee += _ambassadors[i].fee;
 			unchecked {
 				++i;
 			}
@@ -188,5 +399,13 @@ contract Groups is Transfer, Errors {
 		if (totalFee > 10000) revert PERCENTAGE_ERROR();
 	}
 
-	receive() external payable {}
+	/**
+	 * @dev Validates that ambassador array is not empty
+	 * @param _ambassadors Array of ambassadors to validate
+	 * @notice Reverts if the provided array has zero length
+	 * @notice Used to prevent operations on empty ambassador arrays
+	 */
+	function _isEmptyEmbassador(Embassador[] memory _ambassadors) private pure {
+		if (_ambassadors.length == 0) revert EMPTY_ARRAY();
+	}
 }

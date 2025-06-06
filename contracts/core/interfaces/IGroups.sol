@@ -1,17 +1,33 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
+/**
+ * @title IGroups Interface
+ * @dev Interface for the Groups contract that manages ambassador groups and commission distribution
+ * @notice This interface defines all public and external functions of the Groups contract
+ */
 interface IGroups {
 	/// =========================
 	/// ======== Structs ========
 	/// =========================
 
+	/**
+	 * @dev Structure representing an ambassador group
+	 * @param referral Unique referral code for the group
+	 * @param state Group state (active/inactive)
+	 * @param embassadors Array of ambassadors associated with the group
+	 */
 	struct Group {
 		string referral;
 		bool state;
 		Embassador[] embassadors;
 	}
 
+	/**
+	 * @dev Structure representing an ambassador
+	 * @param account Ambassador's address
+	 * @param fee Ambassador's commission in basis points
+	 */
 	struct Embassador {
 		address account;
 		uint256 fee;
@@ -21,115 +37,112 @@ interface IGroups {
 	/// ======== Events =========
 	/// =========================
 
-	event GroupAdded(
+	/**
+	 * @dev Event emitted when a new group is created
+	 * @param referral Referral code of the created group
+	 * @param state Initial state of the group
+	 * @param embassadors Array of group ambassadors
+	 */
+	event GroupCreated(
 		string indexed referral,
 		bool state,
 		Embassador[] embassadors
 	);
 
+	/**
+	 * @dev Event emitted when a group's status is updated
+	 * @param referral Group's referral code
+	 * @param status New group status
+	 */
 	event GroupStatusUpdated(string indexed referral, bool status);
 
+	/**
+	 * @dev Event emitted when ambassadors are added to a group
+	 * @param referral Group's referral code
+	 * @param embassadors Array of added ambassadors
+	 */
 	event EmbassadorsAdded(string indexed referral, Embassador[] embassadors);
 
+	/**
+	 * @dev Event emitted when ambassadors in a group are updated
+	 * @param referral Group's referral code
+	 * @param embassadors Array of updated ambassadors
+	 */
 	event EmbassadorsUpdated(string indexed referral, Embassador[] embassadors);
 
+	/**
+	 * @dev Event emitted when ambassadors are removed from a group
+	 * @param referral Group's referral code
+	 * @param accounts Array of removed ambassador addresses
+	 */
 	event EmbassadorsRemoved(string indexed referral, address[] accounts);
 
+	/**
+	 * @dev Event emitted when a commission is distributed to an ambassador
+	 * @param embassador Address of the ambassador receiving the commission
+	 * @param amount Distributed amount
+	 */
 	event Distributed(address indexed embassador, uint256 amount);
+
+	/**
+	 * @dev Event emitted when supported tokens are added
+	 * @param tokens Array of added token addresses
+	 */
+	event TokensAdded(address[] tokens);
+
+	/**
+	 * @dev Event emitted when a supported token is removed
+	 * @param token Address of the removed token
+	 */
+	event TokenRemoved(address token);
 
 	/// =========================
 	/// ===== View Functions ====
 	/// =========================
 
 	/**
-	 * @dev Get group information by referral code
-	 * @param _referral The referral code of the group
-	 * @return Group struct containing group data
+	 * @dev Gets complete information of a group by its referral code
+	 * @param _referral Group's referral code
+	 * @return Group Complete group structure
 	 */
 	function getGroup(
 		string calldata _referral
 	) external view returns (Group memory);
 
 	/**
-	 * @dev Calculate fee based on amount and percentage
-	 * @param amount Total amount
-	 * @param porcentaje Fee percentage in basis points
-	 * @return fee Calculated fee amount
+	 * @dev Gets a group's referral code by its index
+	 * @param _id Group index in the list
+	 * @return string Group's referral code
+	 */
+	function getGroupReferral(uint256 _id) external view returns (string memory);
+
+	/**
+	 * @dev Checks if a token is supported by the contract
+	 * @param _token Token address to verify
+	 * @return bool True if the token is supported, false otherwise
+	 */
+	function isTokenSupported(address _token) external view returns (bool);
+
+	/**
+	 * @dev Calculates commission based on amount and percentage
+	 * @param _amount Total amount on which to calculate the commission
+	 * @param _porcentaje Commission percentage in basis points (10000 = 100%)
+	 * @return fee Calculated commission amount
 	 */
 	function calculateFee(
-		uint256 amount,
-		uint256 porcentaje
+		uint256 _amount,
+		uint256 _porcentaje
 	) external pure returns (uint256 fee);
 
 	/**
-	 * @dev Get total number of groups
-	 * @return Total count of groups
+	 * @dev Gets the total number of created groups
+	 * @return uint256 Total number of groups
 	 */
 	function groupCount() external view returns (uint256);
 
 	/**
-	 * @dev Get group referral by index
-	 * @param index Group index
-	 * @return Referral code
-	 */
-	function groupList(uint256 index) external view returns (string memory);
-
-	/**
-	 * @dev Get maximum percentage (basis points)
-	 * @return Maximum percentage value
+	 * @dev Gets the maximum percentage value (basis points)
+	 * @return uint256 Maximum percentage value (10000 = 100%)
 	 */
 	function pncg() external view returns (uint256);
-
-	/// =========================
-	/// == External Functions ===
-	/// =========================
-
-	/**
-	 * @dev Add a new group
-	 * @param _referral Unique referral code for the group
-	 * @param _state Initial state of the group (active/inactive)
-	 * @param _embassadors Array of embassadors with their fees
-	 */
-	function addGroup(
-		string calldata _referral,
-		bool _state,
-		Embassador[] memory _embassadors
-	) external;
-
-	/**
-	 * @dev Update group status
-	 * @param _referral Referral code of the group
-	 * @param _status New status for the group
-	 */
-	function updateGroupStatus(string calldata _referral, bool _status) external;
-
-	/**
-	 * @dev Add embassadors to an existing group
-	 * @param _referal Referral code of the group
-	 * @param _embassadors Array of embassadors to add
-	 */
-	function addEmbassadors(
-		string calldata _referal,
-		Embassador[] calldata _embassadors
-	) external;
-
-	/**
-	 * @dev Update existing embassadors' fees
-	 * @param _referral Referral code of the group
-	 * @param _embassadors Array of embassadors with updated fees
-	 */
-	function updateEmbassadors(
-		string calldata _referral,
-		Embassador[] calldata _embassadors
-	) external;
-
-	/**
-	 * @dev Remove embassadors from a group
-	 * @param _referral Referral code of the group
-	 * @param _accounts Array of embassador addresses to remove
-	 */
-	function removeEmbassadors(
-		string calldata _referral,
-		address[] calldata _accounts
-	) external;
 }

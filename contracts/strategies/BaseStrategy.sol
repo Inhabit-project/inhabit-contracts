@@ -47,7 +47,7 @@ abstract contract BaseStrategy is Errors, Native, Transfer {
 		_isZeroAddress(_inhabit);
 
 		// check if collection ID is not initialized already, if it is, revert
-		if (collectionId != 0) revert ALREADY_INITIALIZED();
+		if (collectionId != 0) revert ALREADY_INITIALIZED_STRATEGY();
 
 		// check if collection ID is valid and not zero (0), if it is, revert
 		if (_collectionId == 0) revert INVALID();

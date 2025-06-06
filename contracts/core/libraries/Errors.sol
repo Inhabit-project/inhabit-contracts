@@ -6,10 +6,8 @@ contract Errors {
 	/// ====== Generic =======
 	/// ======================
 
-	error ALREADY_INITIALIZED();
 	error EMPTY_STRING();
 	error EMPTY_ARRAY();
-	error INVALID();
 	error INVALID_INDEX();
 	error INVALID_PRICE();
 	error INVALID_SUPPLY();
@@ -18,13 +16,31 @@ contract Errors {
 	error UNAUTHORIZED();
 	error ZERO_ADDRESS();
 
-	function _isEmptyString(string memory _str) internal pure {
-		if (bytes(_str).length == 0) revert EMPTY_STRING();
+	/**
+	 * @dev Validates that a string is not empty
+	 * @param _string String to validate
+	 * @notice Reverts if string has zero length
+	 * @notice Used for referral code validation
+	 */
+	function _isEmptyString(string memory _string) internal pure {
+		if (bytes(_string).length == 0) revert EMPTY_STRING();
 	}
 
-	function _isZeroAddress(address _addr) internal pure {
-		if (_addr == address(0)) revert ZERO_ADDRESS();
+	/**
+	 * @dev Validates that an address is not the zero address
+	 * @param _address Address to validate
+	 * @notice Reverts if address is zero (0x0)
+	 * @notice Used throughout contract for input validation
+	 */
+	function _isZeroAddress(address _address) internal pure {
+		if (_address == address(0)) revert ZERO_ADDRESS();
 	}
+
+	/// ======================
+	/// === Base Strategy ====
+	/// ======================
+	error ALREADY_INITIALIZED_STRATEGY();
+	error INVALID();
 
 	/// ======================
 	/// === NFTCollection ====
