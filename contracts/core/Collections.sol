@@ -51,6 +51,7 @@ contract Collections is ICollections, Errors {
 		uint256 _goal,
 		CollectionParams[] memory _collectionsParams
 	) internal {
+		if (_goal == 0) revert INVALID_GOAL();
 		if (_collectionsParams.length == 0) revert EMPTY_ARRAY();
 
 		Campaign storage campaign = campaigns[++campaignCount];

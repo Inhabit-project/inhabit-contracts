@@ -102,9 +102,10 @@ contract Inhabit is
 	/// @notice Collection functions
 
 	function createCampaign(
+		uint256 _goal,
 		CollectionParams[] memory _collectionsParams
 	) external onlyRole(USER_ROLE) {
-		_createCampaign(_collectionsParams);
+		_createCampaign(_goal, _collectionsParams);
 	}
 
 	function updateCampaignStatus(

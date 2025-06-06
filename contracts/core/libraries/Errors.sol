@@ -39,6 +39,7 @@ contract Errors {
 	/// ======================
 	/// === Base Strategy ====
 	/// ======================
+
 	error ALREADY_INITIALIZED_STRATEGY();
 	error INVALID();
 
@@ -64,4 +65,5 @@ contract Errors {
 
 	error CAMPAIGN_NOT_ACTIVE();
 	error INVALID_CAMPAIGN_ID();
+	error INVALID_GOAL();
 }
