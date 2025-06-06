@@ -30,6 +30,8 @@ interface ICollections {
 		address[] collections;
 		bool state;
 		address creator;
+		uint256 goal;
+		uint256 fundsRaised;
 	}
 
 	/// =========================

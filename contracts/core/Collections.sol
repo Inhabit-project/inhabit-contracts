@@ -48,6 +48,7 @@ contract Collections is ICollections, Errors {
 	/// =========================
 
 	function _createCampaign(
+		uint256 _goal,
 		CollectionParams[] memory _collectionsParams
 	) internal {
 		if (_collectionsParams.length == 0) revert EMPTY_ARRAY();
@@ -55,6 +56,8 @@ contract Collections is ICollections, Errors {
 		Campaign storage campaign = campaigns[++campaignCount];
 		campaign.state = true;
 		campaign.creator = msg.sender;
+		campaign.goal = _goal;
+		campaign.fundsRaised = 0;
 
 		for (uint256 i; i < _collectionsParams.length; ) {
 			CollectionParams memory params = _collectionsParams[i];
