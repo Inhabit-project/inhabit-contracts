@@ -2,13 +2,13 @@
 pragma solidity ^0.8.28;
 
 import {ERC20} from 'solady/src/tokens/ERC20.sol';
-import {IInhabit} from '../core/interfaces/IInhabit.sol';
 
-import {Transfer} from '../core/libraries/Transfer.sol';
+import {IInhabit} from '../core/interfaces/IInhabit.sol';
 import {Native} from '../core/libraries/Native.sol';
+import {Transfer} from '../core/libraries/Transfer.sol';
 import {Errors} from '../core/libraries/Errors.sol';
 
-abstract contract BaseStrategy is Errors, Native, Transfer {
+abstract contract BaseStrategy is Native, Transfer, Errors {
 	/// =========================
 	/// === Storage Variables ===
 	/// =========================
@@ -30,11 +30,7 @@ abstract contract BaseStrategy is Errors, Native, Transfer {
 		_;
 	}
 
-	/// =========================
-	/// ====== Constructor ======
-	/// =========================
-
-	constructor() {}
+	receive() external payable {}
 
 	/// =========================
 	/// ====== Initializer ======
@@ -52,23 +48,15 @@ abstract contract BaseStrategy is Errors, Native, Transfer {
 		// check if collection ID is valid and not zero (0), if it is, revert
 		if (_collectionId == 0) revert INVALID();
 
-		collectionId = _collectionId;
 		inhabit = IInhabit(_inhabit);
+		collectionId = _collectionId;
 	}
 
 	/// =========================
-	/// ==== View Functions =====
+	/// == Internal Functions ===
 	/// =========================
 
-	function getInhabit() external view virtual returns (address) {
-		return address(inhabit);
-	}
-
-	function getCollectionId() external view virtual returns (uint256) {
-		return collectionId;
-	}
-
-	function recoverFunds(address _token, address _to) external onlyInhabit {
+	function recoverFunds(address _token, address _to) internal onlyInhabit {
 		_isZeroAddress(_to);
 
 		uint256 amount = _token == NATIVE
@@ -79,20 +67,18 @@ abstract contract BaseStrategy is Errors, Native, Transfer {
 	}
 
 	/// =========================
-	/// == Internal Functions ===
+	/// === Private Functions ===
 	/// =========================
 
-	function _checkOnlyInitialized() internal view {
+	function _checkOnlyInitialized() private view {
 		if (collectionId == 0) revert NOT_INITIALIZED();
 	}
 
-	function _checkOnlyInhabit() internal view {
+	function _checkOnlyInhabit() private view {
 		if (msg.sender != address(inhabit)) revert UNAUTHORIZED();
 	}
 
 	/// =========================
 	/// ======== Hooks ==========
 	/// =========================
-
-	receive() external payable {}
 }
