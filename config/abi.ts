@@ -1,11 +1,9 @@
-import Inhabit from '@/artifacts/contracts/Inhabit.sol/Inhabit.json'
-import MockErc20 from '@/artifacts/contracts/Mocks/MockErc20.sol/MockErc20.json'
-import MockOracleV2 from '@/artifacts/contracts/Mocks/MockOracleV2.sol/MockOracleV2.json'
-import VendorV2 from '@/artifacts/contracts/VendorV2.sol/VendorV2.json'
+import Inhabit from '@/artifacts/contracts/core/Inhabit.sol/Inhabit.json'
+import MockErc20 from '@/artifacts/contracts/core/mocks/MockErc20.sol/MockErc20.json'
+import NFTCollection from '@/artifacts/contracts/strategies/NFTCollection/NFTCollection.sol/NFTCollection.json'
 
 export const ABIS = {
-	MockErc20: MockErc20.abi,
-	MockOracleV2: MockOracleV2.abi,
 	Inhabit: Inhabit.abi,
-	VendorV2: VendorV2.abi
+	MockErc20: MockErc20.abi,
+	NFTCollection: NFTCollection.abi
 }
