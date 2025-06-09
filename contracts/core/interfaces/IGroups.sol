@@ -38,6 +38,18 @@ interface IGroups {
 	/// =========================
 
 	/**
+	 * @dev Event emitted when supported tokens are added
+	 * @param tokens Array of added token addresses
+	 */
+	event TokensAdded(address[] tokens);
+
+	/**
+	 * @dev Event emitted when a supported token is removed
+	 * @param token Address of the removed token
+	 */
+	event TokenRemoved(address token);
+
+	/**
 	 * @dev Event emitted when a new group is created
 	 * @param referral Referral code of the created group
 	 * @param state Initial state of the group
@@ -84,18 +96,6 @@ interface IGroups {
 	 */
 	event Distributed(address indexed embassador, uint256 amount);
 
-	/**
-	 * @dev Event emitted when supported tokens are added
-	 * @param tokens Array of added token addresses
-	 */
-	event TokensAdded(address[] tokens);
-
-	/**
-	 * @dev Event emitted when a supported token is removed
-	 * @param token Address of the removed token
-	 */
-	event TokenRemoved(address token);
-
 	/// =========================
 	/// ===== View Functions ====
 	/// =========================
@@ -139,10 +139,4 @@ interface IGroups {
 	 * @return uint256 Total number of groups
 	 */
 	function groupCount() external view returns (uint256);
-
-	/**
-	 * @dev Gets the maximum percentage value (basis points)
-	 * @return uint256 Maximum percentage value (10000 = 100%)
-	 */
-	function pncg() external view returns (uint256);
 }

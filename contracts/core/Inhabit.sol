@@ -17,9 +17,9 @@ contract Inhabit is
 	Initializable,
 	AccessControlUpgradeable,
 	ReentrancyGuardUpgradeable,
+	IInhabit,
 	Groups,
-	Collections,
-	IInhabit
+	Collections
 {
 	/// =========================
 	/// === Storage Variables ===
@@ -52,7 +52,6 @@ contract Inhabit is
 		_grantRole(USER_ROLE, _defaultAdmin);
 
 		treasury = _treasury;
-		pncg = 10000;
 	}
 
 	/// =================================

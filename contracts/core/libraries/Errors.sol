@@ -20,7 +20,8 @@ contract Errors {
 	error NOT_INITIALIZED();
 	error NOT_NFT_OWNER();
 	error SAME_STATE();
-	error TOKEN_NOT_SUPPORTED();
+	error TOKEN_ALREADY_EXISTS();
+	error TOKEN_NOT_FOUND();
 	error UNAUTHORIZED();
 	error ZERO_ADDRESS();
 
@@ -62,6 +63,7 @@ contract Errors {
 	/// ======= Groups =======
 	/// ======================
 
+	error AMBASSADOR_ALREADY_EXISTS();
 	error EMBASSADOR_NOT_FOUND();
 	error GROUP_ALREADY_EXISTS();
 	error GROUP_NOT_FOUND();

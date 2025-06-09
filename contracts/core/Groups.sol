@@ -7,6 +7,14 @@ import {IGroups} from './interfaces/IGroups.sol';
 import {Transfer} from './libraries/Transfer.sol';
 import {Errors} from './libraries/Errors.sol';
 
+/**
+ * @title Groups Contract
+ * @author [salviega]
+ * @notice Manages ambassador groups and referral-based commission distribution.
+ * @dev Allows creation, update, and distribution of funds among ambassadors based on predefined fee percentages.
+ * Supports ERC20 tokens and native ETH as payment assets.
+ */
+
 contract Groups is IGroups, Transfer, Errors {
 	/// =========================
 	/// === Storage Variables ===
@@ -22,22 +30,20 @@ contract Groups is IGroups, Transfer, Errors {
 	mapping(address => bool) private tokens;
 
 	/**
-	 * @dev Gets the maximum percentage value (basis points)
-	 * @return uint256 Maximum percentage value (10000 = 100%)
+	 * @notice Allows the contract to receive native ETH.
+	 * @dev This function does not contain any logic; it's used to accept plain ETH transfers.
 	 */
-	uint256 public pncg;
+	receive() external payable {}
+
+	/// =========================
+	/// ==== View Functions =====
+	/// =========================
 
 	/**
 	 * @dev Gets the total number of created groups
 	 * @return uint256 Total number of groups
 	 */
 	uint256 public groupCount;
-
-	receive() external payable {}
-
-	/// =========================
-	/// ==== View Functions =====
-	/// =========================
 
 	/**
 	 * @dev Gets complete information of a group by its referral code
@@ -91,15 +97,18 @@ contract Groups is IGroups, Transfer, Errors {
 	 * @notice Can only be called by the contract owner
 	 */
 	function _addToTokens(address[] calldata _tokens) internal {
-		// todo: check if token is already added, if it is, revert
-		for (uint256 i = 0; i < _tokens.length; i++) {
+		for (uint256 i = 0; i < _tokens.length; ) {
 			_isZeroAddress(_tokens[i]);
+
+			if (tokens[_tokens[i]]) revert TOKEN_ALREADY_EXISTS();
 			tokens[_tokens[i]] = true;
 
 			unchecked {
 				++i;
 			}
 		}
+
+		emit TokensAdded(_tokens);
 	}
 
 	/**
@@ -109,23 +118,10 @@ contract Groups is IGroups, Transfer, Errors {
 	 */
 	function _removeFromTokens(address _token) internal {
 		_isZeroAddress(_token);
+		if (!tokens[_token]) revert TOKEN_NOT_FOUND();
+
 		tokens[_token] = false;
-	}
-
-	/**
-	 * @dev Recovers funds from the contract
-	 * @param _token Token address to recover (use address(0) for native ETH)
-	 * @param _to Destination address to send the funds
-	 * @notice Can only be called by the contract owner
-	 */
-	function _recoverFunds(address _token, address _to) internal {
-		_isZeroAddress(_to);
-
-		uint256 amount = _token == NATIVE
-			? address(this).balance
-			: ERC20(_token).balanceOf(address(this));
-
-		_transferAmount(_token, _to, amount);
+		emit TokenRemoved(_token);
 	}
 
 	/**
@@ -193,6 +189,17 @@ contract Groups is IGroups, Transfer, Errors {
 
 		for (uint256 i; i < _ambassadors.length; ) {
 			_isZeroAddress(_ambassadors[i].account);
+
+			for (uint256 j; j < group.embassadors.length; ) {
+				if (group.embassadors[j].account == _ambassadors[i].account) {
+					revert AMBASSADOR_ALREADY_EXISTS();
+				}
+
+				unchecked {
+					++j;
+				}
+			}
+
 			group.embassadors.push(_ambassadors[i]);
 
 			unchecked {
@@ -339,8 +346,29 @@ contract Groups is IGroups, Transfer, Errors {
 		return totalFee;
 	}
 
+	/**
+	 * @notice Verifies whether a token is supported by the contract.
+	 * @dev Reverts with TOKEN_NOT_FOUND if the token is not registered.
+	 * @param _token The address of the token to verify.
+	 */
 	function _isTokenSupported(address _token) internal view {
-		if (!isTokenSupported(_token)) revert TOKEN_NOT_SUPPORTED();
+		if (!isTokenSupported(_token)) revert TOKEN_NOT_FOUND();
+	}
+
+	/**
+	 * @dev Recovers funds from the contract
+	 * @param _token Token address to recover (use address(0) for native ETH)
+	 * @param _to Destination address to send the funds
+	 * @notice Can only be called by the contract owner
+	 */
+	function _recoverFunds(address _token, address _to) internal {
+		_isZeroAddress(_to);
+
+		uint256 amount = _token == NATIVE
+			? address(this).balance
+			: ERC20(_token).balanceOf(address(this));
+
+		_transferAmount(_token, _to, amount);
 	}
 
 	/// =========================
@@ -385,7 +413,7 @@ contract Groups is IGroups, Transfer, Errors {
 			}
 		}
 
-		if (totalFee > pncg) revert PERCENTAGE_ERROR();
+		if (totalFee > 10000) revert PERCENTAGE_ERROR();
 	}
 
 	/**
@@ -396,7 +424,7 @@ contract Groups is IGroups, Transfer, Errors {
 	 * @notice Validates that no duplicate addresses exist in array
 	 * @dev This is a pure function for standalone array validation
 	 */
-	function _validateFeeArray(Embassador[] memory _ambassadors) private view {
+	function _validateFeeArray(Embassador[] memory _ambassadors) private pure {
 		uint256 totalFee = 0;
 		for (uint256 i; i < _ambassadors.length; ) {
 			_isZeroAddress(_ambassadors[i].account);
@@ -405,7 +433,7 @@ contract Groups is IGroups, Transfer, Errors {
 				++i;
 			}
 		}
-		if (totalFee > pncg) revert PERCENTAGE_ERROR();
+		if (totalFee > 10000) revert PERCENTAGE_ERROR();
 	}
 
 	/**
