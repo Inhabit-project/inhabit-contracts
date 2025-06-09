@@ -16,9 +16,8 @@ const deployMockErc20: DeployFunction = async function (
 
 	const name: string = 'USD Coin'
 	const symbol: string = 'USDC'
-	const initialSupply: bigint = 100_000_000n // 100 USDC with 6 decimals
 
-	const args = [name, symbol, initialSupply]
+	const args = [name, symbol]
 
 	const mockErc20 = await deploy('MockErc20', {
 		from: deployer,
