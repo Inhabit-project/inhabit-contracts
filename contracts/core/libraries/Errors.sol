@@ -8,11 +8,19 @@ contract Errors {
 
 	error EMPTY_STRING();
 	error EMPTY_ARRAY();
+	error INSUFFICIENT_ALLOWANCE();
+	error INSUFFICIENT_FUNDS();
+	error INSUFFICIENT_SUPPLY();
+	error INVALID_AMOUNT();
 	error INVALID_INDEX();
 	error INVALID_PRICE();
 	error INVALID_SUPPLY();
+	error MISMATCHED_LENGTH();
+	error NOT_APPROVED();
 	error NOT_INITIALIZED();
+	error NOT_NFT_OWNER();
 	error SAME_STATE();
+	error TOKEN_NOT_SUPPORTED();
 	error UNAUTHORIZED();
 	error ZERO_ADDRESS();
 
@@ -48,6 +56,7 @@ contract Errors {
 	/// ======================
 
 	error COLLECTION_NOT_ACTIVE();
+	error INVALID_TOKEN_ID();
 
 	/// ======================
 	/// ======= Groups =======
@@ -64,6 +73,9 @@ contract Errors {
 	/// ======================
 
 	error CAMPAIGN_NOT_ACTIVE();
+	error COLLECTION_NOT_FOUND();
 	error INVALID_CAMPAIGN_ID();
 	error INVALID_GOAL();
+	error PURCHASE_NOT_FOUND();
+	error REFUND_ALREADY_CLAIMED();
 }

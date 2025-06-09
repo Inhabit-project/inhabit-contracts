@@ -3,6 +3,7 @@ pragma solidity ^0.8.28;
 
 import {ERC721Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol';
 import {ERC721URIStorageUpgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721URIStorageUpgradeable.sol';
+import {ERC721BurnableUpgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721BurnableUpgradeable.sol';
 import {Initializable} from '@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol';
 
 import {INFTCollection} from '../../core/interfaces/INFTCollection.sol';
@@ -12,6 +13,7 @@ contract NFTCollection is
 	Initializable,
 	ERC721Upgradeable,
 	ERC721URIStorageUpgradeable,
+	ERC721BurnableUpgradeable,
 	INFTCollection,
 	BaseStrategy
 {
@@ -38,9 +40,10 @@ contract NFTCollection is
 	function initialize(CollectionParams calldata _params) public initializer {
 		__ERC721_init(_params.name, _params.symbol);
 		__ERC721URIStorage_init();
-		__BaseStrategy_init(_params.id, msg.sender);
+		__ERC721Burnable_init();
 
-		collectionId = _params.id;
+		__BaseStrategy_init(_params.campaignId, _params.collectionId, msg.sender);
+
 		supply = _params.supply;
 		price = _params.price;
 		state = _params.state;
@@ -58,6 +61,13 @@ contract NFTCollection is
 
 		_safeMint(_to, ++tokenCount);
 		return tokenCount;
+	}
+
+	function burn(
+		uint256 tokenId
+	) public override(ERC721BurnableUpgradeable, INFTCollection) onlyInhabit {
+		_invalidTokenId(tokenId);
+		_burn(tokenId);
 	}
 
 	function setBaseURI(string calldata uri) external onlyInhabit {
@@ -96,12 +106,44 @@ contract NFTCollection is
 		return baseURI;
 	}
 
-	/// @notice Override required due to multiple inheritance
+	function _invalidTokenId(uint256 _tokenId) internal view {
+		if (_tokenId == 0 || _tokenId > tokenCount) revert INVALID_CAMPAIGN_ID();
+	}
+
+	// the following functions are overrides required by BaseStrategy
+
 	function recoverFunds(
 		address token,
 		address to
 	) public override(BaseStrategy, INFTCollection) onlyInhabit {
 		super.recoverFunds(token, to);
+	}
+
+	function getInhabit()
+		public
+		view
+		override(BaseStrategy, INFTCollection)
+		returns (address)
+	{
+		return super.getInhabit();
+	}
+
+	function getCampaignId()
+		public
+		view
+		override(BaseStrategy, INFTCollection)
+		returns (uint256)
+	{
+		return super.getCampaignId();
+	}
+
+	function getCollectionId()
+		public
+		view
+		override(BaseStrategy, INFTCollection)
+		returns (uint256)
+	{
+		return super.getCampaignId();
 	}
 
 	// The following functions are overrides required by Solidity.

@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
+import {IERC721} from '@openzeppelin/contracts/token/ERC721/IERC721.sol';
+
 /**
  * @title INFTCollection Interface
  * @dev Interface for the NFTCollection contract that manages ERC721 collections with minting controls
  * @notice This interface defines all external functions and events for NFT collection management
  */
-interface INFTCollection {
+interface INFTCollection is IERC721 {
 	/// =========================
 	/// ======== Structs ========
 	/// =========================
@@ -22,7 +24,8 @@ interface INFTCollection {
 	 * @param state Initial active/inactive state of the collection
 	 */
 	struct CollectionParams {
-		uint256 id;
+		uint256 campaignId;
+		uint256 collectionId;
 		string name;
 		string symbol;
 		string uri;
@@ -91,6 +94,8 @@ interface INFTCollection {
 	 * @notice Reverts if supply limit is reached or collection is inactive
 	 */
 	function safeMint(address _to) external returns (uint256);
+
+	function burn(uint256 tokenId) external;
 
 	/**
 	 * @dev Updates the base URI for token metadata
@@ -186,4 +191,14 @@ interface INFTCollection {
 	 * @return bool True if interface is supported
 	 */
 	function supportsInterface(bytes4 interfaceId) external view returns (bool);
+
+	/// =========================
+	/// ===== Base Strategy =====
+	/// =========================
+
+	function getInhabit() external view returns (address);
+
+	function getCampaignId() external view returns (uint256);
+
+	function getCollectionId() external view returns (uint256);
 }

@@ -306,7 +306,7 @@ contract Groups is IGroups, Transfer, Errors {
 		string calldata _referral,
 		address _token,
 		uint256 _amount
-	) internal {
+	) internal returns (uint256) {
 		_isNotGroupExist(_referral);
 
 		Group storage group = groups[_referral];
@@ -316,6 +316,7 @@ contract Groups is IGroups, Transfer, Errors {
 			group.embassadors.length
 		);
 
+		uint256 totalFee = 0;
 		for (uint256 i; i < group.embassadors.length; ) {
 			uint256 fee = calculateFee(_amount, group.embassadors[i].fee);
 
@@ -325,13 +326,21 @@ contract Groups is IGroups, Transfer, Errors {
 				amount: fee
 			});
 
+			totalFee += fee;
+
 			emit Distributed(group.embassadors[i].account, fee);
+
 			unchecked {
 				++i;
 			}
 		}
 
 		_transferAmountsFrom(_token, transfers);
+		return totalFee;
+	}
+
+	function _isTokenSupported(address _token) internal view {
+		if (!isTokenSupported(_token)) revert TOKEN_NOT_SUPPORTED();
 	}
 
 	/// =========================
@@ -396,7 +405,7 @@ contract Groups is IGroups, Transfer, Errors {
 				++i;
 			}
 		}
-		if (totalFee > 10000) revert PERCENTAGE_ERROR();
+		if (totalFee > pncg) revert PERCENTAGE_ERROR();
 	}
 
 	/**

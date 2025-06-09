@@ -6,6 +6,21 @@ interface ICollections {
 	/// ======== Structs ========
 	/// =========================
 
+	struct Refund {
+		bool claimed;
+	}
+
+	struct Purchase {
+		address collection;
+		uint256 tokenId;
+		address paymentToken;
+		uint256 price;
+		uint256 referralFee;
+		uint256 campaignId;
+		uint256 timestamp;
+		bool refunded;
+	}
+
 	struct CollectionParams {
 		string name;
 		string symbol;
@@ -53,6 +68,17 @@ interface ICollections {
 		string symbol,
 		uint256 supply,
 		uint256 price
+	);
+
+	event NFTPurchased(
+		uint256 indexed campaignId,
+		address indexed collection,
+		address paymentToken,
+		address indexed buyer,
+		uint256 tokenId,
+		uint256 price,
+		uint256 timestamp,
+		bool refunded
 	);
 
 	event CollectionBaseURIUpdated(

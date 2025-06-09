@@ -13,9 +13,19 @@ contract Collections is ICollections, Errors {
 
 	mapping(address => uint256) private nonces;
 	mapping(uint256 => Campaign) private campaigns;
+	mapping(uint256 => Purchase[]) private campaignPurchases;
+
+	// Refund tracking: campaignId => collection => token => amount per NFT
+	mapping(uint256 => mapping(address => mapping(address => uint256)))
+		private refunds;
+
+	// Track claimed refunds: campaignId => collection => tokenId => claimed
+	mapping(uint256 => mapping(address => mapping(uint256 => bool)))
+		private refundsClaimed;
 
 	INFTCollection public nftCollection;
 	uint256 public campaignCount = 0;
+	uint256 public collectionCount = 0;
 
 	/// =========================
 	/// ====== Modifiers ========
@@ -34,13 +44,30 @@ contract Collections is ICollections, Errors {
 
 	function getCampaign(
 		uint256 _campaignId
-	) internal view returns (Campaign memory) {
-		_invalidCampaignId(_campaignId);
+	) public view returns (Campaign memory) {
 		return campaigns[_campaignId];
 	}
 
-	function getNonce(address _account) internal view returns (uint256) {
-		return nonces[_account];
+	function getCampaignPurchases(
+		uint256 _campaignId
+	) public view returns (Purchase[] memory) {
+		return campaignPurchases[_campaignId];
+	}
+
+	function getRefunds(
+		uint256 _campaignId,
+		address _collection,
+		address _token
+	) public view returns (uint256) {
+		return refunds[_campaignId][_collection][_token];
+	}
+
+	function isRefundClaimed(
+		uint256 _campaignId,
+		address _collection,
+		uint256 _tokenId
+	) public view returns (bool) {
+		return refundsClaimed[_campaignId][_collection][_tokenId];
 	}
 
 	/// =========================
@@ -77,7 +104,8 @@ contract Collections is ICollections, Errors {
 
 			INFTCollection.CollectionParams memory initParams = INFTCollection
 				.CollectionParams({
-					id: campaignCount,
+					campaignId: campaignCount,
+					collectionId: ++collectionCount,
 					name: params.name,
 					symbol: params.symbol,
 					uri: params.uri,
@@ -107,7 +135,7 @@ contract Collections is ICollections, Errors {
 		emit CampaignCreated(campaignCount, msg.sender, _collectionsParams);
 	}
 
-	function _updateCampaignStatus(
+	function _updateCampaignstatus(
 		uint256 _campaignId,
 		bool _status
 	) internal onlyCampaignCreator(_campaignId) {
@@ -120,6 +148,67 @@ contract Collections is ICollections, Errors {
 
 		campaign.state = _status;
 		emit CampaignStatusUpdated(_campaignId, _status);
+	}
+
+	function _setRefund(
+		uint256 _campaignId,
+		address _collection,
+		address _token,
+		uint256 _amount
+	) internal {
+		refunds[_campaignId][_collection][_token] += _amount;
+	}
+
+	function _setRefundClaimed(
+		uint256 _campaignId,
+		address _collection,
+		uint256 _tokenId
+	) internal {
+		refundsClaimed[_campaignId][_collection][_tokenId] = true;
+	}
+
+	/// @notice Collection functions
+
+	function _safeMint(
+		uint256 _campaignId,
+		address _collection,
+		address _to,
+		address _paymentToken,
+		uint256 _price,
+		uint256 _referralFee
+	) internal {
+		INFTCollection nftCollectionFound = INFTCollection(_collection);
+
+		if (nftCollectionFound.supply() <= nftCollectionFound.tokenCount())
+			revert INVALID_SUPPLY();
+
+		uint256 tokenId = nftCollectionFound.safeMint(_to);
+
+		campaignPurchases[_campaignId].push(
+			Purchase({
+				collection: _collection,
+				tokenId: tokenId,
+				paymentToken: _paymentToken,
+				price: _price,
+				referralFee: _referralFee,
+				campaignId: _campaignId,
+				timestamp: block.timestamp,
+				refunded: false
+			})
+		);
+
+		campaigns[_campaignId].fundsRaised += _price;
+
+		emit NFTPurchased(
+			_campaignId,
+			_collection,
+			_paymentToken,
+			_to,
+			tokenId,
+			_price,
+			block.timestamp,
+			false
+		);
 	}
 
 	function _setCollectionBaseURI(
@@ -241,8 +330,53 @@ contract Collections is ICollections, Errors {
 	/// === Private Functions ===
 	/// =========================
 
-	function _invalidCampaignId(uint256 _campaignId) private view {
+	function _findPurchaseByTokenId(
+		uint256 _campaignId,
+		address _collection,
+		uint256 _tokenId
+	) internal view returns (Purchase memory) {
+		Purchase[] memory purchases = getCampaignPurchases(_campaignId);
+
+		for (uint256 i = 0; i < purchases.length; ) {
+			if (
+				purchases[i].collection == _collection &&
+				purchases[i].tokenId == _tokenId
+			) {
+				return purchases[i];
+			}
+
+			unchecked {
+				++i;
+			}
+		}
+
+		revert PURCHASE_NOT_FOUND();
+	}
+
+	function _invalidCampaignId(uint256 _campaignId) internal view {
 		if (_campaignId == 0 || _campaignId > campaignCount)
 			revert INVALID_CAMPAIGN_ID();
+	}
+
+	function _validateCollection(
+		uint256 _campaignId,
+		address _collection
+	) internal view returns (INFTCollection) {
+		_isZeroAddress(_collection);
+		_invalidCampaignId(_campaignId);
+
+		Campaign storage campaign = campaigns[_campaignId];
+
+		for (uint256 i = 0; i < campaign.collections.length; ) {
+			if (campaign.collections[i] == _collection) {
+				return INFTCollection(_collection);
+			}
+
+			unchecked {
+				++i;
+			}
+		}
+
+		revert COLLECTION_NOT_FOUND();
 	}
 }
