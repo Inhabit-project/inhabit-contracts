@@ -12,7 +12,8 @@
 		"format": "prettier --write .",
 		"lint": "eslint",
 		"lint:fix": "eslint --fix",
-		"test": "REPORT_GAS=true hardhat test"
+		"test": "REPORT_GAS=true hardhat test",
+		"typechain": "hardhat typechain"
 	},
 	"dependencies": {
 		"@chainlink/contracts": "^1.4.0",
@@ -30,6 +31,7 @@
 		"@nomicfoundation/hardhat-toolbox-viem": "^3.0.0",
 		"@nomicfoundation/hardhat-verify": "^2.0.14",
 		"@nomicfoundation/ignition-core": "^0.15.11",
+		"@openzeppelin/hardhat-upgrades": "^3.9.0",
 		"@safe-global/api-kit": "^3.0.1",
 		"@safe-global/protocol-kit": "^6.0.4",
 		"@safe-global/types-kit": "^2.0.1",

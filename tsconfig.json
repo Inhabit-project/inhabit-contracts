@@ -21,10 +21,11 @@
 		"./hardhat.config.ts",
 		"./scripts",
 		"./tasks",
-		"./test"
+		"./test",
+		"./typechain-types/**/*"
 	],
 
 	"exclude": ["node_modules"],
 
-	"typeRoots": ["./types", "./node_modules/@types"]
+	"typeRoots": ["./types", "./typechain-types", "./node_modules/@types"]
 }

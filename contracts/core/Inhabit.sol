@@ -5,7 +5,7 @@ import {ERC20} from 'solady/src/tokens/ERC20.sol';
 import {ERC721} from 'solady/src/tokens/ERC721.sol';
 import {Initializable} from '@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol';
 import {AccessControlUpgradeable} from '@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol';
-import {ReentrancyGuard} from '@openzeppelin/contracts/utils/ReentrancyGuard.sol';
+import {ReentrancyGuardUpgradeable} from '@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol';
 
 import {INFTCollection} from '../core/interfaces/INFTCollection.sol';
 import {IInhabit} from '../core/interfaces/IInhabit.sol';
@@ -16,7 +16,7 @@ import {Collections} from './Collections.sol';
 contract Inhabit is
 	Initializable,
 	AccessControlUpgradeable,
-	ReentrancyGuard,
+	ReentrancyGuardUpgradeable,
 	Groups,
 	Collections,
 	IInhabit
@@ -45,12 +45,14 @@ contract Inhabit is
 		address _treasury
 	) public initializer {
 		__AccessControl_init();
+		__ReentrancyGuard_init();
 
 		_grantRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
 		_grantRole(ADMIN_ROLE, _defaultAdmin);
 		_grantRole(USER_ROLE, _defaultAdmin);
 
 		treasury = _treasury;
+		pncg = 10000;
 	}
 
 	/// =================================

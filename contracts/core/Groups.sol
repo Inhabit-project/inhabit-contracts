@@ -25,13 +25,13 @@ contract Groups is IGroups, Transfer, Errors {
 	 * @dev Gets the maximum percentage value (basis points)
 	 * @return uint256 Maximum percentage value (10000 = 100%)
 	 */
-	uint256 public immutable pncg = 10000;
+	uint256 public pncg;
 
 	/**
 	 * @dev Gets the total number of created groups
 	 * @return uint256 Total number of groups
 	 */
-	uint256 public groupCount = 0;
+	uint256 public groupCount;
 
 	receive() external payable {}
 
@@ -78,7 +78,7 @@ contract Groups is IGroups, Transfer, Errors {
 		uint256 _amount,
 		uint256 _porcentaje
 	) public pure returns (uint256 fee) {
-		return (_amount * _porcentaje) / pncg;
+		return (_amount * _porcentaje) / 10000;
 	}
 
 	/// =========================
@@ -396,7 +396,7 @@ contract Groups is IGroups, Transfer, Errors {
 	 * @notice Validates that no duplicate addresses exist in array
 	 * @dev This is a pure function for standalone array validation
 	 */
-	function _validateFeeArray(Embassador[] memory _ambassadors) private pure {
+	function _validateFeeArray(Embassador[] memory _ambassadors) private view {
 		uint256 totalFee = 0;
 		for (uint256 i; i < _ambassadors.length; ) {
 			_isZeroAddress(_ambassadors[i].account);

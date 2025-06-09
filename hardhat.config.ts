@@ -1,4 +1,7 @@
 import '@nomicfoundation/hardhat-toolbox-viem'
+import '@nomicfoundation/hardhat-ethers'
+import '@openzeppelin/hardhat-upgrades'
+import '@typechain/hardhat'
 import 'hardhat-deploy'
 import 'tsconfig-paths/register'
 
@@ -69,6 +72,9 @@ const config: HardhatUserConfig = {
 		},
 		santiago: {
 			default: 3
+		},
+		ledger: {
+			default: 4
 		}
 	},
 

@@ -24,8 +24,8 @@ contract Collections is ICollections, Errors {
 		private refundsClaimed;
 
 	INFTCollection public nftCollection;
-	uint256 public campaignCount = 0;
-	uint256 public collectionCount = 0;
+	uint256 public campaignCount;
+	uint256 public collectionCount;
 
 	/// =========================
 	/// ====== Modifiers ========

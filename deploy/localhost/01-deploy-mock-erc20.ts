@@ -1,6 +1,5 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { DeployFunction } from 'hardhat-deploy/types'
-import { parseEther } from 'viem'
 
 import { developmentChains, networkConfig } from '@/config/constants'
 import { verify } from '@/utils/verify'
@@ -15,9 +14,9 @@ const deployMockErc20: DeployFunction = async function (
 	log('----------------------------------------------------')
 	log('Deploying MockErc20 and waiting for confirmations...')
 
-	const name: string = 'CELO Dollar'
-	const symbol: string = 'cUSD'
-	const initialSupply: bigint = parseEther('100') // 100 cUSD
+	const name: string = 'USD Coin'
+	const symbol: string = 'USDC'
+	const initialSupply: bigint = 100_000_000n // 100 USDC with 6 decimals
 
 	const args = [name, symbol, initialSupply]
 
@@ -36,4 +35,4 @@ const deployMockErc20: DeployFunction = async function (
 }
 
 export default deployMockErc20
-deployMockErc20.tags = ['localhost', 'l-mockErc20']
+deployMockErc20.tags = ['localhost', 'l-deploy', 'l-mockErc20']

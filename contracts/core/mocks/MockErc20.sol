@@ -16,11 +16,7 @@ contract MockErc20 is ERC20 {
 		_mint(to, amount);
 	}
 
-	function mintReserved(address to, uint256 amount) public {
-		_mint(to, amount);
-	}
-
-	function nativeTokenBalance(address who) public view returns (uint256) {
-		return (who).balance;
+	function decimals() public view virtual override returns (uint8) {
+		return 6; // USDC-like decimals
 	}
 }
