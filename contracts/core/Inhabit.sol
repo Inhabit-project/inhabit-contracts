@@ -198,9 +198,9 @@ contract Inhabit is
 	function createGroup(
 		string calldata _referral,
 		bool _state,
-		Embassador[] calldata _embassadors
+		Ambassador[] calldata _ambassadors
 	) external onlyRole(ADMIN_ROLE) {
-		_createGroup(_referral, _state, _embassadors);
+		_createGroup(_referral, _state, _ambassadors);
 	}
 
 	function updateGroupStatus(
@@ -210,25 +210,25 @@ contract Inhabit is
 		_updateGroupStatus(_referral, _status);
 	}
 
-	function addEmbassadors(
+	function addAmbassadors(
 		string calldata _referral,
-		Embassador[] calldata _embassadors
+		Ambassador[] calldata _ambassadors
 	) external onlyRole(ADMIN_ROLE) {
-		_addEmbassadors(_referral, _embassadors);
+		_addAmbassadors(_referral, _ambassadors);
 	}
 
-	function updateEmbassadors(
+	function updateAmbassadors(
 		string calldata _referral,
-		Embassador[] calldata _embassadors
+		Ambassador[] calldata _ambassadors
 	) external onlyRole(ADMIN_ROLE) {
-		_updateEmbassadors(_referral, _embassadors);
+		_updateAmbassadors(_referral, _ambassadors);
 	}
 
-	function removeEmbassadors(
+	function removeAmbassadors(
 		string calldata _referral,
 		address[] calldata _accounts
 	) external onlyRole(ADMIN_ROLE) {
-		_removeEmbassadors(_referral, _accounts);
+		_removeAmbassadors(_referral, _accounts);
 	}
 
 	function addToTokens(

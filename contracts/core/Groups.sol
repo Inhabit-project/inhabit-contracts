@@ -135,7 +135,7 @@ contract Groups is IGroups, Transfer, Errors {
 	function _createGroup(
 		string calldata _referral,
 		bool _state,
-		Embassador[] memory _ambassadors
+		Ambassador[] memory _ambassadors
 	) internal {
 		_isEmptyString(_referral);
 		_isGroupExist(_referral);
@@ -146,7 +146,7 @@ contract Groups is IGroups, Transfer, Errors {
 		newGroup.state = _state;
 
 		for (uint256 i = 0; i < _ambassadors.length; i++) {
-			newGroup.embassadors.push(_ambassadors[i]);
+			newGroup.ambassadors.push(_ambassadors[i]);
 		}
 
 		groupList[++groupCount] = _referral;
@@ -178,9 +178,9 @@ contract Groups is IGroups, Transfer, Errors {
 	 * @notice Total commission sum after adding must not exceed 10000 basis points
 	 * @notice Can only be called by the contract owner
 	 */
-	function _addEmbassadors(
+	function _addAmbassadors(
 		string calldata _referral,
-		Embassador[] calldata _ambassadors
+		Ambassador[] calldata _ambassadors
 	) internal {
 		_isNotGroupExist(_referral);
 		_isEmptyEmbassador(_ambassadors);
@@ -190,8 +190,8 @@ contract Groups is IGroups, Transfer, Errors {
 		for (uint256 i; i < _ambassadors.length; ) {
 			_isZeroAddress(_ambassadors[i].account);
 
-			for (uint256 j; j < group.embassadors.length; ) {
-				if (group.embassadors[j].account == _ambassadors[i].account) {
+			for (uint256 j; j < group.ambassadors.length; ) {
+				if (group.ambassadors[j].account == _ambassadors[i].account) {
 					revert AMBASSADOR_ALREADY_EXISTS();
 				}
 
@@ -200,7 +200,7 @@ contract Groups is IGroups, Transfer, Errors {
 				}
 			}
 
-			group.embassadors.push(_ambassadors[i]);
+			group.ambassadors.push(_ambassadors[i]);
 
 			unchecked {
 				++i;
@@ -208,7 +208,7 @@ contract Groups is IGroups, Transfer, Errors {
 		}
 
 		_validateFee(group);
-		emit EmbassadorsAdded(_referral, _ambassadors);
+		emit AmbassadorsAdded(_referral, _ambassadors);
 	}
 
 	/**
@@ -219,9 +219,9 @@ contract Groups is IGroups, Transfer, Errors {
 	 * @notice Total commission sum after updating must not exceed 10000 basis points
 	 * @notice Can only be called by the contract owner
 	 */
-	function _updateEmbassadors(
+	function _updateAmbassadors(
 		string calldata _referral,
-		Embassador[] calldata _ambassadors
+		Ambassador[] calldata _ambassadors
 	) internal {
 		_isNotGroupExist(_referral);
 		_isEmptyEmbassador(_ambassadors);
@@ -232,9 +232,9 @@ contract Groups is IGroups, Transfer, Errors {
 			_isZeroAddress(_ambassadors[i].account);
 
 			bool found = false;
-			for (uint256 j; j < group.embassadors.length; ) {
-				if (group.embassadors[j].account == _ambassadors[i].account) {
-					group.embassadors[j].fee = _ambassadors[i].fee;
+			for (uint256 j; j < group.ambassadors.length; ) {
+				if (group.ambassadors[j].account == _ambassadors[i].account) {
+					group.ambassadors[j].fee = _ambassadors[i].fee;
 					found = true;
 					break;
 				}
@@ -244,7 +244,7 @@ contract Groups is IGroups, Transfer, Errors {
 				}
 			}
 
-			if (!found) revert EMBASSADOR_NOT_FOUND();
+			if (!found) revert AMBASSADOR_NOT_FOUND();
 
 			unchecked {
 				++i;
@@ -252,7 +252,7 @@ contract Groups is IGroups, Transfer, Errors {
 		}
 
 		_validateFee(group);
-		emit EmbassadorsUpdated(_referral, _ambassadors);
+		emit AmbassadorsUpdated(_referral, _ambassadors);
 	}
 
 	/**
@@ -262,7 +262,7 @@ contract Groups is IGroups, Transfer, Errors {
 	 * @notice Ambassadors must exist in the group
 	 * @notice Can only be called by the contract owner
 	 */
-	function _removeEmbassadors(
+	function _removeAmbassadors(
 		string calldata _referral,
 		address[] calldata _accounts
 	) internal {
@@ -275,12 +275,12 @@ contract Groups is IGroups, Transfer, Errors {
 			if (_accounts[i] == address(0)) revert ZERO_ADDRESS();
 
 			bool found = false;
-			for (uint256 j; j < group.embassadors.length; ) {
-				if (group.embassadors[j].account == _accounts[i]) {
-					group.embassadors[j] = group.embassadors[
-						group.embassadors.length - 1
+			for (uint256 j; j < group.ambassadors.length; ) {
+				if (group.ambassadors[j].account == _accounts[i]) {
+					group.ambassadors[j] = group.ambassadors[
+						group.ambassadors.length - 1
 					];
-					group.embassadors.pop();
+					group.ambassadors.pop();
 					found = true;
 					break;
 				}
@@ -290,14 +290,14 @@ contract Groups is IGroups, Transfer, Errors {
 				}
 			}
 
-			if (!found) revert EMBASSADOR_NOT_FOUND();
+			if (!found) revert AMBASSADOR_NOT_FOUND();
 
 			unchecked {
 				++i;
 			}
 		}
 
-		emit EmbassadorsRemoved(_referral, _accounts);
+		emit AmbassadorsRemoved(_referral, _accounts);
 	}
 
 	/**
@@ -320,22 +320,22 @@ contract Groups is IGroups, Transfer, Errors {
 		if (!group.state) revert GROUP_NOT_ACTIVE();
 
 		TransferData[] memory transfers = new TransferData[](
-			group.embassadors.length
+			group.ambassadors.length
 		);
 
 		uint256 totalFee = 0;
-		for (uint256 i; i < group.embassadors.length; ) {
-			uint256 fee = calculateFee(_amount, group.embassadors[i].fee);
+		for (uint256 i; i < group.ambassadors.length; ) {
+			uint256 fee = calculateFee(_amount, group.ambassadors[i].fee);
 
 			transfers[i] = TransferData({
 				from: msg.sender,
-				to: group.embassadors[i].account,
+				to: group.ambassadors[i].account,
 				amount: fee
 			});
 
 			totalFee += fee;
 
-			emit Distributed(group.embassadors[i].account, fee);
+			emit Distributed(group.ambassadors[i].account, fee);
 
 			unchecked {
 				++i;
@@ -405,8 +405,8 @@ contract Groups is IGroups, Transfer, Errors {
 	 */
 	function _validateFee(Group storage group) private view {
 		uint256 totalFee = 0;
-		for (uint256 i; i < group.embassadors.length; ) {
-			totalFee += group.embassadors[i].fee;
+		for (uint256 i; i < group.ambassadors.length; ) {
+			totalFee += group.ambassadors[i].fee;
 
 			unchecked {
 				++i;
@@ -424,7 +424,7 @@ contract Groups is IGroups, Transfer, Errors {
 	 * @notice Validates that no duplicate addresses exist in array
 	 * @dev This is a pure function for standalone array validation
 	 */
-	function _validateFeeArray(Embassador[] memory _ambassadors) private pure {
+	function _validateFeeArray(Ambassador[] memory _ambassadors) private pure {
 		uint256 totalFee = 0;
 		for (uint256 i; i < _ambassadors.length; ) {
 			_isZeroAddress(_ambassadors[i].account);
@@ -442,7 +442,7 @@ contract Groups is IGroups, Transfer, Errors {
 	 * @notice Reverts if the provided array has zero length
 	 * @notice Used to prevent operations on empty ambassador arrays
 	 */
-	function _isEmptyEmbassador(Embassador[] memory _ambassadors) private pure {
+	function _isEmptyEmbassador(Ambassador[] memory _ambassadors) private pure {
 		if (_ambassadors.length == 0) revert EMPTY_ARRAY();
 	}
 }

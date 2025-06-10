@@ -64,7 +64,7 @@ contract Errors {
 	/// ======================
 
 	error AMBASSADOR_ALREADY_EXISTS();
-	error EMBASSADOR_NOT_FOUND();
+	error AMBASSADOR_NOT_FOUND();
 	error GROUP_ALREADY_EXISTS();
 	error GROUP_NOT_FOUND();
 	error GROUP_NOT_ACTIVE();

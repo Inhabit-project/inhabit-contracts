@@ -15,12 +15,12 @@ interface IGroups {
 	 * @dev Structure representing an ambassador group
 	 * @param referral Unique referral code for the group
 	 * @param state Group state (active/inactive)
-	 * @param embassadors Array of ambassadors associated with the group
+	 * @param ambassadors Array of ambassadors associated with the group
 	 */
 	struct Group {
 		string referral;
 		bool state;
-		Embassador[] embassadors;
+		Ambassador[] ambassadors;
 	}
 
 	/**
@@ -28,7 +28,7 @@ interface IGroups {
 	 * @param account Ambassador's address
 	 * @param fee Ambassador's commission in basis points
 	 */
-	struct Embassador {
+	struct Ambassador {
 		address account;
 		uint256 fee;
 	}
@@ -53,12 +53,12 @@ interface IGroups {
 	 * @dev Event emitted when a new group is created
 	 * @param referral Referral code of the created group
 	 * @param state Initial state of the group
-	 * @param embassadors Array of group ambassadors
+	 * @param ambassadors Array of group ambassadors
 	 */
 	event GroupCreated(
 		string indexed referral,
 		bool state,
-		Embassador[] embassadors
+		Ambassador[] ambassadors
 	);
 
 	/**
@@ -71,23 +71,23 @@ interface IGroups {
 	/**
 	 * @dev Event emitted when ambassadors are added to a group
 	 * @param referral Group's referral code
-	 * @param embassadors Array of added ambassadors
+	 * @param ambassadors Array of added ambassadors
 	 */
-	event EmbassadorsAdded(string indexed referral, Embassador[] embassadors);
+	event AmbassadorsAdded(string indexed referral, Ambassador[] ambassadors);
 
 	/**
 	 * @dev Event emitted when ambassadors in a group are updated
 	 * @param referral Group's referral code
-	 * @param embassadors Array of updated ambassadors
+	 * @param ambassadors Array of updated ambassadors
 	 */
-	event EmbassadorsUpdated(string indexed referral, Embassador[] embassadors);
+	event AmbassadorsUpdated(string indexed referral, Ambassador[] ambassadors);
 
 	/**
 	 * @dev Event emitted when ambassadors are removed from a group
 	 * @param referral Group's referral code
 	 * @param accounts Array of removed ambassador addresses
 	 */
-	event EmbassadorsRemoved(string indexed referral, address[] accounts);
+	event AmbassadorsRemoved(string indexed referral, address[] accounts);
 
 	/**
 	 * @dev Event emitted when a commission is distributed to an ambassador
