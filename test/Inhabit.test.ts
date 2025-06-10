@@ -58,6 +58,75 @@ describe('Inhabit - Groups Module', function () {
 		}
 	}
 
+	describe('Inhabit main contract', function () {
+		beforeEach(async function () {
+			fixture = await deployFixture()
+			;({
+				deployer,
+				luca,
+				juan,
+				santiago,
+				ledger,
+				inhabit,
+				mockUSDC,
+				nftCollection
+			} = fixture)
+		})
+
+		describe('setTreasury', function () {
+			it('Should revert if address is the same as the contract address', async function () {
+				await expect(
+					inhabit.write.setTreasury([inhabit.address], {
+						account: deployer
+					})
+				).to.be.rejectedWith('INVALID_ADDRESS')
+			})
+
+			it('Should revert if address is the same as current treasury', async function () {
+				await expect(
+					inhabit.write.setTreasury([ledger], {
+						account: deployer
+					})
+				).to.be.rejectedWith('SAME_STATE')
+			})
+
+			it('Should revert if address is zero', async function () {
+				await expect(
+					inhabit.write.setTreasury([zeroAddress], {
+						account: deployer
+					})
+				).to.be.rejectedWith('ZERO_ADDRESS')
+			})
+
+			it('Should allow setting a new valid treasury address', async function () {
+				await expect(
+					inhabit.write.setTreasury([santiago], {
+						account: deployer
+					})
+				).not.to.be.rejected
+
+				const currentTreasury = await inhabit.read.treasury()
+				expect(currentTreasury).to.equal(santiago)
+			})
+
+			it('Should emit TreasuryUpdated event', async function () {
+				const tx = await inhabit.write.setTreasury([santiago], {
+					account: deployer
+				})
+
+				expect(tx).to.exist
+
+				const publicClient = await hre.viem.getPublicClient()
+
+				const receipt = await publicClient.waitForTransactionReceipt({
+					hash: tx
+				})
+
+				expect(receipt.logs).to.have.lengthOf.greaterThan(0)
+			})
+		})
+	})
+
 	describe('Groups Contract', function () {
 		// Constants for testing
 		const REFERRAL_CODE = 'TEST_GROUP'
@@ -185,8 +254,6 @@ describe('Inhabit - Groups Module', function () {
 			it('Should emit GroupCreated event', async function () {
 				const ambassadors = [{ account: luca, fee: FEE_50_PERCENT }]
 
-				// Note: Event verification depends on your setup
-				// This is a simplified example
 				const tx = await inhabit.write.createGroup(
 					[REFERRAL_CODE, true, ambassadors],
 					{
@@ -194,8 +261,15 @@ describe('Inhabit - Groups Module', function () {
 					}
 				)
 
-				// You might need to check logs or use a different method based on your setup
 				expect(tx).to.exist
+
+				const publicClient = await hre.viem.getPublicClient()
+
+				const receipt = await publicClient.waitForTransactionReceipt({
+					hash: tx
+				})
+
+				expect(receipt.logs).to.have.lengthOf.greaterThan(0)
 			})
 
 			it('Should create inactive group when state is false', async function () {
@@ -297,6 +371,14 @@ describe('Inhabit - Groups Module', function () {
 				)
 
 				expect(tx).to.exist
+
+				const publicClient = await hre.viem.getPublicClient()
+
+				const receipt = await publicClient.waitForTransactionReceipt({
+					hash: tx
+				})
+
+				expect(receipt.logs).to.have.lengthOf.greaterThan(0)
 			})
 		})
 
@@ -400,6 +482,14 @@ describe('Inhabit - Groups Module', function () {
 				)
 
 				expect(tx).to.exist
+
+				const publicClient = await hre.viem.getPublicClient()
+
+				const receipt = await publicClient.waitForTransactionReceipt({
+					hash: tx
+				})
+
+				expect(receipt.logs).to.have.lengthOf.greaterThan(0)
 			})
 
 			it('Should handle adding multiple ambassadors at limit', async function () {
@@ -553,6 +643,14 @@ describe('Inhabit - Groups Module', function () {
 				)
 
 				expect(tx).to.exist
+
+				const publicClient = await hre.viem.getPublicClient()
+
+				const receipt = await publicClient.waitForTransactionReceipt({
+					hash: tx
+				})
+
+				expect(receipt.logs).to.have.lengthOf.greaterThan(0)
 			})
 
 			it('Should update single ambassador without affecting others', async function () {
@@ -667,6 +765,14 @@ describe('Inhabit - Groups Module', function () {
 				)
 
 				expect(tx).to.exist
+
+				const publicClient = await hre.viem.getPublicClient()
+
+				const receipt = await publicClient.waitForTransactionReceipt({
+					hash: tx
+				})
+
+				expect(receipt.logs).to.have.lengthOf.greaterThan(0)
 			})
 
 			it('Should allow removing all ambassadors', async function () {
@@ -1368,6 +1474,7 @@ describe('Inhabit - Groups Module', function () {
 				const receipt = await publicClient.waitForTransactionReceipt({
 					hash: tx
 				})
+
 				expect(receipt.logs).to.have.lengthOf.greaterThan(0)
 			})
 
@@ -1498,6 +1605,7 @@ describe('Inhabit - Groups Module', function () {
 				const receipt = await publicClient.waitForTransactionReceipt({
 					hash: tx
 				})
+
 				expect(receipt.logs).to.have.lengthOf.greaterThan(0)
 			})
 
@@ -1654,6 +1762,7 @@ describe('Inhabit - Groups Module', function () {
 					const receipt = await publicClient.waitForTransactionReceipt({
 						hash: tx
 					})
+
 					expect(receipt.logs).to.have.lengthOf.greaterThan(0)
 				})
 
@@ -1791,6 +1900,7 @@ describe('Inhabit - Groups Module', function () {
 					const receipt = await publicClient.waitForTransactionReceipt({
 						hash: tx
 					})
+
 					expect(receipt.logs).to.have.lengthOf.greaterThan(0)
 				})
 

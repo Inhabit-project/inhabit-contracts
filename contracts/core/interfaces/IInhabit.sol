@@ -34,4 +34,9 @@ interface IInhabit {
 		address paymentToken,
 		uint256 amount
 	);
+
+	event TreasuryUpdated(
+		address indexed oldTreasury,
+		address indexed newTreasury
+	);
 }

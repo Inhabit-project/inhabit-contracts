@@ -195,9 +195,12 @@ contract Inhabit is
 	}
 
 	function setTreasury(address _treasury) external onlyRole(ADMIN_ROLE) {
+		if (address(this) == _treasury) revert INVALID_ADDRESS();
 		if (treasury == _treasury) revert SAME_STATE();
 		_isZeroAddress(_treasury);
+
 		treasury = _treasury;
+		emit TreasuryUpdated(treasury, _treasury);
 	}
 
 	/// @notice Group functions

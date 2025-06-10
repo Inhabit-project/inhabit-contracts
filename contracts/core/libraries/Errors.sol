@@ -11,6 +11,7 @@ contract Errors {
 	error INSUFFICIENT_ALLOWANCE();
 	error INSUFFICIENT_FUNDS();
 	error INSUFFICIENT_SUPPLY();
+	error INVALID_ADDRESS();
 	error INVALID_AMOUNT();
 	error INVALID_INDEX();
 	error INVALID_PRICE();
