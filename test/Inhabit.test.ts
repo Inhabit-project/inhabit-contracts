@@ -1831,6 +1831,10 @@ describe('Inhabit - Groups Module', function () {
 
 				const campaign = await inhabit.read.getCampaign([1n])
 				collectionAddress = campaign.collections[0]
+
+				await mockUSDC.write.mint([collectionAddress, parseEther('100')], {
+					account: deployer
+				})
 			})
 
 			describe('_setCollectionBaseURI', function () {
@@ -2099,6 +2103,121 @@ describe('Inhabit - Groups Module', function () {
 							}
 						)
 					).to.be.rejectedWith('INVALID_SUPPLY')
+				})
+			})
+
+			describe('_recoverCollectionFunds', function () {
+				it('Should revert if caller does not inhabit contract', async function () {
+					await expect(
+						inhabit.write.recoverCollectionFunds(
+							[1n, collectionAddress, mockUSDC.address, ledger],
+							{
+								account: luca
+							}
+						)
+					).to.be.rejectedWith('UNAUTHORIZED')
+				})
+
+				it('Should revert if destination address is zero', async function () {
+					await expect(
+						inhabit.write.recoverCollectionFunds(
+							[1n, collectionAddress, mockUSDC.address, zeroAddress],
+							{
+								account: deployer
+							}
+						)
+					).to.be.rejectedWith('ZERO_ADDRESS')
+				})
+
+				it('Should recover ERC20 tokens successfully', async function () {
+					const balanceBefore = await mockUSDC.read.balanceOf([ledger])
+
+					const tx = await inhabit.write.recoverCollectionFunds(
+						[1n, collectionAddress, mockUSDC.address, ledger],
+						{
+							account: deployer
+						}
+					)
+
+					expect(tx).to.exist
+
+					const balanceAfter = await mockUSDC.read.balanceOf([ledger])
+					const contractBalance = await mockUSDC.read.balanceOf([
+						inhabit.address
+					])
+
+					expect(balanceAfter).to.equal(balanceBefore + parseEther('100'))
+					expect(contractBalance).to.equal(0n)
+				})
+
+				it('Should recover native ETH successfully', async function () {
+					const wallet = await viem.getWalletClient(deployer)
+					const publicClient = await viem.getPublicClient()
+
+					const hash = await wallet.sendTransaction({
+						account: deployer,
+						to: collectionAddress,
+						value: parseEther('1')
+					})
+
+					await publicClient.waitForTransactionReceipt({ hash })
+
+					const contractBefore = await publicClient.getBalance({
+						address: collectionAddress
+					})
+
+					expect(contractBefore).to.equal(parseEther('1'))
+
+					const ledgerBefore = await publicClient.getBalance({
+						address: ledger
+					})
+
+					const recoverFundsTx = await inhabit.write.recoverCollectionFunds(
+						[1n, collectionAddress, NATIVE, ledger],
+						{
+							account: deployer
+						}
+					)
+
+					await publicClient.waitForTransactionReceipt({
+						hash: recoverFundsTx
+					})
+
+					const ledgerAfter = await publicClient.getBalance({
+						address: ledger
+					})
+
+					const contractAfter = await publicClient.getBalance({
+						address: collectionAddress
+					})
+
+					console.log(
+						`Ledger balance before: ${ledgerBefore}, after: ${ledgerAfter}`
+					)
+					console.log(
+						`Contract balance before: ${contractBefore}, after: ${contractAfter}`
+					)
+
+					expect(contractAfter).to.equal(0n)
+					expect(ledgerAfter - ledgerBefore).to.be.gte(parseEther('0.99999'))
+				})
+
+				it('Should handle recovery when contract has zero balance', async function () {
+					await inhabit.write.recoverCollectionFunds(
+						[1n, collectionAddress, mockUSDC.address, ledger],
+						{
+							account: deployer
+						}
+					)
+
+					const tx = await inhabit.write.recoverCollectionFunds(
+						[1n, collectionAddress, mockUSDC.address, ledger],
+						{
+							account: deployer
+						}
+					)
+
+					expect(tx).to.exist
 				})
 			})
 		})

@@ -171,6 +171,12 @@ contract Collections is ICollections, Errors {
 		refundsClaimed[_campaignId][_collection][_tokenId] = true;
 	}
 
+	function _setNFTCollection(address _nftCollection) internal {
+		_isZeroAddress(_nftCollection);
+		nftCollection = INFTCollection(_nftCollection);
+		emit NftCollectionSet(_nftCollection);
+	}
+
 	/// @notice Collection functions
 
 	function _safeMint(
@@ -311,12 +317,6 @@ contract Collections is ICollections, Errors {
 		}
 
 		if (!found) revert COLLECTION_NOT_FOUND();
-	}
-
-	function _setNFTCollection(address _nftCollection) internal {
-		_isZeroAddress(_nftCollection);
-		nftCollection = INFTCollection(_nftCollection);
-		emit NftCollectionSet(_nftCollection);
 	}
 
 	function _recoverCollectionFunds(
