@@ -39,20 +39,17 @@ abstract contract BaseStrategy is Native, Transfer, Errors {
 
 	function __BaseStrategy_init(
 		uint256 _campaignId,
-		uint256 _collectionId,
-		address _inhabit
-	) internal virtual onlyInhabit {
-		_isZeroAddress(_inhabit);
-
+		uint256 _collectionId
+	) internal virtual {
 		// check if collection ID is not initialized already, if it is, revert
-		if (_campaignId != 0) revert ALREADY_INITIALIZED_STRATEGY();
+		if (campaignId != 0) revert ALREADY_INITIALIZED_STRATEGY();
 		if (collectionId != 0) revert ALREADY_INITIALIZED_STRATEGY();
 
 		// check if collection ID is valid and not zero (0), if it is, revert
 		if (_campaignId == 0) revert INVALID();
 		if (_collectionId == 0) revert INVALID();
 
-		inhabit = IInhabit(_inhabit);
+		inhabit = IInhabit(msg.sender);
 		campaignId = _campaignId;
 		collectionId = _collectionId;
 	}

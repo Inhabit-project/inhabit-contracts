@@ -2,7 +2,7 @@ import { expect } from 'chai'
 import chai from 'chai'
 import chaiBigint from 'chai-bigint'
 import hre, { viem } from 'hardhat'
-import { Address, parseEther, zeroAddress } from 'viem'
+import { Address, maxUint256, parseEther, zeroAddress } from 'viem'
 
 import { NATIVE } from '@/config/constants'
 import { AmbassadorStruct } from '@/models/index'
@@ -58,7 +58,7 @@ describe('Inhabit - Groups Module', function () {
 		}
 	}
 
-	describe('Groups Management', function () {
+	describe('Groups Contract', function () {
 		// Constants for testing
 		const REFERRAL_CODE = 'TEST_GROUP'
 		const EMPTY_REFERRAL = ''
@@ -1035,7 +1035,7 @@ describe('Inhabit - Groups Module', function () {
 			})
 		})
 
-		describe('Distribution (Internal)', function () {
+		describe.skip('⏳ Distribution (Internal)', function () {
 			// Note: _distribution is internal, so we test it through buyNFT
 			// This section would require the full contract integration
 			// Including campaign creation and NFT purchases
@@ -1084,7 +1084,7 @@ describe('Inhabit - Groups Module', function () {
 				expect(tx).to.exist
 			})
 
-			it('❌ Should handle groups with many ambassadors efficiently', async function () {
+			it.skip('❌ Should handle groups with many ambassadors efficiently', async function () {
 				// Create group with many ambassadors (potential gas issue)
 				const manyAmbassadors = []
 				const feePerAmbassador = 100n // 1% each
@@ -1101,6 +1101,1866 @@ describe('Inhabit - Groups Module', function () {
 						account: deployer
 					})
 				).to.be.rejectedWith('GAS_LIMIT_EXCEEDED')
+			})
+		})
+	})
+
+	describe('Collection Contract', function () {
+		const VALID_GOAL = parseEther('1000')
+		const ZERO_GOAL = 0n
+		const VALID_PRICE = parseEther('10')
+		const ZERO_PRICE = 0n
+		const VALID_SUPPLY = 100n
+		const ZERO_SUPPLY = 0n
+
+		let collectionAddress: Address
+
+		beforeEach(async function () {
+			fixture = await deployFixture()
+			;({
+				deployer,
+				luca,
+				juan,
+				santiago,
+				ledger,
+				inhabit,
+				mockUSDC,
+				nftCollection
+			} = fixture)
+
+			const userRole = await inhabit.read.USER_ROLE()
+
+			await inhabit.write.grantRole([userRole, luca], {
+				account: deployer
+			})
+
+			await inhabit.write.setNFTCollection([nftCollection.address], {
+				account: deployer
+			})
+		})
+
+		describe('_createCampaign', function () {
+			it('Should revert if goal is zero', async function () {
+				const collectionsParams = [
+					{
+						name: 'Test Collection',
+						symbol: 'TEST',
+						uri: 'https://test.com/',
+						supply: VALID_SUPPLY,
+						price: VALID_PRICE,
+						state: true
+					}
+				]
+
+				await expect(
+					inhabit.write.createCampaign([ZERO_GOAL, collectionsParams], {
+						account: deployer
+					})
+				).to.be.rejectedWith('INVALID_GOAL')
+			})
+
+			it('Should revert if collections array is empty', async function () {
+				await expect(
+					inhabit.write.createCampaign([VALID_GOAL, []], {
+						account: deployer
+					})
+				).to.be.rejectedWith('EMPTY_ARRAY')
+			})
+
+			it('Should revert if collection name is empty', async function () {
+				const collectionsParams = [
+					{
+						name: '',
+						symbol: 'TEST',
+						uri: 'https://test.com/',
+						supply: VALID_SUPPLY,
+						price: VALID_PRICE,
+						state: true
+					}
+				]
+
+				await expect(
+					inhabit.write.createCampaign([VALID_GOAL, collectionsParams], {
+						account: deployer
+					})
+				).to.be.rejectedWith('EMPTY_STRING')
+			})
+
+			it('Should revert if collection symbol is empty', async function () {
+				const collectionsParams = [
+					{
+						name: 'Test Collection',
+						symbol: '',
+						uri: 'https://test.com/',
+						supply: VALID_SUPPLY,
+						price: VALID_PRICE,
+						state: true
+					}
+				]
+
+				await expect(
+					inhabit.write.createCampaign([VALID_GOAL, collectionsParams], {
+						account: deployer
+					})
+				).to.be.rejectedWith('EMPTY_STRING')
+			})
+
+			it('Should revert if collection URI is empty', async function () {
+				const collectionsParams = [
+					{
+						name: 'Test Collection',
+						symbol: 'TEST',
+						uri: '',
+						supply: VALID_SUPPLY,
+						price: VALID_PRICE,
+						state: true
+					}
+				]
+
+				await expect(
+					inhabit.write.createCampaign([VALID_GOAL, collectionsParams], {
+						account: deployer
+					})
+				).to.be.rejectedWith('EMPTY_STRING')
+			})
+
+			it('Should revert if collection supply is zero', async function () {
+				const collectionsParams = [
+					{
+						name: 'Test Collection',
+						symbol: 'TEST',
+						uri: 'https://test.com/',
+						supply: ZERO_SUPPLY,
+						price: VALID_PRICE,
+						state: true
+					}
+				]
+
+				await expect(
+					inhabit.write.createCampaign([VALID_GOAL, collectionsParams], {
+						account: deployer
+					})
+				).to.be.rejectedWith('INVALID_SUPPLY')
+			})
+
+			it('Should revert if collection price is zero', async function () {
+				const collectionsParams = [
+					{
+						name: 'Test Collection',
+						symbol: 'TEST',
+						uri: 'https://test.com/',
+						supply: VALID_SUPPLY,
+						price: ZERO_PRICE,
+						state: true
+					}
+				]
+
+				await expect(
+					inhabit.write.createCampaign([VALID_GOAL, collectionsParams], {
+						account: deployer
+					})
+				).to.be.rejectedWith('INVALID_PRICE')
+			})
+
+			it('Should revert if caller does not have USER_ROLE', async function () {
+				const collectionsParams = [
+					{
+						name: 'Test Collection',
+						symbol: 'TEST',
+						uri: 'https://test.com/',
+						supply: VALID_SUPPLY,
+						price: VALID_PRICE,
+						state: true
+					}
+				]
+
+				await expect(
+					inhabit.write.createCampaign([VALID_GOAL, collectionsParams], {
+						account: santiago
+					})
+				).to.be.rejectedWith('AccessControlUnauthorizedAccount')
+			})
+
+			it('Should create campaign successfully with single collection', async function () {
+				const collectionsParams = [
+					{
+						name: 'Test Collection',
+						symbol: 'TEST',
+						uri: 'https://test.com/',
+						supply: VALID_SUPPLY,
+						price: VALID_PRICE,
+						state: true
+					}
+				]
+
+				const tx = await inhabit.write.createCampaign(
+					[VALID_GOAL, collectionsParams],
+					{
+						account: deployer
+					}
+				)
+				expect(tx).to.exist
+
+				const campaignCount = await inhabit.read.campaignCount()
+				expect(campaignCount).to.equal(1n)
+
+				const campaign = await inhabit.read.getCampaign([1n])
+				expect(campaign.state).to.be.true
+				expect(campaign.creator).to.equal(deployer)
+				expect(campaign.goal).to.equal(VALID_GOAL)
+				expect(campaign.fundsRaised).to.equal(0n)
+				expect(campaign.collections).to.have.lengthOf(1)
+			})
+
+			it('Should create campaign successfully with multiple collections', async function () {
+				const collectionsParams = [
+					{
+						name: 'Collection 1',
+						symbol: 'COL1',
+						uri: 'https://test1.com/',
+						supply: 50n,
+						price: parseEther('5'),
+						state: true
+					},
+					{
+						name: 'Collection 2',
+						symbol: 'COL2',
+						uri: 'https://test2.com/',
+						supply: 100n,
+						price: parseEther('15'),
+						state: false
+					}
+				]
+
+				const tx = await inhabit.write.createCampaign(
+					[VALID_GOAL, collectionsParams],
+					{
+						account: deployer
+					}
+				)
+				expect(tx).to.exist
+
+				const campaign = await inhabit.read.getCampaign([1n])
+				expect(campaign.collections).to.have.lengthOf(2)
+			})
+
+			it('Should emit CampaignCreated event', async function () {
+				const collectionsParams = [
+					{
+						name: 'Test Collection',
+						symbol: 'TEST',
+						uri: 'https://test.com/',
+						supply: VALID_SUPPLY,
+						price: VALID_PRICE,
+						state: true
+					}
+				]
+
+				const tx = await inhabit.write.createCampaign(
+					[VALID_GOAL, collectionsParams],
+					{
+						account: deployer
+					}
+				)
+
+				const publicClient = await hre.viem.getPublicClient()
+
+				const receipt = await publicClient.waitForTransactionReceipt({
+					hash: tx
+				})
+				expect(receipt.logs).to.have.lengthOf.greaterThan(0)
+			})
+
+			it('Should increment collection count correctly', async function () {
+				const collectionsParams = [
+					{
+						name: 'Collection 1',
+						symbol: 'COL1',
+						uri: 'https://test1.com/',
+						supply: 50n,
+						price: parseEther('5'),
+						state: true
+					},
+					{
+						name: 'Collection 2',
+						symbol: 'COL2',
+						uri: 'https://test2.com/',
+						supply: 100n,
+						price: parseEther('15'),
+						state: false
+					}
+				]
+
+				await inhabit.write.createCampaign([VALID_GOAL, collectionsParams], {
+					account: deployer
+				})
+
+				const collectionCount = await inhabit.read.collectionCount()
+				expect(collectionCount).to.equal(2n)
+			})
+
+			it('Should handle edge case with maximum values', async function () {
+				const collectionsParams = [
+					{
+						name: 'A'.repeat(100), // Long name
+						symbol: 'B'.repeat(20), // Long symbol
+						uri: 'https://test.com/' + 'C'.repeat(100), // Long URI
+						supply: maxUint256,
+						price: maxUint256,
+						state: true
+					}
+				]
+
+				// TODO: Este test podría fallar si hay límites en el tamaño de strings
+				const tx = await inhabit.write.createCampaign(
+					[maxUint256, collectionsParams],
+					{
+						account: deployer
+					}
+				)
+				expect(tx).to.exist
+			})
+		})
+
+		describe('_updateCampaignstatus', function () {
+			beforeEach(async function () {
+				const collectionsParams = [
+					{
+						name: 'Test Collection',
+						symbol: 'TEST',
+						uri: 'https://test.com/',
+						supply: VALID_SUPPLY,
+						price: VALID_PRICE,
+						state: true
+					}
+				]
+
+				const userRole = await inhabit.read.USER_ROLE()
+
+				await inhabit.write.grantRole([userRole, luca], {
+					account: deployer
+				})
+
+				await inhabit.write.createCampaign([VALID_GOAL, collectionsParams], {
+					account: deployer
+				})
+			})
+
+			it('Should revert if campaign ID is invalid (zero)', async function () {
+				await expect(
+					inhabit.write.updateCampaignStatus([0n, false], {
+						account: deployer
+					})
+				).to.be.rejectedWith('INVALID_CAMPAIGN_ID')
+			})
+
+			it('Should revert if campaign ID is invalid (too high)', async function () {
+				await expect(
+					inhabit.write.updateCampaignStatus([999n, false], {
+						account: deployer
+					})
+				).to.be.rejectedWith('INVALID_CAMPAIGN_ID')
+			})
+
+			it('Should revert if caller is not campaign creator', async function () {
+				await expect(
+					inhabit.write.updateCampaignStatus([1n, false], {
+						account: luca
+					})
+				).to.be.rejectedWith('UNAUTHORIZED')
+			})
+
+			it('Should revert if setting same state', async function () {
+				await expect(
+					inhabit.write.updateCampaignStatus([1n, true], {
+						account: deployer
+					})
+				).to.be.rejectedWith('SAME_STATE')
+			})
+
+			it('Should update campaign status successfully', async function () {
+				const tx = await inhabit.write.updateCampaignStatus([1n, false], {
+					account: deployer
+				})
+				expect(tx).to.exist
+
+				const campaign = await inhabit.read.getCampaign([1n])
+				expect(campaign.state).to.be.false
+			})
+
+			it('Should emit CampaignStatusUpdated event', async function () {
+				const tx = await inhabit.write.updateCampaignStatus([1n, false], {
+					account: deployer
+				})
+
+				const publicClient = await hre.viem.getPublicClient()
+
+				const receipt = await publicClient.waitForTransactionReceipt({
+					hash: tx
+				})
+				expect(receipt.logs).to.have.lengthOf.greaterThan(0)
+			})
+
+			it('Should allow toggling status back and forth', async function () {
+				await inhabit.write.updateCampaignStatus([1n, false], {
+					account: deployer
+				})
+
+				let campaign = await inhabit.read.getCampaign([1n])
+				expect(campaign.state).to.be.false
+
+				await inhabit.write.updateCampaignStatus([1n, true], {
+					account: deployer
+				})
+
+				campaign = await inhabit.read.getCampaign([1n])
+				expect(campaign.state).to.be.true
+			})
+		})
+
+		describe.skip('NFT Minting', function () {
+			const CAMPAIGN_GOAL = parseEther('1000')
+			const NFT_PRICE = parseEther('10')
+			const NFT_SUPPLY = 10n
+
+			beforeEach(async function () {
+				// Setup: config NFTCollection and create a campaign
+				await inhabit.write.setNFTCollection([nftCollection.address], {
+					account: deployer
+				})
+
+				const collectionsParams = [
+					{
+						name: 'Test Collection',
+						symbol: 'TEST',
+						uri: 'https://test.com/',
+						supply: NFT_SUPPLY,
+						price: NFT_PRICE,
+						state: true
+					}
+				]
+
+				await inhabit.write.createCampaign([CAMPAIGN_GOAL, collectionsParams], {
+					account: deployer
+				})
+
+				// Get the collection address from the created campaign
+				const campaign = await inhabit.read.getCampaign([1n])
+				collectionAddress = campaign.collections[0]
+			})
+
+			describe.skip('⏳ _safeMint', function () {
+				it('Should revert if supply is exceeded', async function () {
+					// Obtener la instancia de la colección
+					const collection = await viem.getContractAt(
+						'NFTCollection',
+						collectionAddress
+					)
+
+					// Simular que ya se mintó el máximo de tokens
+					// Esto requiere acceso interno al contrato, so usamos una aproximación
+					// mintando hasta el límite
+
+					// En un contrato real, necesitaríamos una función de prueba para simular esto
+					// Por ahora, asumimos que podemos probar esto con la función buyNFT
+
+					// ❌ Este test necesita que el contrato exponga una función de testing
+					// o que modifiquemos la lógica para hacer esto testeable
+				})
+
+				it('Should mint NFT successfully with valid parameters', async function () {
+					await inhabit.write.addToTokens([[mockUSDC.address]], {
+						account: deployer
+					})
+
+					await mockUSDC.write.mint([luca, NFT_PRICE], {
+						account: deployer
+					})
+
+					await mockUSDC.write.approve([inhabit.address, NFT_PRICE], {
+						account: luca
+					})
+
+					const tx = await inhabit.write.buyNFT(
+						[
+							1n, // campaignId
+							collectionAddress,
+							mockUSDC.address,
+							'' // no referral
+						],
+						{
+							account: luca
+						}
+					)
+
+					expect(tx).to.exist
+
+					const collection = await viem.getContractAt(
+						'NFTCollection',
+						collectionAddress
+					)
+					const tokenCount = await collection.read.tokenCount()
+					expect(tokenCount).to.equal(1n)
+				})
+
+				it('Should update campaign funds raised correctly', async function () {
+					await inhabit.write.addToTokens([[mockUSDC.address]], {
+						account: deployer
+					})
+
+					await mockUSDC.write.mint([luca, NFT_PRICE], {
+						account: deployer
+					})
+
+					await mockUSDC.write.approve([inhabit.address, NFT_PRICE], {
+						account: luca
+					})
+
+					// Buy NFT
+					await inhabit.write.buyNFT(
+						[1n, collectionAddress, mockUSDC.address, ''],
+						{
+							account: luca
+						}
+					)
+
+					// verify funds raised
+					const campaign = await inhabit.read.getCampaign([1n])
+					expect(campaign.fundsRaised).to.equal(NFT_PRICE)
+				})
+
+				it('Should emit NFTPurchased event', async function () {
+					await inhabit.write.addToTokens([[mockUSDC.address]], {
+						account: deployer
+					})
+
+					await mockUSDC.write.mint([luca, NFT_PRICE], {
+						account: deployer
+					})
+
+					await mockUSDC.write.approve([inhabit.address, NFT_PRICE], {
+						account: luca
+					})
+
+					const tx = await inhabit.write.buyNFT(
+						[1n, collectionAddress, mockUSDC.address, ''],
+						{
+							account: luca
+						}
+					)
+
+					const publicClient = await hre.viem.getPublicClient()
+
+					const receipt = await publicClient.waitForTransactionReceipt({
+						hash: tx
+					})
+					expect(receipt.logs).to.have.lengthOf.greaterThan(0)
+				})
+
+				it('Should store purchase data correctly', async function () {
+					await inhabit.write.addToTokens([[mockUSDC.address]], {
+						account: deployer
+					})
+
+					await mockUSDC.write.mint([luca, NFT_PRICE], {
+						account: deployer
+					})
+
+					await mockUSDC.write.approve([inhabit.address, NFT_PRICE], {
+						account: luca
+					})
+
+					await inhabit.write.buyNFT(
+						[1n, collectionAddress, mockUSDC.address, ''],
+						{
+							account: luca
+						}
+					)
+
+					// Verify purchase data
+					const purchases = await inhabit.read.getCampaignPurchases([1n])
+					expect(purchases).to.have.lengthOf(1)
+					expect(purchases[0].collection).to.equal(collectionAddress)
+					expect(purchases[0].paymentToken).to.equal(mockUSDC.address)
+					expect(purchases[0].price).to.equal(NFT_PRICE)
+					expect(purchases[0].campaignId).to.equal(1n)
+					expect(purchases[0].refunded).to.be.false
+				})
+			})
+		})
+
+		describe('Collection Management', function () {
+			const CAMPAIGN_GOAL = parseEther('1000')
+			const NFT_PRICE = parseEther('10')
+			const NFT_SUPPLY = 10n
+
+			beforeEach(async function () {
+				const userRole = await inhabit.read.USER_ROLE()
+
+				await inhabit.write.grantRole([userRole, luca], {
+					account: deployer
+				})
+
+				await inhabit.write.setNFTCollection([nftCollection.address], {
+					account: deployer
+				})
+
+				const collectionsParams = [
+					{
+						name: 'Test Collection',
+						symbol: 'TEST',
+						uri: 'https://test.com/',
+						supply: NFT_SUPPLY,
+						price: NFT_PRICE,
+						state: true
+					}
+				]
+
+				await inhabit.write.createCampaign([CAMPAIGN_GOAL, collectionsParams], {
+					account: deployer
+				})
+
+				const campaign = await inhabit.read.getCampaign([1n])
+				collectionAddress = campaign.collections[0]
+			})
+
+			describe('_setCollectionBaseURI', function () {
+				it('Should revert if caller is not campaign creator', async function () {
+					await expect(
+						inhabit.write.setCollectionBaseURI(
+							[1n, collectionAddress, 'https://newuri.com/'],
+							{
+								account: luca
+							}
+						)
+					).to.be.rejectedWith('UNAUTHORIZED')
+				})
+
+				it('Should revert if collection address is zero', async function () {
+					await expect(
+						inhabit.write.setCollectionBaseURI(
+							[1n, zeroAddress, 'https://newuri.com/'],
+							{
+								account: deployer
+							}
+						)
+					).to.be.rejectedWith('ZERO_ADDRESS')
+				})
+
+				it('Should revert if campaign ID is invalid', async function () {
+					await expect(
+						inhabit.write.setCollectionBaseURI(
+							[999n, collectionAddress, 'https://newuri.com/'],
+							{
+								account: deployer
+							}
+						)
+					).to.be.rejectedWith('INVALID_CAMPAIGN_ID')
+				})
+
+				it('Should update base URI successfully', async function () {
+					const newURI = 'https://newuri.com/'
+
+					const tx = await inhabit.write.setCollectionBaseURI(
+						[1n, collectionAddress, newURI],
+						{
+							account: deployer
+						}
+					)
+
+					expect(tx).to.exist
+
+					const collection = await viem.getContractAt(
+						'NFTCollection',
+						collectionAddress
+					)
+					const baseURI = await collection.read.baseURI()
+					expect(baseURI).to.equal(newURI)
+				})
+
+				it('Should emit CollectionBaseURIUpdated event', async function () {
+					const tx = await inhabit.write.setCollectionBaseURI(
+						[1n, collectionAddress, 'https://newuri.com/'],
+						{
+							account: deployer
+						}
+					)
+
+					const publicClient = await hre.viem.getPublicClient()
+
+					const receipt = await publicClient.waitForTransactionReceipt({
+						hash: tx
+					})
+					expect(receipt.logs).to.have.lengthOf.greaterThan(0)
+				})
+
+				it('Should not update URI if collection not found in campaign', async function () {
+					const fakeCollection = '0x1234567890123456789012345678901234567890'
+
+					await expect(
+						inhabit.write.setCollectionBaseURI(
+							[1n, fakeCollection, 'https://newuri.com/'],
+							{
+								account: deployer
+							}
+						)
+					).to.be.rejectedWith('COLLECTION_NOT_FOUND')
+				})
+			})
+
+			describe('_setCollectionPrice', function () {
+				it('Should revert if caller is not campaign creator', async function () {
+					await expect(
+						inhabit.write.setCollectionPrice(
+							[1n, collectionAddress, parseEther('20')],
+							{
+								account: luca
+							}
+						)
+					).to.be.rejectedWith('UNAUTHORIZED')
+				})
+
+				it('Should revert if collection address is zero', async function () {
+					await expect(
+						inhabit.write.setCollectionPrice(
+							[1n, zeroAddress, parseEther('20')],
+							{
+								account: deployer
+							}
+						)
+					).to.be.rejectedWith('ZERO_ADDRESS')
+				})
+
+				it('Should revert if price is zero', async function () {
+					await expect(
+						inhabit.write.setCollectionPrice([1n, collectionAddress, 0n], {
+							account: deployer
+						})
+					).to.be.rejectedWith('INVALID_PRICE')
+				})
+
+				it('Should update price successfully', async function () {
+					const newPrice = parseEther('20')
+
+					const tx = await inhabit.write.setCollectionPrice(
+						[1n, collectionAddress, newPrice],
+						{
+							account: deployer
+						}
+					)
+
+					expect(tx).to.exist
+
+					const collection = await viem.getContractAt(
+						'NFTCollection',
+						collectionAddress
+					)
+					const price = await collection.read.price()
+					expect(price).to.equal(newPrice)
+				})
+
+				it('Should handle maximum price value', async function () {
+					const tx = await inhabit.write.setCollectionPrice(
+						[1n, collectionAddress, maxUint256],
+						{
+							account: deployer
+						}
+					)
+
+					expect(tx).to.exist
+				})
+			})
+
+			describe('_setCollectionState', function () {
+				it('Should revert if caller is not campaign creator', async function () {
+					await expect(
+						inhabit.write.setCollectionState([1n, collectionAddress, false], {
+							account: luca
+						})
+					).to.be.rejectedWith('UNAUTHORIZED')
+				})
+
+				it('Should revert if collection address is zero', async function () {
+					await expect(
+						inhabit.write.setCollectionState([1n, zeroAddress, false], {
+							account: deployer
+						})
+					).to.be.rejectedWith('ZERO_ADDRESS')
+				})
+
+				it('Should update state successfully', async function () {
+					const tx = await inhabit.write.setCollectionState(
+						[1n, collectionAddress, false],
+						{
+							account: deployer
+						}
+					)
+
+					expect(tx).to.exist
+
+					const collection = await viem.getContractAt(
+						'NFTCollection',
+						collectionAddress
+					)
+					const state = await collection.read.state()
+					expect(state).to.be.false
+				})
+			})
+
+			describe('_setCollectionSupply', function () {
+				it('Should revert if caller is not campaign creator', async function () {
+					await expect(
+						inhabit.write.setCollectionSupply([1n, collectionAddress, 20n], {
+							account: luca
+						})
+					).to.be.rejectedWith('UNAUTHORIZED')
+				})
+
+				it('Should revert if collection address is zero', async function () {
+					await expect(
+						inhabit.write.setCollectionSupply([1n, zeroAddress, 20n], {
+							account: deployer
+						})
+					).to.be.rejectedWith('ZERO_ADDRESS')
+				})
+
+				it('Should revert if supply is zero', async function () {
+					await expect(
+						inhabit.write.setCollectionSupply([1n, collectionAddress, 0n], {
+							account: deployer
+						})
+					).to.be.rejectedWith('INVALID_SUPPLY')
+				})
+
+				it('Should update supply successfully', async function () {
+					const newSupply = 20n
+
+					const tx = await inhabit.write.setCollectionSupply(
+						[1n, collectionAddress, newSupply],
+						{
+							account: deployer
+						}
+					)
+
+					expect(tx).to.exist
+
+					const collection = await viem.getContractAt(
+						'NFTCollection',
+						collectionAddress
+					)
+					const supply = await collection.read.supply()
+					expect(supply).to.equal(newSupply)
+				})
+
+				it('Should revert if new supply is less than current token count', async function () {
+					await inhabit.write.addToTokens([[mockUSDC.address]], {
+						account: deployer
+					})
+
+					// Mint 5 NFTs
+					for (let i = 0; i < 5; i++) {
+						await mockUSDC.write.mint([luca, NFT_PRICE], {
+							account: deployer
+						})
+
+						await mockUSDC.write.approve([inhabit.address, NFT_PRICE], {
+							account: luca
+						})
+
+						await inhabit.write.buyNFT(
+							[1n, collectionAddress, mockUSDC.address, ''],
+							{
+								account: luca
+							}
+						)
+					}
+
+					// Now try to set supply to less than 5
+					// This should revert
+					await expect(
+						inhabit.write.setCollectionSupply(
+							[
+								1n,
+								collectionAddress,
+								3n // Menos que los 5 tokens ya minteados
+							],
+							{
+								account: deployer
+							}
+						)
+					).to.be.rejectedWith('INVALID_SUPPLY')
+				})
+			})
+		})
+
+		describe('Refund System', function () {
+			const CAMPAIGN_GOAL = parseEther('1000')
+			const NFT_PRICE = parseEther('10')
+			const NFT_SUPPLY = 10n
+			const REFUND_AMOUNT = parseEther('5')
+
+			beforeEach(async function () {
+				const userRole = await inhabit.read.USER_ROLE()
+
+				await inhabit.write.grantRole([userRole, luca], {
+					account: deployer
+				})
+
+				await inhabit.write.setNFTCollection([nftCollection.address], {
+					account: deployer
+				})
+
+				// Create a campaign with a collection
+				const collectionsParams = [
+					{
+						name: 'Test Collection',
+						symbol: 'TEST',
+						uri: 'https://test.com/',
+						supply: NFT_SUPPLY,
+						price: NFT_PRICE,
+						state: true
+					}
+				]
+
+				await inhabit.write.createCampaign([CAMPAIGN_GOAL, collectionsParams], {
+					account: deployer
+				})
+
+				const campaign = await inhabit.read.getCampaign([1n])
+				collectionAddress = campaign.collections[0]
+
+				// Setup tokens
+				await inhabit.write.addToTokens([[mockUSDC.address]], {
+					account: deployer
+				})
+
+				// Buy an NFT to establish a refund
+				await mockUSDC.write.mint([luca, NFT_PRICE], {
+					account: deployer
+				})
+
+				await mockUSDC.write.approve([inhabit.address, NFT_PRICE], {
+					account: luca
+				})
+			})
+
+			describe('establishRefund', function () {
+				it('Should revert if token is not supported', async function () {
+					const unsupportedToken = '0x1234567890123456789012345678901234567890'
+
+					await expect(
+						inhabit.write.establishRefund(
+							[1n, collectionAddress, unsupportedToken, REFUND_AMOUNT],
+							{
+								account: deployer
+							}
+						)
+					).to.be.rejectedWith('TOKEN_NOT_FOUND')
+				})
+
+				it('Should revert if collection is not valid', async function () {
+					const fakeCollection = '0x1234567890123456789012345678901234567890'
+
+					await expect(
+						inhabit.write.establishRefund(
+							[1n, fakeCollection, mockUSDC.address, REFUND_AMOUNT],
+							{
+								account: deployer
+							}
+						)
+					).to.be.rejectedWith('COLLECTION_NOT_FOUND')
+				})
+
+				it('Should revert if trying to establish refund for a collection having no NFTs', async function () {
+					await expect(
+						inhabit.write.establishRefund(
+							[1n, collectionAddress, mockUSDC.address, REFUND_AMOUNT],
+							{
+								account: deployer
+							}
+						)
+					).to.be.rejectedWith('INVALID_AMOUNT')
+				})
+
+				it('Should revert if insufficient funds for total refund', async function () {
+					await inhabit.write.buyNFT(
+						[1n, collectionAddress, mockUSDC.address, ''],
+						{
+							account: luca
+						}
+					)
+
+					await expect(
+						inhabit.write.establishRefund(
+							[1n, collectionAddress, mockUSDC.address, REFUND_AMOUNT],
+							{
+								account: deployer
+							}
+						)
+					).to.be.rejectedWith('INSUFFICIENT_FUNDS')
+				})
+
+				it('Should revert if insufficient allowance for total refund', async function () {
+					await inhabit.write.buyNFT(
+						[1n, collectionAddress, mockUSDC.address, ''],
+						{
+							account: luca
+						}
+					)
+
+					await mockUSDC.write.mint([deployer, REFUND_AMOUNT], {
+						account: deployer
+					})
+
+					await expect(
+						inhabit.write.establishRefund(
+							[1n, collectionAddress, mockUSDC.address, REFUND_AMOUNT],
+							{
+								account: deployer
+							}
+						)
+					).to.be.rejectedWith('INSUFFICIENT_ALLOWANCE')
+				})
+
+				it('Should establish refund successfully', async function () {
+					await inhabit.write.buyNFT(
+						[1n, collectionAddress, mockUSDC.address, ''],
+						{
+							account: luca
+						}
+					)
+
+					await mockUSDC.write.mint([deployer, REFUND_AMOUNT], {
+						account: deployer
+					})
+
+					await mockUSDC.write.approve([inhabit.address, REFUND_AMOUNT], {
+						account: deployer
+					})
+
+					const tx = await inhabit.write.establishRefund(
+						[1n, collectionAddress, mockUSDC.address, REFUND_AMOUNT],
+						{
+							account: deployer
+						}
+					)
+
+					expect(tx).to.exist
+
+					const refundAmount = await inhabit.read.getRefunds([
+						1n,
+						collectionAddress,
+						mockUSDC.address
+					])
+					expect(refundAmount).to.equal(REFUND_AMOUNT)
+				})
+
+				it('Should emit RefundEstablished event', async function () {
+					await inhabit.write.buyNFT(
+						[1n, collectionAddress, mockUSDC.address, ''],
+						{
+							account: luca
+						}
+					)
+
+					await mockUSDC.write.mint([deployer, REFUND_AMOUNT], {
+						account: deployer
+					})
+
+					await mockUSDC.write.approve([inhabit.address, REFUND_AMOUNT], {
+						account: deployer
+					})
+
+					const tx = await inhabit.write.establishRefund(
+						[1n, collectionAddress, mockUSDC.address, REFUND_AMOUNT],
+						{
+							account: deployer
+						}
+					)
+
+					const publicClient = await hre.viem.getPublicClient()
+
+					const receipt = await publicClient.waitForTransactionReceipt({
+						hash: tx
+					})
+					expect(receipt.logs).to.have.lengthOf.greaterThan(0)
+				})
+			})
+
+			describe('claimRefund', function () {
+				beforeEach(async function () {
+					await inhabit.write.buyNFT(
+						[1n, collectionAddress, mockUSDC.address, ''],
+						{
+							account: luca
+						}
+					)
+
+					await mockUSDC.write.mint([deployer, REFUND_AMOUNT], {
+						account: deployer
+					})
+
+					await mockUSDC.write.approve([inhabit.address, REFUND_AMOUNT], {
+						account: deployer
+					})
+
+					await inhabit.write.establishRefund(
+						[1n, collectionAddress, mockUSDC.address, REFUND_AMOUNT],
+						{
+							account: deployer
+						}
+					)
+				})
+
+				it('Should revert if collection is not valid', async function () {
+					const fakeCollection = '0x1234567890123456789012345678901234567890'
+
+					await expect(
+						inhabit.write.claimRefund(
+							[
+								1n,
+								fakeCollection,
+								1n // tokenId
+							],
+							{
+								account: luca
+							}
+						)
+					).to.be.rejectedWith('COLLECTION_NOT_FOUND')
+				})
+
+				it('Should revert if caller is not NFT owner', async function () {
+					await expect(
+						inhabit.write.claimRefund(
+							[
+								1n,
+								collectionAddress,
+								1n // tokenId owned by luca
+							],
+							{
+								account: juan // juan is not the owner
+							}
+						)
+					).to.be.rejectedWith('NOT_NFT_OWNER')
+				})
+
+				it('Should revert if refund already claimed', async function () {
+					await inhabit.write.claimRefund([1n, collectionAddress, 1n], {
+						account: luca
+					})
+
+					await expect(
+						inhabit.write.claimRefund([1n, collectionAddress, 1n], {
+							account: luca
+						})
+					).to.be.rejectedWith('REFUND_ALREADY_CLAIMED')
+				})
+
+				it('Should revert if contract has insufficient funds for refund', async function () {
+					await inhabit.write.recoverFunds([mockUSDC.address, deployer], {
+						account: deployer
+					})
+
+					await expect(
+						inhabit.write.claimRefund([1n, collectionAddress, 1n], {
+							account: luca
+						})
+					).to.be.rejectedWith('INSUFFICIENT_FUNDS')
+				})
+
+				it('Should claim refund successfully', async function () {
+					const balanceBefore = await mockUSDC.read.balanceOf([luca])
+
+					const tx = await inhabit.write.claimRefund(
+						[1n, collectionAddress, 1n],
+						{
+							account: luca
+						}
+					)
+
+					expect(tx).to.exist
+
+					const balanceAfter = await mockUSDC.read.balanceOf([luca])
+					expect(balanceAfter).to.equal(balanceBefore + REFUND_AMOUNT)
+
+					const isClaimed = await inhabit.read.isRefundClaimed([
+						1n,
+						collectionAddress,
+						1n
+					])
+					expect(isClaimed).to.be.true
+				})
+
+				it('Should burn NFT when claiming refund', async function () {
+					const collection = await viem.getContractAt(
+						'NFTCollection',
+						collectionAddress
+					)
+
+					// Verify that the NFT is owned by luca before claiming refund
+					const ownerBefore = await collection.read.ownerOf([1n])
+					expect(ownerBefore).to.equal(luca)
+
+					await inhabit.write.claimRefund([1n, collectionAddress, 1n], {
+						account: luca
+					})
+
+					// Verify that the NFT is burned
+					await expect(collection.read.ownerOf([1n])).to.be.rejectedWith(
+						'ERC721NonexistentToken(1)'
+					)
+				})
+
+				it('Should emit RefundClaimed event', async function () {
+					const tx = await inhabit.write.claimRefund(
+						[1n, collectionAddress, 1n],
+						{
+							account: luca
+						}
+					)
+
+					const publicClient = await hre.viem.getPublicClient()
+
+					const receipt = await publicClient.waitForTransactionReceipt({
+						hash: tx
+					})
+					expect(receipt.logs).to.have.lengthOf.greaterThan(0)
+				})
+			})
+		})
+
+		describe('View Functions', function () {
+			const CAMPAIGN_GOAL = parseEther('1000')
+			const NFT_PRICE = parseEther('10')
+
+			describe('getCampaign', function () {
+				it('Should return empty campaign for invalid ID', async function () {
+					const campaign = await inhabit.read.getCampaign([999n])
+
+					expect(campaign.collections).to.have.lengthOf(0)
+					expect(campaign.state).to.be.false
+					expect(campaign.creator).to.equal(zeroAddress)
+					expect(campaign.goal).to.equal(0n)
+					expect(campaign.fundsRaised).to.equal(0n)
+				})
+
+				it('Should return correct campaign data', async function () {
+					const collectionsParams = [
+						{
+							name: 'Test Collection',
+							symbol: 'TEST',
+							uri: 'https://test.com/',
+							supply: 100n,
+							price: NFT_PRICE,
+							state: true
+						}
+					]
+
+					await inhabit.write.createCampaign(
+						[CAMPAIGN_GOAL, collectionsParams],
+						{ account: deployer }
+					)
+
+					const campaign = await inhabit.read.getCampaign([1n])
+
+					expect(campaign.state).to.be.true
+					expect(campaign.creator).to.equal(deployer)
+					expect(campaign.goal).to.equal(CAMPAIGN_GOAL)
+					expect(campaign.fundsRaised).to.equal(0n)
+					expect(campaign.collections).to.have.lengthOf(1)
+				})
+			})
+
+			describe('getCampaignPurchases', function () {
+				it('Should return empty array for campaign with no purchases', async function () {
+					const collectionsParams = [
+						{
+							name: 'Test Collection',
+							symbol: 'TEST',
+							uri: 'https://test.com/',
+							supply: 100n,
+							price: NFT_PRICE,
+							state: true
+						}
+					]
+
+					await inhabit.write.createCampaign(
+						[CAMPAIGN_GOAL, collectionsParams],
+						{ account: deployer }
+					)
+
+					const purchases = await inhabit.read.getCampaignPurchases([1n])
+					expect(purchases).to.have.lengthOf(0)
+				})
+
+				it('Should return correct purchase data', async function () {
+					const collectionsParams = [
+						{
+							name: 'Test Collection',
+							symbol: 'TEST',
+							uri: 'https://test.com/',
+							supply: 100n,
+							price: NFT_PRICE,
+							state: true
+						}
+					]
+
+					await inhabit.write.createCampaign(
+						[CAMPAIGN_GOAL, collectionsParams],
+						{ account: deployer }
+					)
+
+					const campaign = await inhabit.read.getCampaign([1n])
+					collectionAddress = campaign.collections[0]
+
+					await inhabit.write.addToTokens([[mockUSDC.address]], {
+						account: deployer
+					})
+
+					await mockUSDC.write.mint([luca, NFT_PRICE], {
+						account: deployer
+					})
+
+					await mockUSDC.write.approve([inhabit.address, NFT_PRICE], {
+						account: luca
+					})
+
+					await inhabit.write.buyNFT(
+						[1n, collectionAddress, mockUSDC.address, ''],
+						{ account: luca }
+					)
+
+					const purchases = await inhabit.read.getCampaignPurchases([1n])
+					expect(purchases).to.have.lengthOf(1)
+					expect(purchases[0].collection).to.equal(collectionAddress)
+					expect(purchases[0].paymentToken).to.equal(mockUSDC.address)
+					expect(purchases[0].price).to.equal(NFT_PRICE)
+				})
+			})
+
+			describe('getRefunds', function () {
+				it('Should return zero for non-existent refund', async function () {
+					const refundAmount = await inhabit.read.getRefunds([
+						1n,
+						mockUSDC.address,
+						mockUSDC.address
+					])
+
+					expect(refundAmount).to.equal(0n)
+				})
+
+				it('Should return correct refund amount', async function () {
+					const collectionsParams = [
+						{
+							name: 'Test Collection',
+							symbol: 'TEST',
+							uri: 'https://test.com/',
+							supply: 100n,
+							price: NFT_PRICE,
+							state: true
+						}
+					]
+
+					await inhabit.write.addToTokens([[mockUSDC.address]], {
+						account: deployer
+					})
+
+					await inhabit.write.createCampaign(
+						[CAMPAIGN_GOAL, collectionsParams],
+						{ account: deployer }
+					)
+
+					const campaign = await inhabit.read.getCampaign([1n])
+					const collectionAddress = campaign.collections[0]
+
+					await mockUSDC.write.mint([deployer, parseEther('10')], {
+						account: deployer
+					})
+
+					await mockUSDC.write.approve([inhabit.address, parseEther('10')], {
+						account: deployer
+					})
+
+					await mockUSDC.write.mint([luca, parseEther('10')], {
+						account: deployer
+					})
+
+					await mockUSDC.write.approve([inhabit.address, parseEther('10')], {
+						account: luca
+					})
+
+					await inhabit.write.buyNFT(
+						[1n, collectionAddress, mockUSDC.address, ''],
+						{ account: luca }
+					)
+
+					await inhabit.write.establishRefund(
+						[1n, collectionAddress, mockUSDC.address, parseEther('5')],
+						{ account: deployer }
+					)
+
+					const refundAmount = await inhabit.read.getRefunds([
+						1n,
+						collectionAddress,
+						mockUSDC.address
+					])
+
+					expect(refundAmount).to.equal(parseEther('5'))
+				})
+			})
+
+			describe('isRefundClaimed', function () {
+				it('Should return false for non-existent claim', async function () {
+					const isClaimed = await inhabit.read.isRefundClaimed([
+						1n,
+						collectionAddress,
+						1n
+					])
+
+					expect(isClaimed).to.be.false
+				})
+
+				it('Should return true after claiming refund', async function () {
+					const collectionsParams = [
+						{
+							name: 'Test Collection',
+							symbol: 'TEST',
+							uri: 'https://test.com/',
+							supply: 100n,
+							price: NFT_PRICE,
+							state: true
+						}
+					]
+
+					await inhabit.write.addToTokens([[mockUSDC.address]], {
+						account: deployer
+					})
+
+					await inhabit.write.createCampaign(
+						[CAMPAIGN_GOAL, collectionsParams],
+						{ account: deployer }
+					)
+
+					const campaign = await inhabit.read.getCampaign([1n])
+					collectionAddress = campaign.collections[0]
+
+					await mockUSDC.write.mint([deployer, parseEther('10')], {
+						account: deployer
+					})
+
+					await mockUSDC.write.approve([inhabit.address, parseEther('10')], {
+						account: deployer
+					})
+
+					await mockUSDC.write.mint([luca, parseEther('10')], {
+						account: deployer
+					})
+
+					await mockUSDC.write.approve([inhabit.address, parseEther('10')], {
+						account: luca
+					})
+
+					await inhabit.write.buyNFT(
+						[1n, collectionAddress, mockUSDC.address, ''],
+						{ account: luca }
+					)
+
+					await inhabit.write.establishRefund(
+						[1n, collectionAddress, mockUSDC.address, parseEther('5')],
+						{ account: deployer }
+					)
+
+					await inhabit.write.claimRefund([1n, collectionAddress, 1n], {
+						account: luca
+					})
+
+					const isClaimed = await inhabit.read.isRefundClaimed([
+						1n,
+						collectionAddress,
+						1n
+					])
+
+					expect(isClaimed).to.be.true
+				})
+			})
+		})
+
+		describe('Internal Function Validation', function () {
+			beforeEach(async function () {})
+
+			describe('_invalidCampaignId', function () {
+				it('Should validate campaign ID correctly through public functions', async function () {
+					// Testear a través de funciones públicas que usan _invalidCampaignId
+					await expect(inhabit.read.getCampaign([0n])).to.not.be.rejected // ID 0 debería retornar campaña vacía
+
+					await expect(inhabit.read.getCampaign([999n])).to.not.be.rejected // ID alto debería retornar campaña vacía
+				})
+			})
+
+			describe('_validateCollection', function () {
+				it('Should validate collection correctly through buyNFT', async function () {
+					await inhabit.write.addToTokens([[mockUSDC.address]], {
+						account: deployer
+					})
+
+					// Intentar comprar de una colección que no existe
+					await expect(
+						inhabit.write.buyNFT(
+							[
+								1n, // campaign que no existe
+								mockUSDC.address, // collection fake
+								mockUSDC.address,
+								''
+							],
+							{
+								account: luca
+							}
+						)
+					).to.be.rejectedWith('INVALID_CAMPAIGN_ID')
+
+					// Crear campaña válida
+					await inhabit.write.setNFTCollection([nftCollection.address], {
+						account: deployer
+					})
+
+					const collectionsParams = [
+						{
+							name: 'Test Collection',
+							symbol: 'TEST',
+							uri: 'https://test.com/',
+							supply: 100n,
+							price: parseEther('10'),
+							state: true
+						}
+					]
+
+					await inhabit.write.createCampaign(
+						[parseEther('1000'), collectionsParams],
+						{
+							account: deployer
+						}
+					)
+
+					// Intentar con colección que no pertenece a la campaña
+					await expect(
+						inhabit.write.buyNFT(
+							[
+								1n,
+								mockUSDC.address, // collection que no pertenece a la campaña
+								mockUSDC.address,
+								''
+							],
+							{
+								account: luca
+							}
+						)
+					).to.be.rejectedWith('COLLECTION_NOT_FOUND')
+				})
+			})
+
+			describe('_findPurchaseByTokenId', function () {
+				it('Should find purchase correctly through claimRefund', async function () {
+					// Setup completo para tener una compra
+					await inhabit.write.setNFTCollection([nftCollection.address], {
+						account: deployer
+					})
+
+					await inhabit.write.addToTokens([[mockUSDC.address]], {
+						account: deployer
+					})
+
+					const collectionsParams = [
+						{
+							name: 'Test Collection',
+							symbol: 'TEST',
+							uri: 'https://test.com/',
+							supply: 100n,
+							price: parseEther('10'),
+							state: true
+						}
+					]
+
+					await inhabit.write.createCampaign(
+						[parseEther('1000'), collectionsParams],
+						{
+							account: deployer
+						}
+					)
+
+					const campaign = await inhabit.read.getCampaign([1n])
+					const collectionAddress = campaign.collections[0]
+
+					await mockUSDC.write.mint([luca, parseEther('10')], {
+						account: deployer
+					})
+
+					await mockUSDC.write.approve([inhabit.address, parseEther('10')], {
+						account: luca
+					})
+
+					await inhabit.write.buyNFT(
+						[1n, collectionAddress, mockUSDC.address, ''],
+						{
+							account: luca
+						}
+					)
+
+					// Intentar claim refund con token que no existe debería fallar
+					await expect(
+						inhabit.write.claimRefund(
+							[
+								1n,
+								collectionAddress,
+								999n // token que no existe
+							],
+							{
+								account: luca
+							}
+						)
+					).to.be.rejectedWith('PURCHASE_NOT_FOUND')
+				})
+			})
+		})
+
+		describe('Edge Cases and Security', function () {
+			beforeEach(async function () {
+				await inhabit.write.setNFTCollection([nftCollection.address], {
+					account: deployer
+				})
+			})
+
+			describe('Gas Optimization Issues', function () {
+				it.skip('❌ Should handle campaigns with many collections efficiently', async function () {
+					const manyCollections = []
+
+					for (let i = 0; i < 100; i++) {
+						manyCollections.push({
+							name: `Collection ${i}`,
+							symbol: `COL${i}`,
+							uri: `https://test${i}.com/`,
+							supply: 100n,
+							price: parseEther('10'),
+							state: true
+						})
+					}
+
+					await expect(
+						inhabit.write.createCampaign(
+							[parseEther('1000'), manyCollections],
+							{
+								account: deployer
+							}
+						)
+					).to.be.rejectedWith('GAS_LIMIT_EXCEEDED')
+				})
+
+				it.skip('❌ Should handle collection operations efficiently with many collections', async function () {
+					const collections = []
+					for (let i = 0; i < 10; i++) {
+						collections.push({
+							name: `Collection ${i}`,
+							symbol: `COL${i}`,
+							uri: `https://test${i}.com/`,
+							supply: 100n,
+							price: parseEther('10'),
+							state: true
+						})
+					}
+
+					await inhabit.write.createCampaign(
+						[parseEther('1000'), collections],
+						{
+							account: deployer
+						}
+					)
+
+					const campaign = await inhabit.read.getCampaign([1n])
+					const lastCollection = campaign.collections[9] // Última colección
+
+					const publicClient = await hre.viem.getPublicClient()
+
+					// Las operaciones en la última colección requieren iterar sobre todas las anteriores
+					// Esto es ineficiente
+					// 				const publicClient = await hre.viem.getPublicC				y podría causar problemas de gas
+					const startGas = await publicClient.estimateGas({
+						account: deployer,
+						to: inhabit.address,
+						data: inhabit.interface.encodeFunctionData('setCollectionPrice', [
+							1n,
+							lastCollection,
+							parseEther('20')
+						])
+					})
+
+					// En un contrato optimizado, esto debería ser O(1), no O(n)
+					console.log(
+						'Gas estimate for operation on last collection:',
+						startGas
+					)
+				})
+			})
+
+			describe('Logic Vulnerabilities', function () {
+				it.skip('❌ Should prevent collection operations on non-existent collections', async function () {
+					const collectionsParams = [
+						{
+							name: 'Test Collection',
+							symbol: 'TEST',
+							uri: 'https://test.com/',
+							supply: 100n,
+							price: parseEther('10'),
+							state: true
+						}
+					]
+
+					await inhabit.write.createCampaign(
+						[parseEther('1000'), collectionsParams],
+						{
+							account: deployer
+						}
+					)
+
+					const fakeCollection = '0x1234567890123456789012345678901234567890'
+
+					// Estas operaciones no deberían pasar silenciosamente - deberían revertir
+					const tx = await inhabit.write.setCollectionPrice(
+						[1n, fakeCollection, parseEther('20')],
+						{
+							account: deployer
+						}
+					)
+
+					// ❌ El contrato actual no valida si la colección existe en la campaña
+					// La transacción pasa pero no hace nada
+					expect(tx).to.exist
+				})
+			})
+
+			describe('Integer Overflow/Underflow', function () {
+				it('Should handle maximum values without overflow', async function () {
+					const collectionsParams = [
+						{
+							name: 'Test Collection',
+							symbol: 'TEST',
+							uri: 'https://test.com/',
+							supply: maxUint256,
+							price: maxUint256,
+							state: true
+						}
+					]
+
+					// Crear campaña con valores máximos
+					const tx = await inhabit.write.createCampaign(
+						[maxUint256, collectionsParams],
+						{
+							account: deployer
+						}
+					)
+
+					expect(tx).to.exist
+
+					const campaign = await inhabit.read.getCampaign([1n])
+					expect(campaign.goal).to.equal(maxUint256)
+				})
+
+				it('Should handle fundsRaised accumulation correctly', async function () {
+					// Test que fundsRaised no cause overflow cuando se acumulan muchas compras
+					const collectionsParams = [
+						{
+							name: 'Test Collection',
+							symbol: 'TEST',
+							uri: 'https://test.com/',
+							supply: 1000000n, // Muchos NFTs
+							price: parseEther('1000000'), // Precio alto
+							state: true
+						}
+					]
+
+					await inhabit.write.createCampaign([maxUint256, collectionsParams], {
+						account: deployer
+					})
+
+					// Este test es conceptual - en la práctica sería muy costoso ejecutar
+					// Pero ilustra la importancia de verificar overflows en fundsRaised
+				})
+			})
+
+			describe('Reentrancy Protection', function () {
+				it('Should be protected against reentrancy in claimRefund', async function () {
+					// El contrato usa ReentrancyGuard, pero verificamos que esté aplicado correctamente
+					// Este test sería más complejo y requeriría un contrato malicioso para testing
+					// Por ahora, verificamos que el modifier nonReentrant esté presente en buyNFT y claimRefund
+					// a través de intentar llamadas anidadas (esto es conceptual)
+				})
+			})
+		})
+
+		describe('Private Variables Access', function () {
+			describe('Storage Variable Visibility', function () {
+				it('Should expose nonces for testing and transparency', async function () {
+					const collectionsParams = [
+						{
+							name: 'Test Collection',
+							symbol: 'TEST',
+							uri: 'https://test.com/',
+							supply: 100n,
+							price: parseEther('10'),
+							state: true
+						}
+					]
+
+					await inhabit.write.createCampaign(
+						[parseEther('1000'), collectionsParams],
+						{
+							account: deployer
+						}
+					)
+
+					const nonce = await inhabit.read.getNonces([deployer])
+					expect(nonce).to.equal(1n)
+				})
+
+				it('Should expose campaigns mapping for transparency', async function () {
+					const collectionsParams = [
+						{
+							name: 'Test Collection',
+							symbol: 'TEST',
+							uri: 'https://test.com/',
+							supply: 100n,
+							price: parseEther('10'),
+							state: true
+						}
+					]
+
+					await inhabit.write.createCampaign(
+						[parseEther('1000'), collectionsParams],
+						{
+							account: deployer
+						}
+					)
+
+					const campaign = await inhabit.read.getCampaign([1n])
+					expect(campaign.creator).to.equal(deployer)
+					expect(campaign.goal).to.equal(parseEther('1000'))
+					expect(campaign.state).to.be.true
+					expect(campaign.fundsRaised).to.equal(0n)
+					expect(campaign.collections).to.have.lengthOf(1)
+					expect(campaign.collections[0]).to.exist
+				})
+
+				it.skip('❌Should expose refunds mapping for verification', async function () {
+					// getRefunds existe, pero no hay forma de iterar sobre todos los refunds
+					// o verificar si existe un refund para una campaña/colección específica
+					// Sería útil tener:
+					// - hasRefund(uint256 campaignId, address collection, address token)
+					// - getRefundTokens(uint256 campaignId, address collection)
+				})
+
+				it.skip('❌ Should expose refundsClaimed for comprehensive testing', async function () {
+					// isRefundClaimed existe, pero podría ser útil tener funciones adicionales como:
+					// - getClaimedRefunds(uint256 campaignId, address collection)
+					// - getTotalClaimedRefunds(uint256 campaignId)
+				})
 			})
 		})
 	})

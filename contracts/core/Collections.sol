@@ -6,6 +6,8 @@ import {ICollections} from './interfaces/ICollections.sol';
 import {Errors} from './libraries/Errors.sol';
 import {Clone} from './libraries/Clone.sol';
 
+import 'hardhat/console.sol';
+
 contract Collections is ICollections, Errors {
 	/// =========================
 	/// === Storage Variables ===
@@ -52,6 +54,10 @@ contract Collections is ICollections, Errors {
 		uint256 _campaignId
 	) public view returns (Purchase[] memory) {
 		return campaignPurchases[_campaignId];
+	}
+
+	function getNonces(address _account) public view returns (uint256) {
+		return nonces[_account];
 	}
 
 	function getRefunds(
@@ -139,8 +145,6 @@ contract Collections is ICollections, Errors {
 		uint256 _campaignId,
 		bool _status
 	) internal onlyCampaignCreator(_campaignId) {
-		_invalidCampaignId(_campaignId);
-
 		Campaign storage campaign = campaigns[_campaignId];
 
 		if (campaign.creator != msg.sender) revert UNAUTHORIZED();
@@ -218,10 +222,12 @@ contract Collections is ICollections, Errors {
 	) internal onlyCampaignCreator(_campaignId) {
 		_isZeroAddress(_collection);
 
+		bool found = false;
 		for (uint256 i; i < campaigns[_campaignId].collections.length; ) {
 			if (campaigns[_campaignId].collections[i] == _collection) {
 				INFTCollection(_collection).setBaseURI(_baseURI);
 				emit CollectionBaseURIUpdated(_campaignId, _collection, _baseURI);
+				found = true;
 				break;
 			}
 
@@ -229,6 +235,8 @@ contract Collections is ICollections, Errors {
 				++i;
 			}
 		}
+
+		if (!found) revert COLLECTION_NOT_FOUND();
 	}
 
 	function _setCollectionPrice(
@@ -239,10 +247,12 @@ contract Collections is ICollections, Errors {
 		_isZeroAddress(_collection);
 		if (_price == 0) revert INVALID_PRICE();
 
+		bool found = false;
 		for (uint256 i; i < campaigns[_campaignId].collections.length; ) {
 			if (campaigns[_campaignId].collections[i] == _collection) {
 				INFTCollection(_collection).setPrice(_price);
 				emit CollectionPriceUpdated(_campaignId, _collection, _price);
+				found = true;
 				break;
 			}
 
@@ -250,6 +260,8 @@ contract Collections is ICollections, Errors {
 				++i;
 			}
 		}
+
+		if (!found) revert COLLECTION_NOT_FOUND();
 	}
 
 	function _setCollectionState(
@@ -259,10 +271,12 @@ contract Collections is ICollections, Errors {
 	) internal onlyCampaignCreator(_campaignId) {
 		_isZeroAddress(_collection);
 
+		bool found = false;
 		for (uint256 i; i < campaigns[_campaignId].collections.length; ) {
 			if (campaigns[_campaignId].collections[i] == _collection) {
 				INFTCollection(_collection).setState(_state);
 				emit CollectionStateUpdated(_campaignId, _collection, _state);
+				found = true;
 				break;
 			}
 
@@ -270,6 +284,8 @@ contract Collections is ICollections, Errors {
 				++i;
 			}
 		}
+
+		if (!found) revert COLLECTION_NOT_FOUND();
 	}
 
 	function _setCollectionSupply(
@@ -280,10 +296,12 @@ contract Collections is ICollections, Errors {
 		_isZeroAddress(_collection);
 		if (_supply == 0) revert INVALID_SUPPLY();
 
+		bool found = false;
 		for (uint256 i; i < campaigns[_campaignId].collections.length; ) {
 			if (campaigns[_campaignId].collections[i] == _collection) {
 				INFTCollection(_collection).setSupply(_supply);
 				emit CollectionSupplyUpdated(_campaignId, _collection, _supply);
+				found = true;
 				break;
 			}
 
@@ -291,6 +309,8 @@ contract Collections is ICollections, Errors {
 				++i;
 			}
 		}
+
+		if (!found) revert COLLECTION_NOT_FOUND();
 	}
 
 	function _setNFTCollection(address _nftCollection) internal {
@@ -310,6 +330,7 @@ contract Collections is ICollections, Errors {
 
 		if (msg.sender != campaign.creator) revert UNAUTHORIZED();
 
+		bool found = false;
 		for (uint256 i; i < campaign.collections.length; ) {
 			if (_collectionAddress == campaign.collections[i]) {
 				INFTCollection findedNftCollection = INFTCollection(
@@ -317,6 +338,7 @@ contract Collections is ICollections, Errors {
 				);
 
 				findedNftCollection.recoverFunds(_token, _to);
+				found = true;
 				break;
 			}
 
@@ -324,6 +346,8 @@ contract Collections is ICollections, Errors {
 				++i;
 			}
 		}
+
+		if (!found) revert COLLECTION_NOT_FOUND();
 	}
 
 	/// =========================

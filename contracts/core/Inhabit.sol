@@ -13,6 +13,8 @@ import {ICollections} from '../core/interfaces/ICollections.sol';
 import {Groups} from './Groups.sol';
 import {Collections} from './Collections.sol';
 
+import 'hardhat/console.sol';
+
 contract Inhabit is
 	Initializable,
 	AccessControlUpgradeable,
@@ -107,12 +109,15 @@ contract Inhabit is
 		address _collection,
 		address _token,
 		uint256 _amountPerNFT
-	) internal {
+	) external onlyRole(ADMIN_ROLE) nonReentrant {
 		_isTokenSupported(_token);
 		_validateCollection(_campaignId, _collection);
 
 		INFTCollection nftCollection = INFTCollection(_collection);
+
 		uint256 totalNFTsSold = nftCollection.tokenCount();
+		if (totalNFTsSold == 0) revert INVALID_AMOUNT();
+
 		uint256 totalRefundAmount = _amountPerNFT * totalNFTsSold;
 
 		if (ERC20(_token).balanceOf(msg.sender) < totalRefundAmount)
@@ -146,12 +151,7 @@ contract Inhabit is
 		address _collection,
 		uint256 _tokenId
 	) external nonReentrant {
-		INFTCollection nftCollection = _validateCollection(
-			_campaignId,
-			_collection
-		);
-
-		if (nftCollection.ownerOf(_tokenId) != msg.sender) revert NOT_NFT_OWNER();
+		_validateCollection(_campaignId, _collection);
 
 		if (isRefundClaimed(_campaignId, _collection, _tokenId))
 			revert REFUND_ALREADY_CLAIMED();
@@ -161,6 +161,13 @@ contract Inhabit is
 			_collection,
 			_tokenId
 		);
+
+		INFTCollection nftCollection = _validateCollection(
+			_campaignId,
+			_collection
+		);
+
+		if (nftCollection.ownerOf(_tokenId) != msg.sender) revert NOT_NFT_OWNER();
 
 		uint256 refundAmount = getRefunds(
 			_campaignId,

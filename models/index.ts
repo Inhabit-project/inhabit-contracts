@@ -12,6 +12,14 @@ export interface CollectionStruct {
 	active: boolean
 }
 
+export interface CampaignStruct {
+	collections: Address[]
+	state: boolean
+	creator: Address
+	goal: bigint
+	fundsRaised: bigint
+}
+
 export interface AmbassadorStruct {
 	account: Address
 	fee: bigint

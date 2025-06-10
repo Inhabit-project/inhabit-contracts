@@ -42,7 +42,7 @@ contract NFTCollection is
 		__ERC721URIStorage_init();
 		__ERC721Burnable_init();
 
-		__BaseStrategy_init(_params.campaignId, _params.collectionId, msg.sender);
+		__BaseStrategy_init(_params.campaignId, _params.collectionId);
 
 		supply = _params.supply;
 		price = _params.price;
