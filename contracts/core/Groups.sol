@@ -7,6 +7,8 @@ import {IGroups} from './interfaces/IGroups.sol';
 import {Transfer} from './libraries/Transfer.sol';
 import {Errors} from './libraries/Errors.sol';
 
+import 'hardhat/console.sol';
+
 /**
  * @title Groups Contract
  * @author [salviega]
@@ -319,30 +321,21 @@ contract Groups is IGroups, Transfer, Errors {
 		Group storage group = groups[_referral];
 		if (!group.state) revert GROUP_NOT_ACTIVE();
 
-		TransferData[] memory transfers = new TransferData[](
-			group.ambassadors.length
-		);
-
 		uint256 totalFee = 0;
 		for (uint256 i; i < group.ambassadors.length; ) {
 			uint256 fee = calculateFee(_amount, group.ambassadors[i].fee);
 
-			transfers[i] = TransferData({
-				from: msg.sender,
-				to: group.ambassadors[i].account,
-				amount: fee
-			});
-
 			totalFee += fee;
 
 			emit Distributed(group.ambassadors[i].account, fee);
+
+			_transferAmount(_token, group.ambassadors[i].account, fee);
 
 			unchecked {
 				++i;
 			}
 		}
 
-		_transferAmountsFrom(_token, transfers);
 		return totalFee;
 	}
 

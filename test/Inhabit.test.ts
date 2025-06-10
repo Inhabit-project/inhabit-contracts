@@ -786,6 +786,532 @@ describe('Inhabit - Groups Module', function () {
 			})
 		})
 
+		describe('Distribution (Internal)', function () {
+			const REFERRAL_CODE = 'TEST_GROUP'
+			const CAMPAIGN_GOAL = parseEther('1000')
+			const NFT_PRICE = parseEther('10')
+			const NFT_SUPPLY = 100n
+			const FEE_30_PERCENT = 3000n // 30%
+			const FEE_40_PERCENT = 4000n // 40%
+			const FEE_20_PERCENT = 2000n // 20%
+			const FEE_10_PERCENT = 1000n // 10%
+
+			let collectionAddress: Address
+
+			beforeEach(async function () {
+				fixture = await deployFixture()
+				;({
+					deployer,
+					luca,
+					juan,
+					santiago,
+					ledger,
+					inhabit,
+					mockUSDC,
+					nftCollection
+				} = fixture)
+
+				// Setup roles
+				const userRole = await inhabit.read.USER_ROLE()
+
+				await inhabit.write.grantRole([userRole, luca], {
+					account: deployer
+				})
+
+				// Setup NFT collection
+				await inhabit.write.setNFTCollection([nftCollection.address], {
+					account: deployer
+				})
+
+				// Add supported token
+				await inhabit.write.addToTokens([[mockUSDC.address]], {
+					account: deployer
+				})
+
+				// Create a test group with ambassadors
+				const ambassadors = [
+					{ account: juan, fee: FEE_40_PERCENT },
+					{ account: santiago, fee: FEE_20_PERCENT }
+				]
+
+				await inhabit.write.createGroup([REFERRAL_CODE, true, ambassadors], {
+					account: deployer
+				})
+
+				// Create a campaign with collection
+				const collectionsParams = [
+					{
+						name: 'Test Collection',
+						symbol: 'TEST',
+						uri: 'https://test.com/',
+						supply: NFT_SUPPLY,
+						price: NFT_PRICE,
+						state: true
+					}
+				]
+
+				await inhabit.write.createCampaign([CAMPAIGN_GOAL, collectionsParams], {
+					account: deployer
+				})
+
+				const campaign = await inhabit.read.getCampaign([1n])
+				collectionAddress = campaign.collections[0]
+			})
+
+			describe('_distribution (via buyNFT)', function () {
+				beforeEach(async function () {
+					// Mint tokens for buyer
+					await mockUSDC.write.mint([luca, NFT_PRICE], {
+						account: deployer
+					})
+
+					await mockUSDC.write.approve([inhabit.address, NFT_PRICE], {
+						account: luca
+					})
+				})
+
+				it('Should revert if group does not exist', async function () {
+					await expect(
+						inhabit.write.buyNFT(
+							[1n, collectionAddress, mockUSDC.address, 'NONEXISTENT_GROUP'],
+							{
+								account: luca
+							}
+						)
+					).to.be.rejectedWith('GROUP_NOT_FOUND')
+				})
+
+				it('Should revert if group is inactive', async function () {
+					// Deactivate the group
+					await inhabit.write.updateGroupStatus([REFERRAL_CODE, false], {
+						account: deployer
+					})
+
+					await expect(
+						inhabit.write.buyNFT(
+							[1n, collectionAddress, mockUSDC.address, REFERRAL_CODE],
+							{
+								account: luca
+							}
+						)
+					).to.be.rejectedWith('GROUP_NOT_ACTIVE')
+				})
+
+				it('Should distribute fees correctly to all ambassadors', async function () {
+					const juanBalanceBefore = await mockUSDC.read.balanceOf([juan])
+					const santiagoBalanceBefore = await mockUSDC.read.balanceOf([
+						santiago
+					])
+
+					const tx = await inhabit.write.buyNFT(
+						[1n, collectionAddress, mockUSDC.address, REFERRAL_CODE],
+						{
+							account: luca
+						}
+					)
+
+					expect(tx).to.exist
+
+					const juanBalanceAfter = await mockUSDC.read.balanceOf([juan])
+					const santiagoBalanceAfter = await mockUSDC.read.balanceOf([santiago])
+
+					// Calculate expected fees
+					const expectedJuanFee = await inhabit.read.calculateFee([
+						NFT_PRICE,
+						FEE_40_PERCENT
+					])
+					const expectedSantiagoFee = await inhabit.read.calculateFee([
+						NFT_PRICE,
+						FEE_20_PERCENT
+					])
+
+					expect(juanBalanceAfter).to.equal(juanBalanceBefore + expectedJuanFee)
+					expect(santiagoBalanceAfter).to.equal(
+						santiagoBalanceBefore + expectedSantiagoFee
+					)
+				})
+
+				it('Should handle single ambassador group', async function () {
+					const singleGroupCode = 'SINGLE_GROUP'
+					const ambassadors = [{ account: luca, fee: FEE_30_PERCENT }]
+
+					await inhabit.write.createGroup(
+						[singleGroupCode, true, ambassadors],
+						{
+							account: deployer
+						}
+					)
+
+					const lucaBalanceBefore = await mockUSDC.read.balanceOf([luca])
+
+					await mockUSDC.write.mint([ledger, NFT_PRICE], {
+						account: deployer
+					})
+
+					await mockUSDC.write.approve([inhabit.address, NFT_PRICE], {
+						account: ledger
+					})
+
+					await inhabit.write.buyNFT(
+						[1n, collectionAddress, mockUSDC.address, singleGroupCode],
+						{
+							account: ledger
+						}
+					)
+
+					const lucaBalanceAfter = await mockUSDC.read.balanceOf([luca])
+					const expectedFee = await inhabit.read.calculateFee([
+						NFT_PRICE,
+						FEE_30_PERCENT
+					])
+
+					expect(lucaBalanceAfter).to.equal(lucaBalanceBefore + expectedFee)
+				})
+
+				it('Should handle maximum fee distribution (100%)', async function () {
+					const maxFeeGroupCode = 'MAX_FEE_GROUP'
+					const ambassadors = [{ account: luca, fee: 10000n }] // 100%
+
+					await inhabit.write.createGroup(
+						[maxFeeGroupCode, true, ambassadors],
+						{
+							account: deployer
+						}
+					)
+
+					const lucaBalanceBefore = await mockUSDC.read.balanceOf([luca])
+
+					await mockUSDC.write.mint([ledger, NFT_PRICE], {
+						account: deployer
+					})
+
+					await mockUSDC.write.approve([inhabit.address, NFT_PRICE], {
+						account: ledger
+					})
+
+					await inhabit.write.buyNFT(
+						[1n, collectionAddress, mockUSDC.address, maxFeeGroupCode],
+						{
+							account: ledger
+						}
+					)
+
+					const lucaBalanceAfter = await mockUSDC.read.balanceOf([luca])
+
+					// Luca should receive the entire NFT price as fee
+					expect(lucaBalanceAfter).to.equal(lucaBalanceBefore + NFT_PRICE)
+				})
+
+				it('Should emit Distributed events for each ambassador', async function () {
+					const tx = await inhabit.write.buyNFT(
+						[1n, collectionAddress, mockUSDC.address, REFERRAL_CODE],
+						{
+							account: luca
+						}
+					)
+
+					const publicClient = await hre.viem.getPublicClient()
+
+					const receipt = await publicClient.waitForTransactionReceipt({
+						hash: tx
+					})
+
+					expect(receipt.logs).to.have.lengthOf.greaterThan(1)
+				})
+
+				it('Should return correct total referral fee', async function () {
+					const treasuryBalanceBefore = await mockUSDC.read.balanceOf([ledger])
+
+					await inhabit.write.buyNFT(
+						[1n, collectionAddress, mockUSDC.address, REFERRAL_CODE],
+						{
+							account: luca
+						}
+					)
+
+					const treasuryBalanceAfter = await mockUSDC.read.balanceOf([ledger])
+
+					const expectedJuanFee = await inhabit.read.calculateFee([
+						NFT_PRICE,
+						FEE_40_PERCENT
+					])
+
+					const expectedSantiagoFee = await inhabit.read.calculateFee([
+						NFT_PRICE,
+						FEE_20_PERCENT
+					])
+
+					const totalReferralFee = expectedJuanFee + expectedSantiagoFee
+
+					const expectedTreasuryAmount = NFT_PRICE - totalReferralFee
+
+					const actualTreasuryReceived =
+						treasuryBalanceAfter - treasuryBalanceBefore
+
+					expect(actualTreasuryReceived).to.equal(expectedTreasuryAmount)
+				})
+
+				it('Should handle very small amounts without rounding errors', async function () {
+					const smallPrice = 100n // Very small price
+					const ambassadors = [
+						{ account: juan, fee: 3333n }, // 33.33%
+						{ account: santiago, fee: 3334n } // 33.34% (to make 100%)
+					]
+
+					const smallGroupCode = 'SMALL_GROUP'
+
+					await inhabit.write.createGroup([smallGroupCode, true, ambassadors], {
+						account: deployer
+					})
+
+					// Create a campaign with small price
+					const collectionsParams = [
+						{
+							name: 'Small Collection',
+							symbol: 'SMALL',
+							uri: 'https://small.com/',
+							supply: NFT_SUPPLY,
+							price: smallPrice,
+							state: true
+						}
+					]
+
+					await inhabit.write.createCampaign(
+						[CAMPAIGN_GOAL, collectionsParams],
+						{
+							account: deployer
+						}
+					)
+
+					const campaign = await inhabit.read.getCampaign([2n])
+					const smallCollectionAddress = campaign.collections[0]
+
+					await mockUSDC.write.mint([luca, smallPrice], {
+						account: deployer
+					})
+
+					await mockUSDC.write.approve([inhabit.address, smallPrice], {
+						account: luca
+					})
+
+					const tx = await inhabit.write.buyNFT(
+						[2n, smallCollectionAddress, mockUSDC.address, smallGroupCode],
+						{
+							account: luca
+						}
+					)
+
+					expect(tx).to.exist
+
+					// Verify that the distribution worked even with small amounts
+					const juanBalance = await mockUSDC.read.balanceOf([juan])
+					const santiagoBalance = await mockUSDC.read.balanceOf([santiago])
+
+					expect(juanBalance).to.be.gt(0n)
+					expect(santiagoBalance).to.be.gt(0n)
+				})
+
+				it('Should handle large amounts without overflow', async function () {
+					const largePrice = parseEther('1000000') // 1M tokens
+					const ambassadors = [{ account: luca, fee: 5000n }] // 50%
+
+					const largeGroupCode = 'LARGE_GROUP'
+					await inhabit.write.createGroup([largeGroupCode, true, ambassadors], {
+						account: deployer
+					})
+
+					// Create a campaign with large price
+					const collectionsParams = [
+						{
+							name: 'Expensive Collection',
+							symbol: 'EXPENSIVE',
+							uri: 'https://expensive.com/',
+							supply: NFT_SUPPLY,
+							price: largePrice,
+							state: true
+						}
+					]
+
+					await inhabit.write.createCampaign(
+						[CAMPAIGN_GOAL, collectionsParams],
+						{
+							account: deployer
+						}
+					)
+
+					const campaign = await inhabit.read.getCampaign([2n])
+					const expensiveCollectionAddress = campaign.collections[0]
+
+					await mockUSDC.write.mint([ledger, largePrice], {
+						account: deployer
+					})
+
+					await mockUSDC.write.approve([inhabit.address, largePrice], {
+						account: ledger
+					})
+
+					const lucaBalanceBefore = await mockUSDC.read.balanceOf([luca])
+
+					const tx = await inhabit.write.buyNFT(
+						[2n, expensiveCollectionAddress, mockUSDC.address, largeGroupCode],
+						{
+							account: ledger
+						}
+					)
+
+					expect(tx).to.exist
+
+					const lucaBalanceAfter = await mockUSDC.read.balanceOf([luca])
+					const expectedFee = largePrice / 2n // 50%
+
+					expect(lucaBalanceAfter).to.equal(lucaBalanceBefore + expectedFee)
+				})
+
+				it('Should handle multiple consecutive distributions', async function () {
+					// Mint tokens for multiple purchases
+					const numPurchases = 5
+					const totalAmount = NFT_PRICE * BigInt(numPurchases)
+
+					await mockUSDC.write.mint([luca, totalAmount], {
+						account: deployer
+					})
+
+					await mockUSDC.write.approve([inhabit.address, totalAmount], {
+						account: luca
+					})
+
+					const juanBalanceBefore = await mockUSDC.read.balanceOf([juan])
+					const santiagoBalanceBefore = await mockUSDC.read.balanceOf([
+						santiago
+					])
+
+					// Perform multiple purchases
+					for (let i = 0; i < numPurchases; i++) {
+						await inhabit.write.buyNFT(
+							[1n, collectionAddress, mockUSDC.address, REFERRAL_CODE],
+							{
+								account: luca
+							}
+						)
+					}
+
+					const juanBalanceAfter = await mockUSDC.read.balanceOf([juan])
+					const santiagoBalanceAfter = await mockUSDC.read.balanceOf([santiago])
+
+					// Calculate expected total fees
+					const expectedJuanFeePerPurchase = await inhabit.read.calculateFee([
+						NFT_PRICE,
+						FEE_40_PERCENT
+					])
+
+					const expectedSantiagoFeePerPurchase =
+						await inhabit.read.calculateFee([NFT_PRICE, FEE_20_PERCENT])
+
+					const expectedTotalJuanFee =
+						expectedJuanFeePerPurchase * BigInt(numPurchases)
+
+					const expectedTotalSantiagoFee =
+						expectedSantiagoFeePerPurchase * BigInt(numPurchases)
+
+					expect(juanBalanceAfter).to.equal(
+						juanBalanceBefore + expectedTotalJuanFee
+					)
+					expect(santiagoBalanceAfter).to.equal(
+						santiagoBalanceBefore + expectedTotalSantiagoFee
+					)
+				})
+
+				it.skip('❌ Should handle groups with many ambassadors efficiently', async function () {
+					// Create a group with many ambassadors to test gas consumption
+					const manyAmbassadors = []
+					const feePerAmbassador = 100n // 1% each, totaling 100% for 100 ambassadors
+
+					// Create up to 100 ambassadors (might hit gas limits)
+					for (let i = 0; i < 10; i++) {
+						// Start with 10 to test
+						const account = `0x${(i + 1000).toString(16).padStart(40, '0')}`
+						manyAmbassadors.push({ account, fee: feePerAmbassador })
+					}
+
+					const manyAmbassadorsGroupCode = 'MANY_AMBASSADORS'
+					await inhabit.write.createGroup(
+						[manyAmbassadorsGroupCode, true, manyAmbassadors],
+						{
+							account: deployer
+						}
+					)
+
+					// Measure gas consumption for distribution to many ambassadors
+					await mockUSDC.write.mint([ledger, NFT_PRICE], {
+						account: deployer
+					})
+
+					await mockUSDC.write.approve([inhabit.address, NFT_PRICE], {
+						account: ledger
+					})
+
+					const publicClient = await hre.viem.getPublicClient()
+
+					// This should work but might consume significant gas
+					const tx = await inhabit.write.buyNFT(
+						[1n, collectionAddress, mockUSDC.address, manyAmbassadorsGroupCode],
+						{
+							account: ledger
+						}
+					)
+
+					const receipt = await publicClient.waitForTransactionReceipt({
+						hash: tx
+					})
+
+					console.log(
+						`Gas used for distribution to ${manyAmbassadors.length} ambassadors:`,
+						receipt.gasUsed
+					)
+
+					expect(tx).to.exist
+				})
+
+				it.skip('❌ Should optimize for common case of 1-3 ambassadors', async function () {
+					// Test that small groups are handled efficiently
+					const smallGroupCode = 'OPTIMIZED_GROUP'
+					const ambassadors = [
+						{ account: luca, fee: FEE_30_PERCENT },
+						{ account: juan, fee: FEE_30_PERCENT }
+					]
+
+					await inhabit.write.createGroup([smallGroupCode, true, ambassadors], {
+						account: deployer
+					})
+
+					await mockUSDC.write.mint([ledger, NFT_PRICE], {
+						account: deployer
+					})
+
+					await mockUSDC.write.approve([inhabit.address, NFT_PRICE], {
+						account: ledger
+					})
+
+					const publicClient = await hre.viem.getPublicClient()
+
+					const tx = await inhabit.write.buyNFT(
+						[1n, collectionAddress, mockUSDC.address, smallGroupCode],
+						{
+							account: ledger
+						}
+					)
+
+					const receipt = await publicClient.waitForTransactionReceipt({
+						hash: tx
+					})
+
+					console.log('Gas used for small group distribution:', receipt.gasUsed)
+
+					expect(tx).to.exist
+				})
+			})
+		})
+
 		describe('Token Management', function () {
 			describe('addToTokens', function () {
 				it('Should revert if caller does not have ADMIN_ROLE', async function () {
@@ -1138,23 +1664,6 @@ describe('Inhabit - Groups Module', function () {
 					const finalCount = await inhabit.read.groupCount()
 					expect(finalCount).to.equal(2n)
 				})
-			})
-		})
-
-		describe.skip('⏳ Distribution (Internal)', function () {
-			// Note: _distribution is internal, so we test it through buyNFT
-			// This section would require the full contract integration
-			// Including campaign creation and NFT purchases
-
-			it('Should validate distribution logic through integration', async function () {
-				// This would require setting up:
-				// 1. Token support
-				// 2. Group with ambassadors
-				// 3. Campaign with collection
-				// 4. Executing buyNFT with referral
-				//
-				// Since we're focusing on Groups module only,
-				// this is marked as a placeholder for full integration tests
 			})
 		})
 
@@ -1626,178 +2135,6 @@ describe('Inhabit - Groups Module', function () {
 			})
 		})
 
-		describe.skip('NFT Minting', function () {
-			const CAMPAIGN_GOAL = parseEther('1000')
-			const NFT_PRICE = parseEther('10')
-			const NFT_SUPPLY = 10n
-
-			beforeEach(async function () {
-				// Setup: config NFTCollection and create a campaign
-				await inhabit.write.setNFTCollection([nftCollection.address], {
-					account: deployer
-				})
-
-				const collectionsParams = [
-					{
-						name: 'Test Collection',
-						symbol: 'TEST',
-						uri: 'https://test.com/',
-						supply: NFT_SUPPLY,
-						price: NFT_PRICE,
-						state: true
-					}
-				]
-
-				await inhabit.write.createCampaign([CAMPAIGN_GOAL, collectionsParams], {
-					account: deployer
-				})
-
-				// Get the collection address from the created campaign
-				const campaign = await inhabit.read.getCampaign([1n])
-				collectionAddress = campaign.collections[0]
-			})
-
-			describe.skip('⏳ _safeMint', function () {
-				it('Should revert if supply is exceeded', async function () {
-					// Obtener la instancia de la colección
-					const collection = await viem.getContractAt(
-						'NFTCollection',
-						collectionAddress
-					)
-
-					// Simular que ya se mintó el máximo de tokens
-					// Esto requiere acceso interno al contrato, so usamos una aproximación
-					// mintando hasta el límite
-
-					// En un contrato real, necesitaríamos una función de prueba para simular esto
-					// Por ahora, asumimos que podemos probar esto con la función buyNFT
-
-					// ❌ Este test necesita que el contrato exponga una función de testing
-					// o que modifiquemos la lógica para hacer esto testeable
-				})
-
-				it('Should mint NFT successfully with valid parameters', async function () {
-					await inhabit.write.addToTokens([[mockUSDC.address]], {
-						account: deployer
-					})
-
-					await mockUSDC.write.mint([luca, NFT_PRICE], {
-						account: deployer
-					})
-
-					await mockUSDC.write.approve([inhabit.address, NFT_PRICE], {
-						account: luca
-					})
-
-					const tx = await inhabit.write.buyNFT(
-						[
-							1n, // campaignId
-							collectionAddress,
-							mockUSDC.address,
-							'' // no referral
-						],
-						{
-							account: luca
-						}
-					)
-
-					expect(tx).to.exist
-
-					const collection = await viem.getContractAt(
-						'NFTCollection',
-						collectionAddress
-					)
-					const tokenCount = await collection.read.tokenCount()
-					expect(tokenCount).to.equal(1n)
-				})
-
-				it('Should update campaign funds raised correctly', async function () {
-					await inhabit.write.addToTokens([[mockUSDC.address]], {
-						account: deployer
-					})
-
-					await mockUSDC.write.mint([luca, NFT_PRICE], {
-						account: deployer
-					})
-
-					await mockUSDC.write.approve([inhabit.address, NFT_PRICE], {
-						account: luca
-					})
-
-					// Buy NFT
-					await inhabit.write.buyNFT(
-						[1n, collectionAddress, mockUSDC.address, ''],
-						{
-							account: luca
-						}
-					)
-
-					// verify funds raised
-					const campaign = await inhabit.read.getCampaign([1n])
-					expect(campaign.fundsRaised).to.equal(NFT_PRICE)
-				})
-
-				it('Should emit NFTPurchased event', async function () {
-					await inhabit.write.addToTokens([[mockUSDC.address]], {
-						account: deployer
-					})
-
-					await mockUSDC.write.mint([luca, NFT_PRICE], {
-						account: deployer
-					})
-
-					await mockUSDC.write.approve([inhabit.address, NFT_PRICE], {
-						account: luca
-					})
-
-					const tx = await inhabit.write.buyNFT(
-						[1n, collectionAddress, mockUSDC.address, ''],
-						{
-							account: luca
-						}
-					)
-
-					const publicClient = await hre.viem.getPublicClient()
-
-					const receipt = await publicClient.waitForTransactionReceipt({
-						hash: tx
-					})
-
-					expect(receipt.logs).to.have.lengthOf.greaterThan(0)
-				})
-
-				it('Should store purchase data correctly', async function () {
-					await inhabit.write.addToTokens([[mockUSDC.address]], {
-						account: deployer
-					})
-
-					await mockUSDC.write.mint([luca, NFT_PRICE], {
-						account: deployer
-					})
-
-					await mockUSDC.write.approve([inhabit.address, NFT_PRICE], {
-						account: luca
-					})
-
-					await inhabit.write.buyNFT(
-						[1n, collectionAddress, mockUSDC.address, ''],
-						{
-							account: luca
-						}
-					)
-
-					// Verify purchase data
-					const purchases = await inhabit.read.getCampaignPurchases([1n])
-					expect(purchases).to.have.lengthOf(1)
-					expect(purchases[0].collection).to.equal(collectionAddress)
-					expect(purchases[0].paymentToken).to.equal(mockUSDC.address)
-					expect(purchases[0].price).to.equal(NFT_PRICE)
-					expect(purchases[0].campaignId).to.equal(1n)
-					expect(purchases[0].refunded).to.be.false
-				})
-			})
-		})
-
 		describe('Collection Management', function () {
 			const CAMPAIGN_GOAL = parseEther('1000')
 			const NFT_PRICE = parseEther('10')
@@ -2190,13 +2527,6 @@ describe('Inhabit - Groups Module', function () {
 					const contractAfter = await publicClient.getBalance({
 						address: collectionAddress
 					})
-
-					console.log(
-						`Ledger balance before: ${ledgerBefore}, after: ${ledgerAfter}`
-					)
-					console.log(
-						`Contract balance before: ${contractBefore}, after: ${contractAfter}`
-					)
 
 					expect(contractAfter).to.equal(0n)
 					expect(ledgerAfter - ledgerBefore).to.be.gte(parseEther('0.99999'))

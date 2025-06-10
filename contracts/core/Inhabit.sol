@@ -85,14 +85,18 @@ contract Inhabit is
 		if (ERC20(_token).allowance(msg.sender, address(this)) < price)
 			revert INSUFFICIENT_ALLOWANCE();
 
-		ERC20(_token).transferFrom(msg.sender, address(this), price);
-
 		uint256 referralFee = 0;
+
+		_transferAmountFrom(
+			_token,
+			TransferData({from: msg.sender, to: address(this), amount: price})
+		);
+
 		if (bytes(_referral).length > 0) {
 			referralFee = _distribution(_referral, _token, price);
 		}
 
-		ERC20(_token).transfer(treasury, ERC20(_token).balanceOf(address(this)));
+		_transferAmount(_token, treasury, price - referralFee);
 
 		_safeMint(_campaignId, _collection, msg.sender, _token, price, referralFee);
 	}
