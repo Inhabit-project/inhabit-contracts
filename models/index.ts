@@ -12,15 +12,15 @@ export interface CollectionStruct {
 	active: boolean
 }
 
-export interface Shared {
-	addr: Address
-	pcng: bigint
+export interface AmbassadorStruct {
+	account: Address
+	fee: bigint
 }
 
 export interface GroupStruct {
-	group: string
+	referral: string
 	state: boolean
-	arrayShared: Shared[]
+	ambassadors: AmbassadorStruct[]
 }
 
 export interface TokenStruct {
