@@ -174,7 +174,7 @@ contract Collections is ICollections, Errors {
 	function _setNFTCollection(address _nftCollection) internal {
 		_isZeroAddress(_nftCollection);
 		nftCollection = INFTCollection(_nftCollection);
-		emit NftCollectionSet(_nftCollection);
+		emit NftCollectionUpdated(_nftCollection);
 	}
 
 	/// @notice Collection functions

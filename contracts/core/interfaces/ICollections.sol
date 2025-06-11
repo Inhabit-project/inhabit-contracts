@@ -105,5 +105,5 @@ interface ICollections {
 		uint256 supply
 	);
 
-	event NftCollectionSet(address indexed collection);
+	event NftCollectionUpdated(address indexed collection);
 }

@@ -3,7 +3,7 @@
 	"scripts": {
 		"chain": "hardhat node --tags localhost",
 		"clean": "NODE_ENV=celoAlfajores hardhat clean && rm -rf cache",
-		"compile": "hardhat compile",
+		"compile": "NODE_ENV=celoAlfajores hardhat compile",
 		"coverage": "SOLIDITY_COVERAGE=true hardhat coverage",
 		"create:safe": "bun run scripts/create-safe-multisig.ts",
 		"deploy:celo": "hardhat deploy --network celo --tags celo",
