@@ -4,7 +4,7 @@ import { DeployFunction } from 'hardhat-deploy/types'
 import { developmentChains, networkConfig } from '@/config/constants'
 import { verify } from '@/utils/verify'
 
-const deployOracleV2: DeployFunction = async function (
+const deployNFTCollection: DeployFunction = async function (
 	hre: HardhatRuntimeEnvironment
 ) {
 	const { getNamedAccounts, deployments, network } = hre
@@ -12,21 +12,21 @@ const deployOracleV2: DeployFunction = async function (
 	const { deployer } = await getNamedAccounts()
 
 	log('----------------------------------------------------')
-	log('Deploying OracleV2 and waiting for confirmations...')
+	log('Deploying NFTCollection and waiting for confirmations...')
 
-	const oracleV2 = await deploy('OracleV2', {
+	const nftCollection = await deploy('NFTCollection', {
 		from: deployer,
 		args: [],
 		log: true,
 		waitConfirmations: networkConfig[network.name].blockConfirmations || 1
 	})
 
-	log(`OracleV2 contract at ${oracleV2.address}`)
+	log(`NFTCollection contract at ${nftCollection.address}`)
 
 	if (!developmentChains.includes(network.name)) {
-		await verify(oracleV2.address, [])
+		await verify(nftCollection.address, [])
 	}
 }
 
-export default deployOracleV2
-deployOracleV2.tags = ['celoAlfajores', 'ca-oracleV2']
+export default deployNFTCollection
+deployNFTCollection.tags = ['celoAlfajores', 'ca-deploy', 'ca-nftCollection']
