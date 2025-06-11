@@ -35,8 +35,6 @@ const coinmarketcap = ensureEnvVar(
 
 const enabled = GAS_REPORT === 'true' ? true : false
 
-console.log('GAS REPORT ENABLED:', enabled)
-
 const walletPrivateKey = ensureEnvVar(WALLET_PRIVATE_KEY, 'PRIVATE_KEY')
 
 // Set up accounts
