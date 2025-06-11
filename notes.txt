@@ -1,5 +1,5 @@
 // TODO
-Refactor contract (solady) and improve events names
+Refactor contract (solady)
 
 TDD:
   · View fail tests

@@ -6,57 +6,80 @@ import 'hardhat-deploy'
 import 'tsconfig-paths/register'
 
 import dotenv from 'dotenv'
-import { HardhatUserConfig } from 'hardhat/types'
+import { HardhatUserConfig, SolcUserConfig } from 'hardhat/types'
 
 import { ensureEnvVar } from './utils/ensure-env-var'
 
-dotenv.config()
+// Load environment variables
 
-const CELO_RPC_URL = ensureEnvVar(process.env.CELO_RPC_URL, 'CELO_RPC_URL')
+dotenv.config({ path: `.env.${process.env.NODE_ENV}` })
 
-const CELO_ALFAJORES_RPC_URL = ensureEnvVar(
-	process.env.CELO_ALFAJORES_RPC_URL,
-	'CELO_ALFAJORES_RPC_URL'
-)
+const {
+	COINMARKETCAP_API_KEY,
+	SCAN_API_KEY,
+	GAS_REPORT,
+	RPC_HTTPS,
+	WALLET_PRIVATE_KEY
+} = process.env
 
-const CELOSCAN_API_KEY = ensureEnvVar(
-	process.env.CELOSCAN_API_KEY,
-	'CELOSCAN_API_KEY'
-)
+// Ensure environment variables
 
-const COINMARKETCAP_API_KEY = ensureEnvVar(
-	process.env.COINMARKETCAP_API_KEY,
+const url = ensureEnvVar(RPC_HTTPS, 'CELO_RPC_URL')
+
+const apiKey = ensureEnvVar(SCAN_API_KEY, 'CELOSCAN_API_KEY')
+
+const coinmarketcap = ensureEnvVar(
+	COINMARKETCAP_API_KEY,
 	'COINMARKETCAP_API_KEY'
 )
 
-const GAS_REPORT = process.env.REPORT_GAS === 'true' || false
+const enabled = GAS_REPORT === 'true' ? true : false
 
-const PRIVATE_KEY = ensureEnvVar(process.env.PRIVATE_KEY, 'PRIVATE_KEY')
+console.log('GAS REPORT ENABLED:', enabled)
+
+const walletPrivateKey = ensureEnvVar(WALLET_PRIVATE_KEY, 'PRIVATE_KEY')
+
+// Set up accounts
+
+const accounts: string[] = [walletPrivateKey]
+
+// Set up Solidity compiler
+
+const solcUserConfig = (version: string): SolcUserConfig => {
+	return {
+		version,
+		settings: {
+			optimizer: {
+				enabled: true,
+				runs: 200
+			}
+		}
+	}
+}
 
 const config: HardhatUserConfig = {
 	defaultNetwork: 'hardhat',
 	networks: {
 		hardhat: {
-			// allowUnlimitedContractSize: true,
+			allowUnlimitedContractSize: true,
 			chainId: 1337
 		},
-
 		localhost: {
-			// allowUnlimitedContractSize: true,
+			allowUnlimitedContractSize: true,
 			chainId: 1337,
-			url: 'http://127.0.0.1:8545'
+			url: 'http://localhost:8545'
 		},
 
 		celo: {
-			url: CELO_RPC_URL || 'https://forno.celo.org',
-			accounts: PRIVATE_KEY ? [PRIVATE_KEY] : [],
-			chainId: 42220
+			chainId: 42220,
+			accounts,
+			url
 		},
 
 		celoAlfajores: {
-			url: CELO_ALFAJORES_RPC_URL || 'https://alfajores-forno.celo-testnet.org',
-			accounts: PRIVATE_KEY ? [PRIVATE_KEY] : [],
-			chainId: 44787
+			chainId: 44787,
+			accounts,
+			url
 		}
 	},
 
@@ -78,35 +101,30 @@ const config: HardhatUserConfig = {
 		}
 	},
 
+	sourcify: {
+		enabled: true
+	},
+
 	solidity: {
-		version: '0.8.28',
-		settings: {
-			optimizer: {
-				enabled: true,
-				runs: 1000
-			}
-		}
+		compilers: [solcUserConfig('0.8.28')]
 	},
 
 	etherscan: {
-		apiKey: {
-			celo: CELOSCAN_API_KEY || '',
-			alfajores: CELOSCAN_API_KEY || ''
-		},
+		apiKey,
 		customChains: [
 			{
 				network: 'celo',
 				chainId: 42220,
 				urls: {
-					apiURL: 'https://api.celoscan.io/api',
+					apiURL: 'https://api.etherscan.io/v2/api?chainid=42220',
 					browserURL: 'https://celoscan.io'
 				}
 			},
 			{
-				network: 'alfajores',
+				network: 'celoAlfajores',
 				chainId: 44787,
 				urls: {
-					apiURL: 'https://api-alfajores.celoscan.io/api',
+					apiURL: 'https://api.etherscan.io/v2/api?chainid=44787',
 					browserURL: 'https://alfajores.celoscan.io'
 				}
 			}
@@ -114,8 +132,8 @@ const config: HardhatUserConfig = {
 	},
 
 	gasReporter: {
-		enabled: GAS_REPORT,
-		coinmarketcap: COINMARKETCAP_API_KEY || '',
+		enabled,
+		coinmarketcap,
 		currency: 'USD',
 		currencyDisplayPrecision: 5,
 		token: 'CELO',
@@ -127,6 +145,11 @@ const config: HardhatUserConfig = {
 		darkMode: true,
 		showMethodSig: true,
 		outputFile: 'gas-report.txt'
+	},
+
+	typechain: {
+		outDir: 'typechain-types',
+		target: 'ethers-v6'
 	},
 
 	mocha: {

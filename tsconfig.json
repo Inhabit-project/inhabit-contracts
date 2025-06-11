@@ -15,12 +15,9 @@
 	},
 
 	"include": [
-		"./artifacts",
 		"./deploy",
-		"./js-test",
 		"./hardhat.config.ts",
 		"./scripts",
-		"./tasks",
 		"./test",
 		"./typechain-types/**/*"
 	],
