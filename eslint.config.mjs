@@ -14,7 +14,18 @@ const __dirname = dirname(__filename)
 const compat = new FlatCompat({ baseDirectory: __dirname })
 
 export default tseslint.config(
-	{ ignores: ['artifacts', 'cache', 'typechain', 'dist'] },
+	{
+		ignores: [
+			'artifacts',
+			'assets',
+			'cache',
+			'coverage',
+			'deployments',
+			'deprecated',
+			'node_modules',
+			'typechain-types'
+		]
+	},
 
 	{
 		extends: [
