@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
+import {INFTCollection} from '../interfaces/INFTCollection.sol';
+
 interface ICollections {
 	/// =========================
 	/// ======== Structs ========
@@ -47,6 +49,15 @@ interface ICollections {
 		address creator;
 		uint256 goal;
 		uint256 fundsRaised;
+	}
+
+	struct CampaignInfo {
+		uint256 id;
+		address creator;
+		bool state;
+		uint256 goal;
+		uint256 fundsRaised;
+		INFTCollection.CollectionInfo[] collectionsInfo;
 	}
 
 	/// =========================

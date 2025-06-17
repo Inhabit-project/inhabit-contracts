@@ -37,10 +37,12 @@ interface INFTCollection is IERC721 {
 	struct CollectionInfo {
 		uint256 campaignId;
 		uint256 collectionId;
+		address collectionAddress;
 		string name;
 		string symbol;
 		string baseURI;
 		uint256 supply;
+		uint256 tokenCount;
 		uint256 price;
 		bool state;
 	}

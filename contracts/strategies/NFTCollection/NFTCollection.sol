@@ -107,9 +107,11 @@ contract NFTCollection is
 			CollectionInfo({
 				campaignId: getCampaignId(),
 				collectionId: getCollectionId(),
+				collectionAddress: address(this),
 				name: name(),
 				symbol: symbol(),
 				baseURI: baseURI,
+				tokenCount: tokenCount,
 				supply: supply,
 				price: price,
 				state: state
@@ -153,7 +155,7 @@ contract NFTCollection is
 		override(BaseStrategy, INFTCollection)
 		returns (uint256)
 	{
-		return super.getCampaignId();
+		return super.getCollectionId();
 	}
 
 	// The following functions are overrides required by Solidity.

@@ -108,10 +108,11 @@ contract Collections is ICollections, Errors {
 				nonces[msg.sender]++
 			);
 
+			collectionCount++;
 			INFTCollection.CollectionParams memory initParams = INFTCollection
 				.CollectionParams({
 					campaignId: campaignCount,
-					collectionId: ++collectionCount,
+					collectionId: collectionCount,
 					name: params.name,
 					symbol: params.symbol,
 					uri: params.uri,
@@ -178,6 +179,37 @@ contract Collections is ICollections, Errors {
 	}
 
 	/// @notice Collection functions
+
+	function getCampaignAndCollectionsInfo(
+		uint256 _campaignId
+	) external view returns (CampaignInfo memory) {
+		_invalidCampaignId(_campaignId);
+
+		Campaign storage campaign = campaigns[_campaignId];
+		INFTCollection.CollectionInfo[]
+			memory collectionsInfo = new INFTCollection.CollectionInfo[](
+				campaign.collections.length
+			);
+
+		for (uint256 i; i < campaign.collections.length; ) {
+			collectionsInfo[i] = INFTCollection(campaign.collections[i])
+				.getCollectionInfo();
+
+			unchecked {
+				++i;
+			}
+		}
+
+		return
+			CampaignInfo({
+				id: _campaignId,
+				creator: campaign.creator,
+				state: campaign.state,
+				goal: campaign.goal,
+				fundsRaised: campaign.fundsRaised,
+				collectionsInfo: collectionsInfo
+			});
+	}
 
 	function getCollectionInfo(
 		uint256 _campaignId,
