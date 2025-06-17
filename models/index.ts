@@ -6,6 +6,15 @@ export interface NetworkConfigInfo {
 	}
 }
 
+export interface CollectionParams {
+	name: string
+	symbol: string
+	uri: string
+	supply: bigint
+	price: bigint
+	state: boolean
+}
+
 export interface CollectionStruct {
 	addr: Address
 	price: bigint
