@@ -32,7 +32,7 @@ task('addCampaign', 'Adds a new campaign to the Inhabit contract').setAction(
 				{
 					name: 'INHABIT Ñuiyanzhi JAGUAR',
 					symbol: 'JAGUAR',
-					uri: 'https://black-fast-chipmunk-543.mypinata.cloud/ipfs/bafkreic5q7x2j3y6z4g3k5v7b2c4q6f5z7w5t6y8u9h3j4k2l5m6n7o8p9',
+					uri: 'https://black-fast-chipmunk-543.mypinata.cloud/ipfs/bafkreih4fccggynla475clgzrj2rs2ulggxvi7lwyavhjcyjeuxjduetoq',
 					supply: 5n,
 					price: 5000000000n,
 					state: true
