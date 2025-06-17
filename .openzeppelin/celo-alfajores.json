@@ -35,6 +35,11 @@
       "address": "0xc6b5d08e1537a46c9f934026eAB85E2ab37068dD",
       "txHash": "0xc739cea50e29562c742aad9167531dbf6eebc2239f0cdb9edb70fb543ef6bc46",
       "kind": "transparent"
+    },
+    {
+      "address": "0x3eab9bDd3593Bb5843ce101921B444161670ab88",
+      "txHash": "0x2a7707ef801b618833f824ec5b74780e78d5f9b28b4bb87f6a054f11cea2b061",
+      "kind": "transparent"
     }
   ],
   "impls": {
@@ -381,6 +386,445 @@
             "numberOfBytes": "96"
           },
           "t_struct(Purchase)11540_storage": {
+            "label": "struct ICollections.Purchase",
+            "members": [
+              {
+                "label": "collection",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "tokenId",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "paymentToken",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "price",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "referralFee",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "4"
+              },
+              {
+                "label": "campaignId",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "5"
+              },
+              {
+                "label": "timestamp",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "6"
+              },
+              {
+                "label": "refunded",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "7"
+              }
+            ],
+            "numberOfBytes": "256"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.ReentrancyGuard": [
+            {
+              "contract": "ReentrancyGuardUpgradeable",
+              "label": "_status",
+              "type": "t_uint256",
+              "src": "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol:43",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.AccessControl": [
+            {
+              "contract": "AccessControlUpgradeable",
+              "label": "_roles",
+              "type": "t_mapping(t_bytes32,t_struct(RoleData)24_storage)",
+              "src": "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol:61",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    },
+    "ab6aafb9291213e549267a441fe09c623f0ab5d8866e86487c8dc8dd208f97a9": {
+      "address": "0x6560Ad78B33Ea3A1775B3BDE06F65602bFeD86Ff",
+      "txHash": "0x720ad2ab5f8be4c0598ab43617683425102b111f6585a22e32df6aeae35940c1",
+      "layout": {
+        "solcVersion": "0.8.28",
+        "storage": [
+          {
+            "label": "groups",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_mapping(t_string_memory_ptr,t_struct(Group)11151_storage)",
+            "contract": "Groups",
+            "src": "contracts/core/Groups.sol:26"
+          },
+          {
+            "label": "groupList",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_mapping(t_uint256,t_string_storage)",
+            "contract": "Groups",
+            "src": "contracts/core/Groups.sol:29"
+          },
+          {
+            "label": "tokens",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_mapping(t_address,t_bool)",
+            "contract": "Groups",
+            "src": "contracts/core/Groups.sol:32"
+          },
+          {
+            "label": "groupCount",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_uint256",
+            "contract": "Groups",
+            "src": "contracts/core/Groups.sol:48"
+          },
+          {
+            "label": "nonces",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "Collections",
+            "src": "contracts/core/Collections.sol:16"
+          },
+          {
+            "label": "campaigns",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_mapping(t_uint256,t_struct(Campaign)11052_storage)",
+            "contract": "Collections",
+            "src": "contracts/core/Collections.sol:17"
+          },
+          {
+            "label": "campaignPurchases",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_mapping(t_uint256,t_array(t_struct(Purchase)11010_storage)dyn_storage)",
+            "contract": "Collections",
+            "src": "contracts/core/Collections.sol:18"
+          },
+          {
+            "label": "refunds",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_mapping(t_uint256,t_mapping(t_address,t_mapping(t_address,t_uint256)))",
+            "contract": "Collections",
+            "src": "contracts/core/Collections.sol:21"
+          },
+          {
+            "label": "refundsClaimed",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_mapping(t_uint256,t_mapping(t_address,t_mapping(t_uint256,t_bool)))",
+            "contract": "Collections",
+            "src": "contracts/core/Collections.sol:25"
+          },
+          {
+            "label": "nftCollection",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_contract(INFTCollection)11508",
+            "contract": "Collections",
+            "src": "contracts/core/Collections.sol:28"
+          },
+          {
+            "label": "campaignCount",
+            "offset": 0,
+            "slot": "10",
+            "type": "t_uint256",
+            "contract": "Collections",
+            "src": "contracts/core/Collections.sol:29"
+          },
+          {
+            "label": "collectionCount",
+            "offset": 0,
+            "slot": "11",
+            "type": "t_uint256",
+            "contract": "Collections",
+            "src": "contracts/core/Collections.sol:30"
+          },
+          {
+            "label": "treasury",
+            "offset": 0,
+            "slot": "12",
+            "type": "t_address",
+            "contract": "Inhabit",
+            "src": "contracts/core/Inhabit.sol:33"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_struct(RoleData)24_storage)": {
+            "label": "mapping(bytes32 => struct AccessControlUpgradeable.RoleData)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(AccessControlStorage)34_storage": {
+            "label": "struct AccessControlUpgradeable.AccessControlStorage",
+            "members": [
+              {
+                "label": "_roles",
+                "type": "t_mapping(t_bytes32,t_struct(RoleData)24_storage)",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(InitializableStorage)145_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(ReentrancyGuardStorage)672_storage": {
+            "label": "struct ReentrancyGuardUpgradeable.ReentrancyGuardStorage",
+            "members": [
+              {
+                "label": "_status",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(RoleData)24_storage": {
+            "label": "struct AccessControlUpgradeable.RoleData",
+            "members": [
+              {
+                "label": "hasRole",
+                "type": "t_mapping(t_address,t_bool)",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "adminRole",
+                "type": "t_bytes32",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]",
+            "numberOfBytes": "32"
+          },
+          "t_array(t_struct(Ambassador)11157_storage)dyn_storage": {
+            "label": "struct IGroups.Ambassador[]",
+            "numberOfBytes": "32"
+          },
+          "t_array(t_struct(Purchase)11010_storage)dyn_storage": {
+            "label": "struct ICollections.Purchase[]",
+            "numberOfBytes": "32"
+          },
+          "t_contract(INFTCollection)11508": {
+            "label": "contract INFTCollection",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_address,t_mapping(t_address,t_uint256))": {
+            "label": "mapping(address => mapping(address => uint256))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_mapping(t_uint256,t_bool))": {
+            "label": "mapping(address => mapping(uint256 => bool))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_string_memory_ptr,t_struct(Group)11151_storage)": {
+            "label": "mapping(string => struct IGroups.Group)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_array(t_struct(Purchase)11010_storage)dyn_storage)": {
+            "label": "mapping(uint256 => struct ICollections.Purchase[])",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_bool)": {
+            "label": "mapping(uint256 => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_mapping(t_address,t_mapping(t_address,t_uint256)))": {
+            "label": "mapping(uint256 => mapping(address => mapping(address => uint256)))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_mapping(t_address,t_mapping(t_uint256,t_bool)))": {
+            "label": "mapping(uint256 => mapping(address => mapping(uint256 => bool)))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_string_storage)": {
+            "label": "mapping(uint256 => string)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_struct(Campaign)11052_storage)": {
+            "label": "mapping(uint256 => struct ICollections.Campaign)",
+            "numberOfBytes": "32"
+          },
+          "t_string_memory_ptr": {
+            "label": "string",
+            "numberOfBytes": "32"
+          },
+          "t_string_storage": {
+            "label": "string",
+            "numberOfBytes": "32"
+          },
+          "t_struct(Ambassador)11157_storage": {
+            "label": "struct IGroups.Ambassador",
+            "members": [
+              {
+                "label": "account",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "fee",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_struct(Campaign)11052_storage": {
+            "label": "struct ICollections.Campaign",
+            "members": [
+              {
+                "label": "collections",
+                "type": "t_array(t_address)dyn_storage",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "state",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "creator",
+                "type": "t_address",
+                "offset": 1,
+                "slot": "1"
+              },
+              {
+                "label": "goal",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "fundsRaised",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "3"
+              }
+            ],
+            "numberOfBytes": "128"
+          },
+          "t_struct(Group)11151_storage": {
+            "label": "struct IGroups.Group",
+            "members": [
+              {
+                "label": "referral",
+                "type": "t_string_storage",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "state",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "ambassadors",
+                "type": "t_array(t_struct(Ambassador)11157_storage)dyn_storage",
+                "offset": 0,
+                "slot": "2"
+              }
+            ],
+            "numberOfBytes": "96"
+          },
+          "t_struct(Purchase)11010_storage": {
             "label": "struct ICollections.Purchase",
             "members": [
               {

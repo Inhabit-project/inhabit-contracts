@@ -102,12 +102,22 @@ contract NFTCollection is
 	/// ===== View Functions ====
 	/// =========================
 
-	function _baseURI() internal view override returns (string memory) {
-		return baseURI;
+	function getCollectionInfo() external view returns (CollectionInfo memory) {
+		return
+			CollectionInfo({
+				campaignId: getCampaignId(),
+				collectionId: getCollectionId(),
+				name: name(),
+				symbol: symbol(),
+				baseURI: baseURI,
+				supply: supply,
+				price: price,
+				state: state
+			});
 	}
 
-	function _invalidTokenId(uint256 _tokenId) internal view {
-		if (_tokenId == 0 || _tokenId > tokenCount) revert INVALID_CAMPAIGN_ID();
+	function _baseURI() internal view override returns (string memory) {
+		return baseURI;
 	}
 
 	// the following functions are overrides required by BaseStrategy
@@ -168,5 +178,13 @@ contract NFTCollection is
 		returns (bool)
 	{
 		return super.supportsInterface(interfaceId);
+	}
+
+	/// =========================
+	/// == Internal Functions ===
+	/// =========================
+
+	function _invalidTokenId(uint256 _tokenId) internal view {
+		if (_tokenId == 0 || _tokenId > tokenCount) revert INVALID_CAMPAIGN_ID();
 	}
 }

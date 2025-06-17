@@ -34,6 +34,17 @@ interface INFTCollection is IERC721 {
 		bool state;
 	}
 
+	struct CollectionInfo {
+		uint256 campaignId;
+		uint256 collectionId;
+		string name;
+		string symbol;
+		string baseURI;
+		uint256 supply;
+		uint256 price;
+		bool state;
+	}
+
 	/// =========================
 	/// ======== Events =========
 	/// =========================
@@ -146,6 +157,8 @@ interface INFTCollection is IERC721 {
 	/// =========================
 	/// ===== View Functions ====
 	/// =========================
+
+	function getCollectionInfo() external view returns (CollectionInfo memory);
 
 	/**
 	 * @dev Gets the current number of minted tokens

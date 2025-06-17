@@ -179,6 +179,48 @@ contract Collections is ICollections, Errors {
 
 	/// @notice Collection functions
 
+	function getCollectionInfo(
+		uint256 _campaignId,
+		address _collection
+	) external view returns (INFTCollection.CollectionInfo memory) {
+		_invalidCampaignId(_campaignId);
+		_isZeroAddress(_collection);
+
+		for (uint256 i; i < campaigns[_campaignId].collections.length; ) {
+			if (campaigns[_campaignId].collections[i] == _collection) {
+				return INFTCollection(_collection).getCollectionInfo();
+			}
+
+			unchecked {
+				++i;
+			}
+		}
+
+		revert COLLECTION_NOT_FOUND();
+	}
+
+	function getCollectionsInfo(
+		uint256 _campaignId
+	) external view returns (INFTCollection.CollectionInfo[] memory) {
+		_invalidCampaignId(_campaignId);
+
+		address[] memory collections = campaigns[_campaignId].collections;
+		INFTCollection.CollectionInfo[]
+			memory collectionsInfo = new INFTCollection.CollectionInfo[](
+				collections.length
+			);
+
+		for (uint256 i; i < collections.length; ) {
+			collectionsInfo[i] = INFTCollection(collections[i]).getCollectionInfo();
+
+			unchecked {
+				++i;
+			}
+		}
+
+		return collectionsInfo;
+	}
+
 	function _safeMint(
 		uint256 _campaignId,
 		address _collection,
