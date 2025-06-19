@@ -180,9 +180,9 @@ contract Collections is ICollections, Errors {
 
 	/// @notice Collection functions
 
-	function getCampaignAndCollectionsInfo(
+	function getCampaignInfo(
 		uint256 _campaignId
-	) external view returns (CampaignInfo memory) {
+	) public view returns (CampaignInfo memory) {
 		_invalidCampaignId(_campaignId);
 
 		Campaign storage campaign = campaigns[_campaignId];
@@ -209,6 +209,20 @@ contract Collections is ICollections, Errors {
 				fundsRaised: campaign.fundsRaised,
 				collectionsInfo: collectionsInfo
 			});
+	}
+
+	function getCampaigsInfo() external view returns (CampaignInfo[] memory) {
+		CampaignInfo[] memory campaignsInfo = new CampaignInfo[](campaignCount);
+
+		for (uint256 i; i < campaignCount; ) {
+			campaignsInfo[i] = getCampaignInfo(i + 1);
+
+			unchecked {
+				++i;
+			}
+		}
+
+		return campaignsInfo;
 	}
 
 	function getCollectionInfo(
