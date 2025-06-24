@@ -25,9 +25,22 @@ const deployInhabit: DeployFunction = async function (
 
 	const args = [defaultAdmin, treasury]
 
+	// const signer = await ethers.getSigner(deployer)
+	// const currentNonce = await signer.provider!.getTransactionCount(
+	// 	signer.address,
+	// 	'pending'
+	// )
+
+	// log(`Using nonce: ${currentNonce}`)
+
 	const Inhabit = await ethers.getContractFactory('Inhabit')
 
-	const proxy = await upgrades.deployProxy(Inhabit, args)
+	const proxy = await upgrades.deployProxy(Inhabit, args, {
+		kind: 'transparent',
+		txOverrides: {
+			// nonce: currentNonce
+		}
+	})
 	await proxy.waitForDeployment()
 
 	const proxyTransaction = proxy.deploymentTransaction()
