@@ -24,12 +24,15 @@ task('addCampaign', 'Adds a new campaign to the Inhabit contract').setAction(
 
 			const GOAL = 100_000_000_000n // 100,000 USDC
 
-			const nftCollections = !productionChains.includes(network.name)
+			const nftCollections = productionChains.includes(network.name)
 				? CELO_NFT_COLLECTIONS
 				: CELO_ALFAJORES_NFT_COLLECTIONS
 
 			console.log('----------------------------------------------------')
 			console.log('Adding campaign NFT collection...')
+
+			const nftCollectionAddress = await inhabit.read.nftCollection()
+			console.log('NFTCollection address', nftCollectionAddress)
 
 			const txHash = await inhabit.write.createCampaign(
 				[GOAL, nftCollections],
@@ -43,7 +46,6 @@ task('addCampaign', 'Adds a new campaign to the Inhabit contract').setAction(
 			console.log(`Campaign created. tx hash: ${txHash}`)
 		} catch (error) {
 			console.error('❌', error)
-			throw error
 		}
 	}
 )

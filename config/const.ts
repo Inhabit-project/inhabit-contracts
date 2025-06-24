@@ -100,7 +100,7 @@ export const CELO_ALFAJORES_NFT_COLLECTIONS: CollectionParams[] = [
 	{
 		name: 'INHABIT Ñuiyanzhi CARACOLI',
 		symbol: 'CARACOLI',
-		uri: 'https://black-fast-chipmunk-543.mypinata.cloud/ipfs/bafkreigbiy2eypcsnuqbnwlxarhekmvpzx5osvu6yp5ilvdavvf6jingge',
+		uri: 'https://black-fast-chipmunk-543.mypinata.cloud/ipfs/bafkreihpsd4ysq7vab4wk5qrtu6bfgzeubjfp2z35mdrwminbb5hayod3i',
 		supply: 19n,
 		price: 3_000_000n,
 		state: true

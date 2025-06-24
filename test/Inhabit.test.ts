@@ -4,7 +4,7 @@ import chaiBigint from 'chai-bigint'
 import hre, { viem } from 'hardhat'
 import { Address, maxUint256, parseEther, zeroAddress } from 'viem'
 
-import { NATIVE } from '@/config/constants'
+import { NATIVE } from '@/config/const'
 import { AmbassadorStruct } from '@/models/index'
 
 chai.use(chaiBigint)
@@ -2013,6 +2013,10 @@ describe('Inhabit - Groups Module', function () {
 
 				const collectionCount = await inhabit.read.collectionCount()
 				expect(collectionCount).to.equal(2n)
+			})
+
+			it('Should create other campaigns with different parameters', async function () {
+				const collectionsParams = []
 			})
 
 			it('Should handle edge case with maximum values', async function () {
