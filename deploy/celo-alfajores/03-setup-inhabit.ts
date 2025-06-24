@@ -8,7 +8,7 @@ import {
 	CELO_ALFAJORES_USDC_ADDRESS,
 	LUCA_ADDRESS,
 	SALVIEGA_ADDRESS
-} from '@/config/constants'
+} from '@/config/const'
 
 const setupContracts: DeployFunction = async function (
 	hre: HardhatRuntimeEnvironment

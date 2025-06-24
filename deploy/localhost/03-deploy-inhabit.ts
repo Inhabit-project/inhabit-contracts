@@ -1,7 +1,7 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { DeployFunction } from 'hardhat-deploy/types'
 
-import { developmentChains } from '@/config/constants'
+import { developmentChains } from '@/config/const'
 import {
 	getImplementationAddress,
 	getProxyAdmin
