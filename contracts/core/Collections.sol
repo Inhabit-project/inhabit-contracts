@@ -56,6 +56,20 @@ contract Collections is ICollections, Errors {
 		return campaignPurchases[_campaignId];
 	}
 
+	function getCampaignsInfo() external view returns (CampaignInfo[] memory) {
+		CampaignInfo[] memory campaignsInfo = new CampaignInfo[](campaignCount);
+
+		for (uint256 i; i < campaignCount; ) {
+			campaignsInfo[i] = getCampaignInfo(i + 1);
+
+			unchecked {
+				++i;
+			}
+		}
+
+		return campaignsInfo;
+	}
+
 	function getNonces(address _account) public view returns (uint256) {
 		return nonces[_account];
 	}
@@ -209,20 +223,6 @@ contract Collections is ICollections, Errors {
 				fundsRaised: campaign.fundsRaised,
 				collectionsInfo: collectionsInfo
 			});
-	}
-
-	function getCampaigsInfo() external view returns (CampaignInfo[] memory) {
-		CampaignInfo[] memory campaignsInfo = new CampaignInfo[](campaignCount);
-
-		for (uint256 i; i < campaignCount; ) {
-			campaignsInfo[i] = getCampaignInfo(i + 1);
-
-			unchecked {
-				++i;
-			}
-		}
-
-		return campaignsInfo;
 	}
 
 	function getCollectionInfo(
