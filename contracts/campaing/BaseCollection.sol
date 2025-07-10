@@ -2,13 +2,12 @@
 pragma solidity ^0.8.28;
 
 import {ERC20} from 'solady/src/tokens/ERC20.sol';
-
 import {IInhabit} from '../core/interfaces/IInhabit.sol';
 import {Native} from '../core/libraries/Native.sol';
 import {Transfer} from '../core/libraries/Transfer.sol';
 import {Errors} from '../core/libraries/Errors.sol';
 
-abstract contract BaseStrategy is Native, Transfer, Errors {
+abstract contract BaseCollection is Native, Transfer, Errors {
 	/// =========================
 	/// === Storage Variables ===
 	/// =========================
@@ -37,7 +36,7 @@ abstract contract BaseStrategy is Native, Transfer, Errors {
 	/// ====== Initializer ======
 	/// =========================
 
-	function __BaseStrategy_init(
+	function __BaseCollection_init(
 		uint256 _campaignId,
 		uint256 _collectionId
 	) internal virtual {

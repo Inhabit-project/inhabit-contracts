@@ -29,7 +29,7 @@ export const CELO_NFT_COLLECTIONS: CollectionParams[] = [
 	{
 		name: 'INHABIT Ñuiyanzhi TITI',
 		symbol: 'TITI',
-		uri: 'https://black-fast-chipmunk-543.mypinata.cloud/ipfs/bafkreihqsoyx6iiqxjp2qughd54xz2gtgddj2ivjgwfqfnitvkkmkmg6au',
+		uri: 'ipfs://bafkreihqsoyx6iiqxjp2qughd54xz2gtgddj2ivjgwfqfnitvkkmkmg6au',
 		supply: 2483n,
 		price: 50_000_000n,
 		state: true
@@ -37,7 +37,7 @@ export const CELO_NFT_COLLECTIONS: CollectionParams[] = [
 	{
 		name: 'INHABIT Ñuiyanzhi PAUJIL',
 		symbol: 'PAUJIL',
-		uri: 'https://black-fast-chipmunk-543.mypinata.cloud/ipfs/bafkreig63uzhbc2p3nddkkqtw3ildtgbcc7buoyd6flnz6qyzk2m3beuxe',
+		uri: 'ipfs://bafkreig63uzhbc2p3nddkkqtw3ildtgbcc7buoyd6flnz6qyzk2m3beuxe',
 		supply: 124n,
 		price: 500_000_000n,
 		state: true
@@ -45,7 +45,7 @@ export const CELO_NFT_COLLECTIONS: CollectionParams[] = [
 	{
 		name: 'INHABIT Ñuiyanzhi CARACOLI',
 		symbol: 'CARACOLI',
-		uri: 'https://black-fast-chipmunk-543.mypinata.cloud/ipfs/bafkreiczdctjncnwxrnuuaz66wgv37a4u7ycrqnkt2n73cu4bafdv5z5oa',
+		uri: 'ipfs://bafkreiczdctjncnwxrnuuaz66wgv37a4u7ycrqnkt2n73cu4bafdv5z5oa',
 		supply: 19n,
 		price: 2000_000_000n,
 		state: true
@@ -53,7 +53,7 @@ export const CELO_NFT_COLLECTIONS: CollectionParams[] = [
 	{
 		name: 'INHABIT Ñuiyanzhi JAGUAR',
 		symbol: 'JAGUAR',
-		uri: 'https://black-fast-chipmunk-543.mypinata.cloud/ipfs/bafkreih4fccggynla475clgzrj2rs2ulggxvi7lwyavhjcyjeuxjduetoq',
+		uri: 'ipfs://bafkreih4fccggynla475clgzrj2rs2ulggxvi7lwyavhjcyjeuxjduetoq',
 		supply: 5n,
 		price: 5000_000_000n,
 		state: true
@@ -84,7 +84,7 @@ export const CELO_ALFAJORES_NFT_COLLECTIONS: CollectionParams[] = [
 	{
 		name: 'INHABIT Ñuiyanzhi TITI',
 		symbol: 'TITI',
-		uri: 'https://black-fast-chipmunk-543.mypinata.cloud/ipfs/bafkreiforhajyhg5i564fnvfe7ixnfzyqhmbjbekq4yiiyo2kq6jt2cnuy',
+		uri: 'ipfs://bafybeiejfgiaw4l6hysgwgos5pvc53hpjrgehydcym7zqphfkpqh4x4v7q/01-titi.json',
 		supply: 2483n,
 		price: 1_000_000n,
 		state: true
@@ -92,7 +92,7 @@ export const CELO_ALFAJORES_NFT_COLLECTIONS: CollectionParams[] = [
 	{
 		name: 'INHABIT Ñuiyanzhi PAUJIL',
 		symbol: 'PAUJIL',
-		uri: 'https://black-fast-chipmunk-543.mypinata.cloud/ipfs/bafkreiafxsk2q2ywrtu6bttgloemtbdab4vea3urys6npshzqdlzi5ki7q',
+		uri: 'ipfs://bafybeiejfgiaw4l6hysgwgos5pvc53hpjrgehydcym7zqphfkpqh4x4v7q/03-caracoli.json',
 		supply: 124n,
 		price: 2_000_000n,
 		state: true
@@ -100,7 +100,7 @@ export const CELO_ALFAJORES_NFT_COLLECTIONS: CollectionParams[] = [
 	{
 		name: 'INHABIT Ñuiyanzhi CARACOLI',
 		symbol: 'CARACOLI',
-		uri: 'https://black-fast-chipmunk-543.mypinata.cloud/ipfs/bafkreihpsd4ysq7vab4wk5qrtu6bfgzeubjfp2z35mdrwminbb5hayod3i',
+		uri: 'ipfs://bafybeiejfgiaw4l6hysgwgos5pvc53hpjrgehydcym7zqphfkpqh4x4v7q/04-jaguar.json',
 		supply: 19n,
 		price: 3_000_000n,
 		state: true
@@ -108,7 +108,7 @@ export const CELO_ALFAJORES_NFT_COLLECTIONS: CollectionParams[] = [
 	{
 		name: 'INHABIT Ñuiyanzhi JAGUAR',
 		symbol: 'JAGUAR',
-		uri: 'https://black-fast-chipmunk-543.mypinata.cloud/ipfs/bafkreiae3gykborfjm565gnxlswd7yaiqn66s4kbntrsjlqaemrgjduhqi',
+		uri: 'ipfs://bafkreiae3gykborfjm565gnxlswd7yaiqn66s4kbntrsjlqaemrgjduhqi',
 		supply: 5n,
 		price: 4_000_000n,
 		state: true

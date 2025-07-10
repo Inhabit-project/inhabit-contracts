@@ -13,8 +13,13 @@ import { ensureEnvVar } from './utils/ensure-env-var'
 
 // Load environment variables
 
-dotenv.config({ path: `.env.${process.env.NODE_ENV}` })
-dotenv.config()
+dotenv.config({
+	path: `./.env.${process.env.NODE_ENV}`,
+	override: true,
+	quiet: true
+})
+
+dotenv.config({ path: './.env', override: true, quiet: true })
 
 const {
 	COINMARKETCAP_API_KEY,

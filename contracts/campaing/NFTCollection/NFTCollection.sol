@@ -7,7 +7,7 @@ import {ERC721BurnableUpgradeable} from '@openzeppelin/contracts-upgradeable/tok
 import {Initializable} from '@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol';
 
 import {INFTCollection} from '../../core/interfaces/INFTCollection.sol';
-import {BaseStrategy} from '../../strategies/BaseStrategy.sol';
+import {BaseCollection} from '../BaseCollection.sol';
 
 contract NFTCollection is
 	Initializable,
@@ -15,7 +15,7 @@ contract NFTCollection is
 	ERC721URIStorageUpgradeable,
 	ERC721BurnableUpgradeable,
 	INFTCollection,
-	BaseStrategy
+	BaseCollection
 {
 	/// =========================
 	/// === Storage Variables ===
@@ -42,7 +42,7 @@ contract NFTCollection is
 		__ERC721URIStorage_init();
 		__ERC721Burnable_init();
 
-		__BaseStrategy_init(_params.campaignId, _params.collectionId);
+		__BaseCollection_init(_params.campaignId, _params.collectionId);
 
 		supply = _params.supply;
 		price = _params.price;
@@ -122,19 +122,19 @@ contract NFTCollection is
 		return baseURI;
 	}
 
-	// the following functions are overrides required by BaseStrategy
+	// the following functions are overrides required by BaseCollection
 
 	function recoverFunds(
 		address token,
 		address to
-	) public override(BaseStrategy, INFTCollection) onlyInhabit {
+	) public override(BaseCollection, INFTCollection) onlyInhabit {
 		super.recoverFunds(token, to);
 	}
 
 	function getInhabit()
 		public
 		view
-		override(BaseStrategy, INFTCollection)
+		override(BaseCollection, INFTCollection)
 		returns (address)
 	{
 		return super.getInhabit();
@@ -143,7 +143,7 @@ contract NFTCollection is
 	function getCampaignId()
 		public
 		view
-		override(BaseStrategy, INFTCollection)
+		override(BaseCollection, INFTCollection)
 		returns (uint256)
 	{
 		return super.getCampaignId();
@@ -152,7 +152,7 @@ contract NFTCollection is
 	function getCollectionId()
 		public
 		view
-		override(BaseStrategy, INFTCollection)
+		override(BaseCollection, INFTCollection)
 		returns (uint256)
 	{
 		return super.getCollectionId();
@@ -168,7 +168,8 @@ contract NFTCollection is
 		override(ERC721Upgradeable, ERC721URIStorageUpgradeable, INFTCollection)
 		returns (string memory)
 	{
-		return super.tokenURI(tokenId);
+		_requireOwned(tokenId);
+		return baseURI;
 	}
 
 	function supportsInterface(
