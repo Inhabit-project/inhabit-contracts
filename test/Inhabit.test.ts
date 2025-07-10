@@ -2209,7 +2209,7 @@ describe('Inhabit - Groups Module', function () {
 				})
 
 				it('Should update base URI successfully', async function () {
-					const newURI = 'https://newuri.com/'
+					const newURI = 'https://newuri.com'
 
 					const tx = await inhabit.write.setCollectionBaseURI(
 						[1n, collectionAddress, newURI],
@@ -2224,7 +2224,7 @@ describe('Inhabit - Groups Module', function () {
 						'NFTCollection',
 						collectionAddress
 					)
-					const baseURI = await collection.read.baseURI()
+					const baseURI = await collection.read.getBaseURI()
 					expect(baseURI).to.equal(newURI)
 				})
 
@@ -2306,7 +2306,7 @@ describe('Inhabit - Groups Module', function () {
 						'NFTCollection',
 						collectionAddress
 					)
-					const price = await collection.read.price()
+					const price = await collection.read.getPrice()
 					expect(price).to.equal(newPrice)
 				})
 
@@ -2353,7 +2353,7 @@ describe('Inhabit - Groups Module', function () {
 						'NFTCollection',
 						collectionAddress
 					)
-					const state = await collection.read.state()
+					const state = await collection.read.getState()
 					expect(state).to.be.false
 				})
 			})
@@ -2399,7 +2399,7 @@ describe('Inhabit - Groups Module', function () {
 						'NFTCollection',
 						collectionAddress
 					)
-					const supply = await collection.read.supply()
+					const supply = await collection.read.getSupply()
 					expect(supply).to.equal(newSupply)
 				})
 

@@ -414,6 +414,7 @@ contract Collections is ICollections, Errors {
 		address _to
 	) internal {
 		_invalidCampaignId(_campaignId);
+		_isZeroAddress(_to);
 		Campaign storage campaign = campaigns[_campaignId];
 
 		if (msg.sender != campaign.creator) revert UNAUTHORIZED();
