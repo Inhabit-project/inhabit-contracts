@@ -2067,7 +2067,7 @@ describe('Inhabit - Groups Module', function () {
 					inhabit.write.updateCampaignStatus([0n, false], {
 						account: deployer
 					})
-				).to.be.rejectedWith('INVALID_CAMPAIGN_ID')
+				).to.be.rejectedWith('UNAUTHORIZED')
 			})
 
 			it('Should revert if campaign ID is invalid (too high)', async function () {
@@ -2075,7 +2075,7 @@ describe('Inhabit - Groups Module', function () {
 					inhabit.write.updateCampaignStatus([999n, false], {
 						account: deployer
 					})
-				).to.be.rejectedWith('INVALID_CAMPAIGN_ID')
+				).to.be.rejectedWith('UNAUTHORIZED')
 			})
 
 			it('Should revert if caller is not campaign creator', async function () {
@@ -2205,7 +2205,7 @@ describe('Inhabit - Groups Module', function () {
 								account: deployer
 							}
 						)
-					).to.be.rejectedWith('INVALID_CAMPAIGN_ID')
+					).to.be.rejectedWith('UNAUTHORIZED')
 				})
 
 				it('Should update base URI successfully', async function () {
