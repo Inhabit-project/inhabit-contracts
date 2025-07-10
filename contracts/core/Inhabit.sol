@@ -78,7 +78,7 @@ contract Inhabit is
 		Campaign memory campaign = getCampaign(_campaignId);
 		if (!campaign.state) revert CAMPAIGN_NOT_ACTIVE();
 
-		uint256 price = nftCollection.price();
+		uint256 price = nftCollection.getPrice();
 		if (ERC20(_token).balanceOf(msg.sender) < price)
 			revert INSUFFICIENT_FUNDS();
 
@@ -119,7 +119,7 @@ contract Inhabit is
 
 		INFTCollection nftCollection = INFTCollection(_collection);
 
-		uint256 totalNFTsSold = nftCollection.tokenCount();
+		uint256 totalNFTsSold = nftCollection.getTokenCount();
 		if (totalNFTsSold == 0) revert INVALID_AMOUNT();
 
 		uint256 totalRefundAmount = _amountPerNFT * totalNFTsSold;

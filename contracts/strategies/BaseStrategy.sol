@@ -55,7 +55,7 @@ abstract contract BaseStrategy is Native, Transfer, Errors {
 	}
 
 	/// =========================
-	/// === View Functions ======
+	/// ======= Getters =========
 	/// =========================
 
 	function getInhabit() public view virtual returns (address) {
@@ -70,6 +70,17 @@ abstract contract BaseStrategy is Native, Transfer, Errors {
 		return collectionId;
 	}
 
+	/// =========================
+	/// === View Functions ======
+	/// =========================
+
+	function activeBalance(address _token) public view virtual returns (uint256) {
+		return
+			_token == NATIVE
+				? address(this).balance
+				: ERC20(_token).balanceOf(address(this));
+	}
+
 	/// =================================
 	/// == External / Public Functions ==
 	/// =================================
@@ -78,8 +89,6 @@ abstract contract BaseStrategy is Native, Transfer, Errors {
 		address _token,
 		address _to
 	) public virtual onlyInhabit {
-		_isZeroAddress(_to);
-
 		uint256 amount = _token == NATIVE
 			? address(this).balance
 			: ERC20(_token).balanceOf(address(this));

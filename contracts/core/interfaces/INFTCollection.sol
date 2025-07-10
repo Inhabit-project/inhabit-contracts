@@ -52,10 +52,10 @@ interface INFTCollection is IERC721 {
 	/// =========================
 
 	/**
-	 * @dev Event emitted when the base URI is updated
-	 * @param newBaseURI The new base URI for token metadata
+	 * @dev Event emitted when the supply limit is updated
+	 * @param newSupply The new maximum supply of tokens
 	 */
-	event BaseURIUpdated(string indexed newBaseURI);
+	event SupplyUpdated(uint256 indexed newSupply);
 
 	/**
 	 * @dev Event emitted when the mint price is updated
@@ -70,10 +70,10 @@ interface INFTCollection is IERC721 {
 	event StateUpdated(bool indexed newState);
 
 	/**
-	 * @dev Event emitted when the supply limit is updated
-	 * @param newSupply The new maximum supply of tokens
+	 * @dev Event emitted when the base URI is updated
+	 * @param newBaseURI The new base URI for token metadata
 	 */
-	event SupplyUpdated(uint256 indexed newSupply);
+	event BaseURIUpdated(string indexed newBaseURI);
 
 	/**
 	 * @dev Event emitted when a token is successfully minted
@@ -95,29 +95,39 @@ interface INFTCollection is IERC721 {
 	function initialize(CollectionParams calldata _params) external;
 
 	/// =========================
-	/// === External Functions ==
+	/// ======= Getters =========
+	/// =========================
+
+	function getTokenCount() external view returns (uint256);
+
+	function getSupply() external view returns (uint256);
+
+	function getPrice() external view returns (uint256);
+
+	function getState() external view returns (bool);
+
+	function getBaseURI() external view returns (string memory);
+
+	// the following functions are overrides required by BaseStrategy
+
+	function getInhabit() external view returns (address);
+
+	function getCampaignId() external view returns (uint256);
+
+	function getCollectionId() external view returns (uint256);
+
+	/// =========================
+	/// ======= Setters =========
 	/// =========================
 
 	/**
-	 * @dev Safely mints a new token to the specified address
-	 * @param _to Address to receive the minted token
-	 * @return tokenId The ID of the newly minted token
+	 * @dev Updates the maximum supply of tokens
+	 * @param _supply New maximum supply
 	 * @notice Only authorized addresses can call this function
-	 * @notice Collection must be active and within supply limits
-	 * @notice Reverts if supply limit is reached or collection is inactive
+	 * @notice New supply cannot be less than current token count
+	 * @notice Emits SupplyUpdated event
 	 */
-	function safeMint(address _to) external returns (uint256);
-
-	function burn(uint256 tokenId) external;
-
-	/**
-	 * @dev Updates the base URI for token metadata
-	 * @param uri New base URI string
-	 * @notice Only authorized addresses can call this function
-	 * @notice URI cannot be empty string
-	 * @notice Emits BaseURIUpdated event
-	 */
-	function setBaseURI(string calldata uri) external;
+	function setSupply(uint256 _supply) external;
 
 	/**
 	 * @dev Updates the mint price for tokens
@@ -138,13 +148,37 @@ interface INFTCollection is IERC721 {
 	function setState(bool _state) external;
 
 	/**
-	 * @dev Updates the maximum supply of tokens
-	 * @param _supply New maximum supply
+	 * @dev Updates the base URI for token metadata
+	 * @param uri New base URI string
 	 * @notice Only authorized addresses can call this function
-	 * @notice New supply cannot be less than current token count
-	 * @notice Emits SupplyUpdated event
+	 * @notice URI cannot be empty string
+	 * @notice Emits BaseURIUpdated event
 	 */
-	function setSupply(uint256 _supply) external;
+	function setBaseURI(string calldata uri) external;
+
+	/// =========================
+	/// ===== View Functions ====
+	/// =========================
+
+	function getCollectionInfo() external view returns (CollectionInfo memory);
+
+	// the following functions are overrides required by BaseStrategy
+
+	function activeBalance(address _token) external view returns (uint256);
+
+	/// =========================
+	/// === External Functions ==
+	/// =========================
+
+	/**
+	 * @dev Safely mints a new token to the specified address
+	 * @param _to Address to receive the minted token
+	 * @return tokenId The ID of the newly minted token
+	 * @notice Only authorized addresses can call this function
+	 * @notice Collection must be active and within supply limits
+	 * @notice Reverts if supply limit is reached or collection is inactive
+	 */
+	function safeMint(address _to) external returns (uint256);
 
 	/**
 	 * @dev Recovers funds from the contract
@@ -154,43 +188,18 @@ interface INFTCollection is IERC721 {
 	 * @notice Reverts if trying to recover native ETH without specifying address(0)
 	 * @notice Emits Transfer event for the recovered amount
 	 */
+
+	/// ==========================
+	/// ======== Overrides =======
+	/// ==========================
+
+	function burn(uint256 tokenId) external;
+
+	// the following functions are overrides required by BaseStrategy
+
 	function recoverFunds(address _token, address _to) external;
 
-	/// =========================
-	/// ===== View Functions ====
-	/// =========================
-
-	function getCollectionInfo() external view returns (CollectionInfo memory);
-
-	/**
-	 * @dev Gets the current number of minted tokens
-	 * @return uint256 Current token count
-	 */
-	function tokenCount() external view returns (uint256);
-
-	/**
-	 * @dev Gets the maximum supply of tokens
-	 * @return uint256 Maximum supply limit
-	 */
-	function supply() external view returns (uint256);
-
-	/**
-	 * @dev Gets the current mint price
-	 * @return uint256 Price per token in wei
-	 */
-	function price() external view returns (uint256);
-
-	/**
-	 * @dev Gets the base URI for token metadata
-	 * @return string Base URI string
-	 */
-	function baseURI() external view returns (string memory);
-
-	/**
-	 * @dev Gets the current active/inactive state
-	 * @return bool Current state (true = active, false = inactive)
-	 */
-	function state() external view returns (bool);
+	// The following functions are overrides required by Solidity.
 
 	/**
 	 * @dev Returns the token URI for a given token ID
@@ -206,14 +215,4 @@ interface INFTCollection is IERC721 {
 	 * @return bool True if interface is supported
 	 */
 	function supportsInterface(bytes4 interfaceId) external view returns (bool);
-
-	/// =========================
-	/// ===== Base Strategy =====
-	/// =========================
-
-	function getInhabit() external view returns (address);
-
-	function getCampaignId() external view returns (uint256);
-
-	function getCollectionId() external view returns (uint256);
 }

@@ -277,7 +277,7 @@ contract Collections is ICollections, Errors {
 	) internal {
 		INFTCollection nftCollectionFound = INFTCollection(_collection);
 
-		if (nftCollectionFound.supply() <= nftCollectionFound.tokenCount())
+		if (nftCollectionFound.getSupply() <= nftCollectionFound.getTokenCount())
 			revert INVALID_SUPPLY();
 
 		uint256 tokenId = nftCollectionFound.safeMint(_to);
