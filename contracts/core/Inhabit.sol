@@ -271,6 +271,13 @@ contract Inhabit is
 		_createCampaign(_goal, _collectionsParams);
 	}
 
+	function addCollection(
+		uint256 _campaignId,
+		CollectionParams memory _params
+	) external onlyRole(USER_ROLE) {
+		_addCollection(_campaignId, _params);
+	}
+
 	function updateCampaignStatus(
 		uint256 _campaignId,
 		bool _status

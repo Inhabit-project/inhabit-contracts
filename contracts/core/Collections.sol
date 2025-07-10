@@ -34,9 +34,7 @@ contract Collections is ICollections, Errors {
 	/// =========================
 
 	modifier onlyCampaignCreator(uint256 _campaignId) {
-		_invalidCampaignId(_campaignId);
-
-		if (campaigns[_campaignId].creator != msg.sender) revert UNAUTHORIZED();
+		_checkOnlyCampaignCreator(_campaignId);
 		_;
 	}
 
@@ -140,6 +138,51 @@ contract Collections is ICollections, Errors {
 		}
 
 		emit CampaignCreated(campaignCount, msg.sender, _collectionsParams);
+	}
+
+	function _addCollection(
+		uint256 _campaignId,
+		CollectionParams memory _params
+	) internal onlyCampaignCreator(_campaignId) {
+		_isEmptyString(_params.name);
+		_isEmptyString(_params.symbol);
+		_isEmptyString(_params.uri);
+		if (_params.supply == 0) revert INVALID_SUPPLY();
+		if (_params.price == 0) revert INVALID_PRICE();
+
+		address newCollection = Clone.createClone(
+			address(nftCollection),
+			msg.sender,
+			nonces[msg.sender]++
+		);
+
+		collectionCount++;
+		INFTCollection.CollectionParams memory initParams = INFTCollection
+			.CollectionParams({
+				campaignId: _campaignId,
+				collectionId: collectionCount,
+				name: _params.name,
+				symbol: _params.symbol,
+				uri: _params.uri,
+				supply: _params.supply,
+				price: _params.price,
+				state: _params.state
+			});
+
+		INFTCollection(newCollection).initialize(initParams);
+
+		campaigns[_campaignId].collections.push(newCollection);
+
+		emit CollectionAdded(
+			_campaignId,
+			newCollection,
+			_params.name,
+			_params.symbol,
+			_params.uri,
+			_params.supply,
+			_params.price,
+			_params.state
+		);
 	}
 
 	function _updateCampaignstatus(
@@ -491,5 +534,9 @@ contract Collections is ICollections, Errors {
 		}
 
 		revert COLLECTION_NOT_FOUND();
+	}
+
+	function _checkOnlyCampaignCreator(uint256 _campaignId) private view {
+		if (campaigns[_campaignId].creator != msg.sender) revert UNAUTHORIZED();
 	}
 }

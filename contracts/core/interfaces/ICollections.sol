@@ -72,6 +72,17 @@ interface ICollections {
 
 	event CampaignStatusUpdated(uint256 indexed campaignId, bool status);
 
+	event CollectionAdded(
+		uint256 indexed campaignId,
+		address indexed collection,
+		string name,
+		string symbol,
+		string uri,
+		uint256 supply,
+		uint256 price,
+		bool state
+	);
+
 	event CollectionCreated(
 		address indexed collection,
 		address indexed creator,
