@@ -1,13 +1,17 @@
 import { task } from 'hardhat/config'
 import { Address } from 'viem'
 
-import { CollectionParams } from '@/models'
+import {
+	CELO_ALFAJORES_NFT_COLLECTIONS,
+	CELO_NFT_COLLECTIONS,
+	productionChains
+} from '@/config/const'
 
 task('addCampaign', 'Adds a new campaign to the Inhabit contract').setAction(
 	async (_, hre) => {
 		try {
 			const { viem } = hre
-			const { getNamedAccounts, deployments } = hre
+			const { getNamedAccounts, deployments, network } = hre
 			const { deployer } = await getNamedAccounts()
 
 			const publicClient = await viem.getPublicClient()
@@ -18,48 +22,20 @@ task('addCampaign', 'Adds a new campaign to the Inhabit contract').setAction(
 				inhabitAddress as Address
 			)
 
-			const GOAL = 100000000000n // 100,000 USDC
+			const GOAL = 100_000_000_000n // 100,000 USDC
 
-			const NFT_COLLECTIONS: CollectionParams[] = [
-				{
-					name: 'INHABIT Ñuiyanzhi CARACOLI',
-					symbol: 'CARACOLI',
-					uri: 'https://black-fast-chipmunk-543.mypinata.cloud/ipfs/bafkreiczdctjncnwxrnuuaz66wgv37a4u7ycrqnkt2n73cu4bafdv5z5oa',
-					supply: 19n,
-					price: 2000000000n,
-					state: true
-				},
-				{
-					name: 'INHABIT Ñuiyanzhi JAGUAR',
-					symbol: 'JAGUAR',
-					uri: 'https://black-fast-chipmunk-543.mypinata.cloud/ipfs/bafkreih4fccggynla475clgzrj2rs2ulggxvi7lwyavhjcyjeuxjduetoq',
-					supply: 5n,
-					price: 5000000000n,
-					state: true
-				},
-				{
-					name: 'INHABIT Ñuiyanzhi PAUJIL',
-					symbol: 'PAUJIL',
-					uri: 'https://black-fast-chipmunk-543.mypinata.cloud/ipfs/bafkreig63uzhbc2p3nddkkqtw3ildtgbcc7buoyd6flnz6qyzk2m3beuxe',
-					supply: 124n,
-					price: 500000000n,
-					state: true
-				},
-				{
-					name: 'INHABIT Ñuiyanzhi TITI',
-					symbol: 'TITI',
-					uri: 'https://black-fast-chipmunk-543.mypinata.cloud/ipfs/bafkreihqsoyx6iiqxjp2qughd54xz2gtgddj2ivjgwfqfnitvkkmkmg6au',
-					supply: 2483n,
-					price: 50000000n,
-					state: true
-				}
-			]
+			const nftCollections = productionChains.includes(network.name)
+				? CELO_NFT_COLLECTIONS
+				: CELO_ALFAJORES_NFT_COLLECTIONS
 
 			console.log('----------------------------------------------------')
 			console.log('Adding campaign NFT collection...')
 
+			const nftCollectionAddress = await inhabit.read.nftCollection()
+			console.log('NFTCollection address', nftCollectionAddress)
+
 			const txHash = await inhabit.write.createCampaign(
-				[GOAL, NFT_COLLECTIONS],
+				[GOAL, nftCollections],
 				{
 					account: deployer as Address
 				}
@@ -70,7 +46,6 @@ task('addCampaign', 'Adds a new campaign to the Inhabit contract').setAction(
 			console.log(`Campaign created. tx hash: ${txHash}`)
 		} catch (error) {
 			console.error('❌', error)
-			throw error
 		}
 	}
 )
