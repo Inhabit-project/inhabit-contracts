@@ -8,21 +8,6 @@ interface ICollections {
 	/// ======== Structs ========
 	/// =========================
 
-	struct Refund {
-		bool claimed;
-	}
-
-	struct Purchase {
-		address collection;
-		uint256 tokenId;
-		address paymentToken;
-		uint256 price;
-		uint256 referralFee;
-		uint256 campaignId;
-		uint256 timestamp;
-		bool refunded;
-	}
-
 	struct CollectionParams {
 		string name;
 		string symbol;
@@ -32,32 +17,13 @@ interface ICollections {
 		bool state;
 	}
 
-	struct Collection {
-		string name;
-		string symbol;
-		string uri;
-		uint256 supply;
-		uint256 price;
-		bool state;
-		address creator;
-		uint256 tokenCount;
-	}
-
 	struct Campaign {
+		uint256 id;
+		uint256 goal;
+		uint256 fundsRaised;
+		address owner;
 		address[] collections;
 		bool state;
-		address creator;
-		uint256 goal;
-		uint256 fundsRaised;
-	}
-
-	struct CampaignInfo {
-		uint256 id;
-		address creator;
-		bool state;
-		uint256 goal;
-		uint256 fundsRaised;
-		INFTCollection.CollectionInfo[] collectionsInfo;
 	}
 
 	/// =========================
@@ -65,16 +31,20 @@ interface ICollections {
 	/// =========================
 
 	event CampaignCreated(
-		uint256 indexed campaignId,
 		address indexed creator,
-		CollectionParams[] collections
+		uint256 indexed campaignId,
+		uint256 goal,
+		bool state,
+		address[] collections
 	);
 
 	event CampaignStatusUpdated(uint256 indexed campaignId, bool status);
 
-	event CollectionAdded(
+	event CollectionCreated(
+		address indexed owner,
 		uint256 indexed campaignId,
-		address indexed collection,
+		uint256 collectionId,
+		address indexed collectionAddress,
 		string name,
 		string symbol,
 		string uri,
@@ -83,24 +53,17 @@ interface ICollections {
 		bool state
 	);
 
-	event CollectionCreated(
-		address indexed collection,
-		address indexed creator,
+	event CollectionAdded(
+		address indexed owner,
+		uint256 indexed campaignId,
+		uint256 collectionId,
+		address indexed collectionAddress,
 		string name,
 		string symbol,
+		string uri,
 		uint256 supply,
-		uint256 price
-	);
-
-	event NFTPurchased(
-		uint256 indexed campaignId,
-		address indexed collection,
-		address paymentToken,
-		address indexed buyer,
-		uint256 tokenId,
 		uint256 price,
-		uint256 timestamp,
-		bool refunded
+		bool state
 	);
 
 	event CollectionBaseURIUpdated(
@@ -128,4 +91,14 @@ interface ICollections {
 	);
 
 	event NftCollectionUpdated(address indexed collection);
+
+	/// =========================
+	/// ==== View Functions =====
+	/// =========================
+
+	function getNftCollection() external view returns (INFTCollection);
+
+	function getCollectionCount() external view returns (uint256);
+
+	function getNonces(address _account) external view returns (uint256);
 }

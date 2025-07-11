@@ -131,7 +131,6 @@ contract NFTCollection is
 	}
 
 	function setBaseURI(string calldata _uri) external onlyInhabit {
-		_isEmptyString(_uri);
 		baseURI = _uri;
 
 		emit BaseURIUpdated(_uri);
@@ -170,7 +169,6 @@ contract NFTCollection is
 	/// =================================
 
 	function safeMint(address _to) external onlyInhabit returns (uint256) {
-		_isZeroAddress(_to);
 		if (!state) revert COLLECTION_NOT_ACTIVE();
 		if (tokenCount > supply) revert INVALID_SUPPLY();
 
@@ -195,10 +193,10 @@ contract NFTCollection is
 	// the following functions are overrides required by BaseStrategy
 
 	function recoverFunds(
-		address token,
-		address to
+		address _token,
+		address _to
 	) public override(BaseStrategy, INFTCollection) onlyInhabit {
-		super.recoverFunds(token, to);
+		super.recoverFunds(_token, _to);
 	}
 
 	// The following functions are overrides required by Solidity.

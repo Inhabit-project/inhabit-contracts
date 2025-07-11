@@ -7,9 +7,8 @@ import {Initializable} from '@openzeppelin/contracts-upgradeable/proxy/utils/Ini
 import {AccessControlUpgradeable} from '@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol';
 import {ReentrancyGuardUpgradeable} from '@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol';
 
-import {INFTCollection} from '../core/interfaces/INFTCollection.sol';
+import {INFTCollection} from './interfaces/INFTCollection.sol';
 import {IInhabit} from '../core/interfaces/IInhabit.sol';
-import {ICollections} from '../core/interfaces/ICollections.sol';
 import {Groups} from './Groups.sol';
 import {Collections} from './Collections.sol';
 
@@ -19,9 +18,9 @@ contract Inhabit is
 	Initializable,
 	AccessControlUpgradeable,
 	ReentrancyGuardUpgradeable,
-	IInhabit,
 	Groups,
-	Collections
+	Collections,
+	IInhabit
 {
 	/// =========================
 	/// === Storage Variables ===
@@ -29,10 +28,33 @@ contract Inhabit is
 
 	bytes32 public constant ADMIN_ROLE = keccak256('ADMIN_ROLE');
 	bytes32 public constant USER_ROLE = keccak256('USER_ROLE');
+	address private treasury;
+	uint256 private campaignCount;
+	mapping(address => bool) private tokens;
+	mapping(uint256 id => Campaign) private campaigns;
 
-	address public treasury;
+	/// =========================
+	/// ====== Modifiers ========
+	/// =========================
 
-	/// @custom:oz-upgrades-unsafe-allow constructor
+	modifier onlyCampaignOwner(uint256 _campaignId) {
+		_checkOnlyCampaignOwner(_campaignId);
+		_;
+	}
+
+	modifier ifCampaignExists(uint256 _campaignId) {
+		_checkIfCampaignExists(_campaignId);
+		_;
+	}
+
+	modifier ifCollectionExists(uint256 _campaignId, address _collection) {
+		_checkIfCollectionExists(_campaignId, _collection);
+		_;
+	}
+
+	/// =========================
+	/// ====== Constructor ======
+	/// =========================
 
 	constructor() {
 		_disableInitializers();
@@ -44,6 +66,7 @@ contract Inhabit is
 
 	function initialize(
 		address _defaultAdmin,
+		address _nftCollection,
 		address _treasury
 	) public initializer {
 		__AccessControl_init();
@@ -53,206 +76,345 @@ contract Inhabit is
 		_grantRole(ADMIN_ROLE, _defaultAdmin);
 		_grantRole(USER_ROLE, _defaultAdmin);
 
+		__Collections_init(_nftCollection);
+		__Groups_init();
+
 		treasury = _treasury;
+	}
+
+	/// =========================
+	/// ======= Getters =========
+	/// =========================
+
+	function getTreasury() external view returns (address) {
+		return treasury;
+	}
+
+	function getCampaignCount() external view returns (uint256) {
+		return campaignCount;
+	}
+
+	function getCampaign(uint256 _id) public view returns (Campaign memory) {
+		return campaigns[_id];
+	}
+
+	function getCampaigns() external view override returns (Campaign[] memory) {
+		Campaign[] memory allCampaigns = new Campaign[](campaignCount);
+		for (uint256 i = 1; i <= campaignCount; ) {
+			allCampaigns[i - 1] = campaigns[i];
+
+			unchecked {
+				++i;
+			}
+		}
+
+		return allCampaigns;
+	}
+
+	function isTokenSupported(address _token) external view returns (bool) {
+		return tokens[_token];
+	}
+
+	/// =========================
+	/// ======= Setters =========
+	/// =========================
+
+	function setTreasury(address _treasury) external onlyRole(ADMIN_ROLE) {
+		if (treasury == _treasury) revert SAME_ADDRESS();
+		treasury = _treasury;
+
+		emit TreasuryUpdated(treasury, _treasury);
+	}
+
+	function addToToken(address _token) external onlyRole(ADMIN_ROLE) {
+		if (tokens[_token]) revert TOKEN_ALREADY_EXISTS();
+		tokens[_token] = true;
+
+		emit TokenAdded(_token);
+	}
+
+	function removeFromTokens(address _token) external onlyRole(ADMIN_ROLE) {
+		if (!tokens[_token]) revert TOKEN_NOT_FOUND();
+		tokens[_token] = false;
+
+		emit TokenRemoved(_token);
+	}
+
+	function setCampaignOwner(
+		uint256 _campaignId,
+		address _newOwner
+	) external onlyCampaignOwner(_campaignId) {
+		Campaign storage campaign = campaigns[_campaignId];
+
+		if (_newOwner == address(0)) revert INVALID_ADDRESS();
+		if (campaign.owner == _newOwner) revert SAME_ADDRESS();
+		campaign.owner = _newOwner;
+
+		emit CampaignOwnershipTransferred(_campaignId, msg.sender, _newOwner);
+	}
+
+	function setCampaignStatus(
+		uint256 _campaignId,
+		bool _status
+	) external onlyRole(USER_ROLE) onlyCampaignOwner(_campaignId) {
+		Campaign storage campaign = campaigns[_campaignId];
+
+		if (campaign.state == _status) revert SAME_STATE();
+		campaign.state = _status;
+
+		emit CampaignStatusUpdated(_campaignId, campaign.state, _status);
+	}
+
+	// the following setters of Groups
+
+	function setCampaignReferral(
+		uint256 _campaignId,
+		bytes32 _referral
+	) external onlyRole(ADMIN_ROLE) ifCampaignExists(_campaignId) {
+		_setCampaignReferral(_campaignId, _referral);
+	}
+
+	function setGroupReferral(
+		uint256 _campaignId,
+		uint256 _groupId,
+		string calldata _referral
+	) external onlyRole(ADMIN_ROLE) ifCampaignExists(_campaignId) {
+		_setGroupReferral(_campaignId, _groupId, _referral);
+	}
+
+	function setGroupStatus(
+		uint256 _campaignId,
+		uint256 _groupId,
+		bool _status
+	) external onlyRole(ADMIN_ROLE) ifCampaignExists(_campaignId) {
+		_setGroupStatus(_campaignId, _groupId, _status);
+	}
+
+	function setAmbassadors(
+		uint256 _campaignId,
+		uint256 _groupId,
+		Ambassador[] calldata _ambassadors
+	) external onlyRole(ADMIN_ROLE) ifCampaignExists(_campaignId) {
+		_setAmbassadors(_campaignId, _groupId, _ambassadors);
+	}
+
+	function addAmbassadors(
+		uint256 _campaignId,
+		uint256 _groupId,
+		Ambassador[] calldata _ambassadors
+	) external onlyRole(ADMIN_ROLE) ifCampaignExists(_campaignId) {
+		_addAmbassadors(_campaignId, _groupId, _ambassadors);
+	}
+
+	function removeAmbassadors(
+		uint256 _campaignId,
+		uint256 _groupId,
+		Ambassador[] calldata _ambassadors
+	) external onlyRole(ADMIN_ROLE) ifCampaignExists(_campaignId) {
+		_removeAmbassadors(_campaignId, _groupId, _ambassadors);
+	}
+
+	// the following setters of Collections
+
+	function setNFTCollection(
+		uint256 _campaignId,
+		address _nftCollection
+	) external onlyRole(ADMIN_ROLE) {
+		if (!_isCollection(_campaignId, _nftCollection))
+			revert COLLECTION_NOT_FOUND();
+		_setNftCollection(_nftCollection);
+	}
+
+	function setCollectionSupply(
+		uint256 _campaignId,
+		address _collection,
+		uint256 _supply
+	)
+		external
+		onlyRole(USER_ROLE)
+		ifCollectionExists(_campaignId, _collection)
+		onlyCampaignOwner(_campaignId)
+	{
+		_setCollectionSupply(_collection, _supply);
+	}
+
+	function setCollectionPrice(
+		uint256 _campaignId,
+		address _collection,
+		uint256 _price
+	)
+		external
+		onlyRole(USER_ROLE)
+		ifCollectionExists(_campaignId, _collection)
+		onlyCampaignOwner(_campaignId)
+	{
+		_setCollectionPrice(_collection, _price);
+	}
+
+	function setCollectionState(
+		uint256 _campaignId,
+		address _collection,
+		bool _state
+	)
+		external
+		onlyRole(USER_ROLE)
+		ifCollectionExists(_campaignId, _collection)
+		onlyCampaignOwner(_campaignId)
+	{
+		_setCollectionState(_collection, _state);
+	}
+
+	function setCollectionBaseURI(
+		uint256 _campaignId,
+		address _collection,
+		string calldata _baseURI
+	)
+		external
+		onlyRole(USER_ROLE)
+		ifCollectionExists(_campaignId, _collection)
+		onlyCampaignOwner(_campaignId)
+	{
+		_setCollectionBaseURI(_collection, _baseURI);
+	}
+
+	/// ==========================
+	/// ===== View Functions =====
+	/// ==========================
+
+	function getCollectionInfo(
+		uint256 _campaignId,
+		address _collection
+	)
+		external
+		view
+		ifCollectionExists(_campaignId, _collection)
+		returns (INFTCollection.CollectionInfo memory)
+	{
+		return _getCollectionInfo(_collection);
+	}
+
+	function getActiveBalance(
+		uint256 _campaignId,
+		address _collection,
+		address _token
+	)
+		external
+		view
+		ifCollectionExists(_campaignId, _collection)
+		returns (uint256)
+	{
+		return _collectionActiveBalance(_collection, _token);
+	}
+
+	function getCampaignInfo(
+		uint256 _campaignId
+	) public view ifCampaignExists(_campaignId) returns (CampaignInfo memory) {
+		Campaign storage campaign = campaigns[_campaignId];
+
+		INFTCollection.CollectionInfo[]
+			memory collectionsInfo = new INFTCollection.CollectionInfo[](
+				campaign.collections.length
+			);
+
+		for (uint256 i; i < collectionsInfo.length; ) {
+			collectionsInfo[i] = _getCollectionInfo(campaign.collections[i]);
+
+			unchecked {
+				++i;
+			}
+		}
+
+		return
+			CampaignInfo({
+				owner: campaign.owner,
+				id: campaign.id,
+				goal: campaign.goal,
+				fundsRaised: campaign.fundsRaised,
+				state: campaign.state,
+				collectionsInfo: collectionsInfo
+			});
+	}
+
+	function getCampaignsInfo() external view returns (CampaignInfo[] memory) {
+		CampaignInfo[] memory allCampaignsInfo = new CampaignInfo[](campaignCount);
+		for (uint256 i = 1; i <= campaignCount; ) {
+			allCampaignsInfo[i - 1] = getCampaignInfo(i);
+
+			unchecked {
+				++i;
+			}
+		}
+
+		return allCampaignsInfo;
 	}
 
 	/// =================================
 	/// == External / Public Functions ==
 	/// =================================
 
-	/// @notice Main functions
-
 	function buyNFT(
 		uint256 _campaignId,
 		address _collection,
-		address _token,
-		string calldata _referral
-	) external nonReentrant {
-		_isTokenSupported(_token);
+		uint256 _groupId,
+		address _paymentToken
+	) external nonReentrant ifCollectionExists(_campaignId, _collection) {
+		if (!_isTokenSupported(_paymentToken)) revert TOKEN_NOT_SUPPORTED();
 
-		INFTCollection nftCollection = _validateCollection(
-			_campaignId,
+		INFTCollection.CollectionInfo memory nftCollection = _getCollectionInfo(
 			_collection
 		);
 
 		Campaign memory campaign = getCampaign(_campaignId);
 		if (!campaign.state) revert CAMPAIGN_NOT_ACTIVE();
 
-		uint256 price = nftCollection.getPrice();
-		if (ERC20(_token).balanceOf(msg.sender) < price)
+		if (ERC20(_paymentToken).balanceOf(msg.sender) < nftCollection.price)
 			revert INSUFFICIENT_FUNDS();
 
-		if (ERC20(_token).allowance(msg.sender, address(this)) < price)
-			revert INSUFFICIENT_ALLOWANCE();
-
-		uint256 referralFee = 0;
+		if (
+			ERC20(_paymentToken).allowance(msg.sender, address(this)) <
+			nftCollection.price
+		) revert INSUFFICIENT_ALLOWANCE();
 
 		_transferAmountFrom(
-			_token,
-			TransferData({from: msg.sender, to: address(this), amount: price})
+			_paymentToken,
+			TransferData({
+				from: msg.sender,
+				to: address(this),
+				amount: nftCollection.price
+			})
 		);
 
-		if (bytes(_referral).length > 0) {
-			referralFee = _distribution(_referral, _token, price);
-		}
+		uint256 referralFee = _distribution(
+			_campaignId,
+			_groupId,
+			_paymentToken,
+			nftCollection.price
+		);
 
-		_transferAmount(_token, treasury, price - referralFee);
+		_transferAmount(_paymentToken, treasury, nftCollection.price - referralFee);
 
-		_safeMint(_campaignId, _collection, msg.sender, _token, price, referralFee);
-	}
+		uint256 tokenId = _safeMint(_collection, msg.sender);
 
-	/**
-	 * @notice Admin establishes refund amount per NFT for a specific collection
-	 * @param _campaignId Campaign ID
-	 * @param _collection Collection address
-	 * @param _token Token used for refund
-	 * @param _amountPerNFT Amount to refund per NFT
-	 */
-	function establishRefund(
-		uint256 _campaignId,
-		address _collection,
-		address _token,
-		uint256 _amountPerNFT
-	) external onlyRole(ADMIN_ROLE) nonReentrant {
-		_isTokenSupported(_token);
-		_validateCollection(_campaignId, _collection);
+		campaigns[_campaignId].fundsRaised += nftCollection.price;
 
-		INFTCollection nftCollection = INFTCollection(_collection);
-
-		uint256 totalNFTsSold = nftCollection.getTokenCount();
-		if (totalNFTsSold == 0) revert INVALID_AMOUNT();
-
-		uint256 totalRefundAmount = _amountPerNFT * totalNFTsSold;
-
-		if (ERC20(_token).balanceOf(msg.sender) < totalRefundAmount)
-			revert INSUFFICIENT_FUNDS();
-
-		if (ERC20(_token).allowance(msg.sender, address(this)) < totalRefundAmount)
-			revert INSUFFICIENT_ALLOWANCE();
-
-		_setRefund(_campaignId, _collection, _token, _amountPerNFT);
-
-		ERC20(_token).transferFrom(msg.sender, address(this), totalRefundAmount);
-
-		emit RefundEstablished(
+		emit NFTPurchased(
 			_campaignId,
 			_collection,
-			_token,
-			_amountPerNFT,
-			totalRefundAmount,
-			totalNFTsSold
-		);
-	}
-
-	/**
-	 * @notice Users can claim refund by burning their NFT
-	 * @param _campaignId Campaign ID
-	 * @param _collection Collection address
-	 * @param _tokenId NFT token ID to burn for refund
-	 */
-	function claimRefund(
-		uint256 _campaignId,
-		address _collection,
-		uint256 _tokenId
-	) external nonReentrant {
-		_validateCollection(_campaignId, _collection);
-
-		if (isRefundClaimed(_campaignId, _collection, _tokenId))
-			revert REFUND_ALREADY_CLAIMED();
-
-		Purchase memory purchase = _findPurchaseByTokenId(
-			_campaignId,
-			_collection,
-			_tokenId
-		);
-
-		INFTCollection nftCollection = _validateCollection(
-			_campaignId,
-			_collection
-		);
-
-		if (nftCollection.ownerOf(_tokenId) != msg.sender) revert NOT_NFT_OWNER();
-
-		uint256 refundAmount = getRefunds(
-			_campaignId,
-			_collection,
-			purchase.paymentToken
-		);
-
-		if (ERC20(purchase.paymentToken).balanceOf(address(this)) < refundAmount)
-			revert INSUFFICIENT_FUNDS();
-
-		_setRefundClaimed(_campaignId, _collection, _tokenId);
-
-		nftCollection.burn(_tokenId);
-
-		ERC20(purchase.paymentToken).transfer(msg.sender, refundAmount);
-
-		emit RefundClaimed(
-			_campaignId,
-			_collection,
-			_tokenId,
 			msg.sender,
-			purchase.paymentToken,
-			refundAmount
+			_paymentToken,
+			nftCollection.price,
+			tokenId,
+			block.timestamp
 		);
-	}
-
-	function setTreasury(address _treasury) external onlyRole(ADMIN_ROLE) {
-		if (address(this) == _treasury) revert INVALID_ADDRESS();
-		if (treasury == _treasury) revert SAME_STATE();
-		_isZeroAddress(_treasury);
-
-		treasury = _treasury;
-		emit TreasuryUpdated(treasury, _treasury);
 	}
 
 	/// @notice Group functions
 
 	function createGroup(
-		string calldata _referral,
-		bool _state,
-		Ambassador[] calldata _ambassadors
-	) external onlyRole(ADMIN_ROLE) {
-		_createGroup(_referral, _state, _ambassadors);
-	}
-
-	function updateGroupStatus(
-		string calldata _referral,
-		bool _status
-	) external onlyRole(ADMIN_ROLE) {
-		_updateGroupStatus(_referral, _status);
-	}
-
-	function addAmbassadors(
-		string calldata _referral,
-		Ambassador[] calldata _ambassadors
-	) external onlyRole(ADMIN_ROLE) {
-		_addAmbassadors(_referral, _ambassadors);
-	}
-
-	function updateAmbassadors(
-		string calldata _referral,
-		Ambassador[] calldata _ambassadors
-	) external onlyRole(ADMIN_ROLE) {
-		_updateAmbassadors(_referral, _ambassadors);
-	}
-
-	function removeAmbassadors(
-		string calldata _referral,
-		address[] calldata _accounts
-	) external onlyRole(ADMIN_ROLE) {
-		_removeAmbassadors(_referral, _accounts);
-	}
-
-	function addToTokens(
-		address[] calldata _tokens
-	) external onlyRole(ADMIN_ROLE) {
-		_addToTokens(_tokens);
-	}
-
-	function removeFromTokens(address _token) external onlyRole(ADMIN_ROLE) {
-		_removeFromTokens(_token);
+		uint256 _campaignId,
+		GroupParams calldata _groupParams
+	) external onlyRole(ADMIN_ROLE) ifCampaignExists(_campaignId) {
+		_createGroup(_campaignId, _groupParams);
 	}
 
 	function recoverFunds(
@@ -266,69 +428,101 @@ contract Inhabit is
 
 	function createCampaign(
 		uint256 _goal,
-		CollectionParams[] memory _collectionsParams
-	) external onlyRole(USER_ROLE) {
-		_createCampaign(_goal, _collectionsParams);
+		INFTCollection.CollectionParams[] calldata _in
+	) external override onlyRole(USER_ROLE) {
+		uint256 len = _in.length;
+		CollectionParams[] memory tmp = new CollectionParams[](len);
+		for (uint256 i; i < len; ++i) {
+			tmp[i] = CollectionParams(
+				_in[i].name,
+				_in[i].symbol,
+				_in[i].uri,
+				_in[i].supply,
+				_in[i].price,
+				_in[i].state
+			);
+		}
+
+		Campaign memory c = _createCampaign(
+			msg.sender,
+			++campaignCount,
+			_goal,
+			tmp
+		);
+		campaigns[c.id] = c;
 	}
 
 	function addCollection(
 		uint256 _campaignId,
-		CollectionParams memory _params
-	) external onlyRole(USER_ROLE) {
-		_addCollection(_campaignId, _params);
-	}
-
-	function updateCampaignStatus(
-		uint256 _campaignId,
-		bool _status
-	) external onlyRole(USER_ROLE) {
-		_updateCampaignstatus(_campaignId, _status);
-	}
-
-	function setCollectionBaseURI(
-		uint256 _campaignId,
-		address _collection,
-		string calldata _baseURI
-	) external onlyRole(USER_ROLE) {
-		_setCollectionBaseURI(_campaignId, _collection, _baseURI);
-	}
-
-	function setCollectionPrice(
-		uint256 _campaignId,
-		address _collection,
-		uint256 _price
-	) external onlyRole(USER_ROLE) {
-		_setCollectionPrice(_campaignId, _collection, _price);
-	}
-
-	function setCollectionState(
-		uint256 _campaignId,
-		address _collection,
-		bool _state
-	) external onlyRole(USER_ROLE) {
-		_setCollectionState(_campaignId, _collection, _state);
-	}
-
-	function setCollectionSupply(
-		uint256 _campaignId,
-		address _collection,
-		uint256 _supply
-	) external onlyRole(USER_ROLE) {
-		_setCollectionSupply(_campaignId, _collection, _supply);
-	}
-
-	function setNFTCollection(
-		address _nftCollection
-	) external onlyRole(USER_ROLE) {
-		_setNFTCollection(_nftCollection);
+		INFTCollection.CollectionParams calldata _p
+	) external override onlyRole(USER_ROLE) onlyCampaignOwner(_campaignId) {
+		CollectionParams memory p = CollectionParams(
+			_p.name,
+			_p.symbol,
+			_p.uri,
+			_p.supply,
+			_p.price,
+			_p.state
+		);
+		_addCollection(campaigns[_campaignId], p);
 	}
 
 	function recoverCollectionFunds(
 		uint256 _campaignId,
-		address _collectionAddress,
+		address _collection,
 		address _token,
 		address _to
-	) external onlyRole(USER_ROLE) {
-		_recoverCollectionFunds(_campaignId, _collectionAddress, _token, _to);
+	)
+		external
+		onlyRole(USER_ROLE)
+		ifCollectionExists(_campaignId, _collection)
+		onlyCampaignOwner(_campaignId)
+	{
+		_recoverCollectionFunds(_collection, _token, _to);
+	}
+
+	/// =========================
+	/// === Private Functions ===
+	/// =========================
+
+	function _isTokenSupported(address _token) private view returns (bool) {
+		return tokens[_token];
+	}
+
+	function _isCampaign(uint256 _id) private view returns (bool) {
+		return _id == 0 || _id > campaignCount ? false : true;
+	}
+
+	function _isCollection(
+		uint256 _campaignId,
+		address _collection
+	) private view returns (bool) {
+		if (!_isCampaign(_campaignId)) return false;
+
+		Campaign storage campaign = campaigns[_campaignId];
+		for (uint256 i; i < campaign.collections.length; ) {
+			if (campaign.collections[i] == _collection) return true;
+
+			unchecked {
+				++i;
+			}
+		}
+
+		return false;
+	}
+
+	function _checkOnlyCampaignOwner(uint256 _id) private view {
+		if (campaigns[_id].owner != msg.sender) revert UNAUTHORIZED();
+	}
+
+	function _checkIfCampaignExists(uint256 _id) private view {
+		if (!_isCampaign(_id)) revert CAMPAIGN_NOT_FOUND();
+	}
+
+	function _checkIfCollectionExists(
+		uint256 _campaignId,
+		address _collection
+	) private view {
+		if (!_isCollection(_campaignId, _collection)) revert COLLECTION_NOT_FOUND();
 	}
 }

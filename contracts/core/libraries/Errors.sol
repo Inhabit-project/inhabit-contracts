@@ -13,18 +13,25 @@ contract Errors {
 	error INSUFFICIENT_SUPPLY();
 	error INVALID_ADDRESS();
 	error INVALID_AMOUNT();
+	error INVALID_REFERRAL();
 	error INVALID_INDEX();
 	error INVALID_PRICE();
 	error INVALID_SUPPLY();
+	error INVALID_AMBASSADORS();
+	error REFERRAL_ALREADY_EXISTS();
+	error REFERRAL_NOT_FOUND();
+	error TOKEN_NOT_SUPPORTED();
 	error MISMATCHED_LENGTH();
 	error NOT_APPROVED();
 	error NOT_INITIALIZED();
 	error NOT_NFT_OWNER();
+	error SAME_ADDRESS();
 	error SAME_STATE();
 	error TOKEN_ALREADY_EXISTS();
 	error TOKEN_NOT_FOUND();
 	error UNAUTHORIZED();
 	error ZERO_ADDRESS();
+	error CAMPAIGN_NOT_FOUND();
 
 	/**
 	 * @dev Validates that a string is not empty
@@ -42,8 +49,8 @@ contract Errors {
 	 * @notice Reverts if address is zero (0x0)
 	 * @notice Used throughout contract for input validation
 	 */
-	function _isZeroAddress(address _address) internal pure {
-		if (_address == address(0)) revert ZERO_ADDRESS();
+	function _isZeroAddress(address _address) internal pure returns (bool) {
+		return _address == address(0) ? false : true;
 	}
 
 	/// ======================
