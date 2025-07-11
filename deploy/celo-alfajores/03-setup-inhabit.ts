@@ -8,7 +8,7 @@ import {
 	CELO_ALFAJORES_USDC_ADDRESS,
 	LUCA_ADDRESS,
 	SALVIEGA_ADDRESS
-} from '@/config/constants'
+} from '@/config/const'
 
 const setupContracts: DeployFunction = async function (
 	hre: HardhatRuntimeEnvironment
@@ -30,29 +30,29 @@ const setupContracts: DeployFunction = async function (
 		account: deployer as Address
 	}
 
-	log('----------------------------------------------------')
-	log('Setting up NFT collection clone...')
+	// log('----------------------------------------------------')
+	// log('Setting up NFT collection clone...')
 
-	const setNftCollectionTx = await inhabit.write.setNFTCollection(
-		[nftCollectionAddress],
-		{
-			account: deployer,
-			gasOption
-		}
-	)
+	// const setNftCollectionTx = await inhabit.write.setNFTCollection(
+	// 	[nftCollectionAddress],
+	// 	{
+	// 		account: deployer,
+	// 		gasOption
+	// 	}
+	// )
 
-	await publicClient.waitForTransactionReceipt({
-		hash: setNftCollectionTx
-	})
+	// await publicClient.waitForTransactionReceipt({
+	// 	hash: setNftCollectionTx
+	// })
 
-	log(`NFT collection set. tx hash: ${setNftCollectionTx}`)
+	// log(`NFT collection set. tx hash: ${setNftCollectionTx}`)
 
 	log('----------------------------------------------------')
 	log('Addding tokens...')
 
 	// Add USDC token
-	const tx2AddToken = await inhabit.write.addToTokens(
-		[[CELO_ALFAJORES_USDC_ADDRESS]],
+	const tx2AddToken = await inhabit.write.addToToken(
+		[CELO_ALFAJORES_USDC_ADDRESS],
 		{
 			account: deployer,
 			gasOption
@@ -66,8 +66,8 @@ const setupContracts: DeployFunction = async function (
 	log(`USDC token added. tx hash: ${tx2AddToken}`)
 
 	// Add USDT token
-	const addToTokensTx2 = await inhabit.write.addToTokens(
-		[[CELO_ALFAJORES_MOCK_NATIVE_USDT_ADDRESS]],
+	const addToTokensTx2 = await inhabit.write.addToToken(
+		[CELO_ALFAJORES_MOCK_NATIVE_USDT_ADDRESS],
 		{
 			account: deployer,
 			gasOption

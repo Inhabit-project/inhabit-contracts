@@ -1,7 +1,7 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { DeployFunction } from 'hardhat-deploy/types'
 
-import { developmentChains, networkConfig } from '@/config/constants'
+import { developmentChains, networkConfig } from '@/config/const'
 import { verify } from '@/utils/verify'
 
 const deployMockErc20: DeployFunction = async function (

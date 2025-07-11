@@ -1,7 +1,7 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { DeployFunction } from 'hardhat-deploy/types'
 
-import { developmentChains, TREASURY_ADDRESS } from '@/config/constants'
+import { developmentChains, TREASURY_ADDRESS } from '@/config/const'
 import {
 	getImplementationAddress,
 	getProxyAdmin
@@ -20,10 +20,13 @@ const deployInhabit: DeployFunction = async function (
 	log('----------------------------------------------------')
 	log('Deploying Inhabit and waiting for confirmations...')
 
+	const { address: NFTCollectionAddress } =
+		await deployments.get('NFTCollection')
+
 	const defaultAdmin = deployer
 	const treasury = TREASURY_ADDRESS
 
-	const args = [defaultAdmin, treasury]
+	const args = [defaultAdmin, NFTCollectionAddress, treasury]
 
 	const Inhabit = await ethers.getContractFactory('Inhabit')
 
