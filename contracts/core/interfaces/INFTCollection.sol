@@ -23,7 +23,7 @@ interface INFTCollection is IERC721 {
 	 * @param price Price per token in wei
 	 * @param state Initial active/inactive state of the collection
 	 */
-	struct CollectionParams {
+	struct NFTCollectionParams {
 		uint256 campaignId;
 		uint256 collectionId;
 		string name;
@@ -34,7 +34,7 @@ interface INFTCollection is IERC721 {
 		bool state;
 	}
 
-	struct CollectionInfo {
+	struct NFTCollectionInfo {
 		uint256 campaignId;
 		uint256 collectionId;
 		address collectionAddress;
@@ -92,7 +92,7 @@ interface INFTCollection is IERC721 {
 	 * @notice This function can only be called once during proxy initialization
 	 * @notice Sets up the ERC721 name, symbol, and collection-specific parameters
 	 */
-	function initialize(CollectionParams calldata _params) external;
+	function initialize(NFTCollectionParams calldata _params) external;
 
 	/// =========================
 	/// ======= Getters =========
@@ -160,7 +160,7 @@ interface INFTCollection is IERC721 {
 	/// ===== View Functions ====
 	/// =========================
 
-	function getCollectionInfo() external view returns (CollectionInfo memory);
+	function getCollectionInfo() external view returns (NFTCollectionInfo memory);
 
 	// the following functions are overrides required by BaseStrategy
 

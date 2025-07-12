@@ -96,16 +96,9 @@ abstract contract Collections is ICollections, Errors {
 		if (_goal == 0) revert INVALID_GOAL();
 		if (_collectionsParams.length == 0) revert EMPTY_ARRAY();
 
-		Campaign memory campaign = Campaign({
-			owner: _owner,
-			id: _campaignId,
-			goal: _goal,
-			fundsRaised: 0,
-			state: true,
-			collections: new address[](0)
-		});
+		address[] memory collections = new address[](_collectionsParams.length);
 
-		for (uint256 i; i < _collectionsParams.length; ) {
+		for (uint256 i; i < _collectionsParams.length; ++i) {
 			CollectionParams memory params = _collectionsParams[i];
 			if (params.supply == 0) revert INVALID_SUPPLY();
 			if (params.price == 0) revert INVALID_PRICE();
@@ -117,8 +110,9 @@ abstract contract Collections is ICollections, Errors {
 			);
 
 			collectionCount++;
-			INFTCollection.CollectionParams memory initParams = INFTCollection
-				.CollectionParams({
+
+			INFTCollection.NFTCollectionParams memory init = INFTCollection
+				.NFTCollectionParams({
 					campaignId: _campaignId,
 					collectionId: collectionCount,
 					name: params.name,
@@ -129,15 +123,14 @@ abstract contract Collections is ICollections, Errors {
 					state: params.state
 				});
 
-			INFTCollection(newCollection).initialize(initParams);
-
-			campaign.collections[i] = newCollection;
+			INFTCollection(newCollection).initialize(init);
+			collections[i] = newCollection;
 
 			emit CollectionCreated(
 				_owner,
 				_campaignId,
 				collectionCount,
-				address(newCollection),
+				newCollection,
 				params.name,
 				params.symbol,
 				params.uri,
@@ -145,19 +138,16 @@ abstract contract Collections is ICollections, Errors {
 				params.price,
 				params.state
 			);
-
-			unchecked {
-				++i;
-			}
 		}
 
-		emit CampaignCreated(
-			campaign.owner,
-			campaign.id,
-			campaign.goal,
-			campaign.state,
-			campaign.collections
-		);
+		Campaign memory campaign = Campaign({
+			owner: _owner,
+			id: _campaignId,
+			goal: _goal,
+			fundsRaised: 0,
+			state: true,
+			collections: collections
+		});
 
 		return campaign;
 	}
@@ -176,8 +166,8 @@ abstract contract Collections is ICollections, Errors {
 		);
 
 		collectionCount++;
-		INFTCollection.CollectionParams memory initParams = INFTCollection
-			.CollectionParams({
+		INFTCollection.NFTCollectionParams memory initParams = INFTCollection
+			.NFTCollectionParams({
 				campaignId: _campaign.id,
 				collectionId: collectionCount,
 				name: _params.name,
@@ -210,7 +200,7 @@ abstract contract Collections is ICollections, Errors {
 
 	function _getCollectionInfo(
 		address _collection
-	) internal view returns (INFTCollection.CollectionInfo memory) {
+	) internal view returns (INFTCollection.NFTCollectionInfo memory) {
 		return INFTCollection(_collection).getCollectionInfo();
 	}
 

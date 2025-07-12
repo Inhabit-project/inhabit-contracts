@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
+import {ICollections} from './ICollections.sol';
 import {INFTCollection} from './INFTCollection.sol';
 import {ICollections} from './ICollections.sol';
 
@@ -15,7 +16,7 @@ interface IInhabit {
 		uint256 goal;
 		uint256 fundsRaised;
 		bool state;
-		INFTCollection.CollectionInfo[] collectionsInfo;
+		INFTCollection.NFTCollectionInfo[] collectionsInfo;
 	}
 
 	/// =========================
@@ -95,7 +96,7 @@ interface IInhabit {
 	function getCollectionInfo(
 		uint256 _campaignId,
 		address _collection
-	) external view returns (INFTCollection.CollectionInfo memory);
+	) external view returns (INFTCollection.NFTCollectionInfo memory);
 
 	function getActiveBalance(
 		uint256 _campaignId,
@@ -105,12 +106,12 @@ interface IInhabit {
 
 	function createCampaign(
 		uint256 _goal,
-		INFTCollection.CollectionParams[] calldata _collectionsParams
+		ICollections.CollectionParams[] calldata _collectionsParams
 	) external;
 
 	function addCollection(
 		uint256 _campaignId,
-		INFTCollection.CollectionParams calldata _params
+		INFTCollection.NFTCollectionParams calldata _params
 	) external;
 
 	function setCampaignOwner(uint256 _campaignId, address _newOwner) external;

@@ -286,7 +286,7 @@ contract Inhabit is
 		external
 		view
 		ifCollectionExists(_campaignId, _collection)
-		returns (INFTCollection.CollectionInfo memory)
+		returns (INFTCollection.NFTCollectionInfo memory)
 	{
 		return _getCollectionInfo(_collection);
 	}
@@ -309,8 +309,8 @@ contract Inhabit is
 	) public view ifCampaignExists(_campaignId) returns (CampaignInfo memory) {
 		Campaign storage campaign = campaigns[_campaignId];
 
-		INFTCollection.CollectionInfo[]
-			memory collectionsInfo = new INFTCollection.CollectionInfo[](
+		INFTCollection.NFTCollectionInfo[]
+			memory collectionsInfo = new INFTCollection.NFTCollectionInfo[](
 				campaign.collections.length
 			);
 
@@ -358,7 +358,7 @@ contract Inhabit is
 	) external nonReentrant ifCollectionExists(_campaignId, _collection) {
 		if (!_isTokenSupported(_paymentToken)) revert TOKEN_NOT_SUPPORTED();
 
-		INFTCollection.CollectionInfo memory nftCollection = _getCollectionInfo(
+		INFTCollection.NFTCollectionInfo memory nftCollection = _getCollectionInfo(
 			_collection
 		);
 
@@ -426,33 +426,29 @@ contract Inhabit is
 
 	function createCampaign(
 		uint256 _goal,
-		INFTCollection.CollectionParams[] calldata _in
+		CollectionParams[] calldata _collectionsParams
 	) external override onlyRole(USER_ROLE) {
-		uint256 len = _in.length;
-		CollectionParams[] memory tmp = new CollectionParams[](len);
-		for (uint256 i; i < len; ++i) {
-			tmp[i] = CollectionParams(
-				_in[i].name,
-				_in[i].symbol,
-				_in[i].uri,
-				_in[i].supply,
-				_in[i].price,
-				_in[i].state
-			);
-		}
-
-		Campaign memory c = _createCampaign(
+		Campaign memory campaign = _createCampaign(
 			msg.sender,
 			++campaignCount,
 			_goal,
-			tmp
+			_collectionsParams
 		);
-		campaigns[c.id] = c;
+
+		campaigns[campaign.id] = campaign;
+
+		emit CampaignCreated(
+			campaign.owner,
+			campaign.id,
+			campaign.goal,
+			campaign.state,
+			campaign.collections
+		);
 	}
 
 	function addCollection(
 		uint256 _campaignId,
-		INFTCollection.CollectionParams calldata _p
+		INFTCollection.NFTCollectionParams calldata _p
 	) external override onlyRole(USER_ROLE) onlyCampaignOwner(_campaignId) {
 		CollectionParams memory p = CollectionParams(
 			_p.name,

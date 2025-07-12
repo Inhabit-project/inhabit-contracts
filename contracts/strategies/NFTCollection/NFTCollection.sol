@@ -39,7 +39,7 @@ contract NFTCollection is
 	/// ====== Initializer ======
 	/// =========================
 
-	function initialize(CollectionParams calldata _params) public initializer {
+	function initialize(NFTCollectionParams calldata _params) public initializer {
 		__ERC721_init(_params.name, _params.symbol);
 		__ERC721URIStorage_init();
 		__ERC721Burnable_init();
@@ -140,9 +140,13 @@ contract NFTCollection is
 	/// ===== View Functions =====
 	/// ==========================
 
-	function getCollectionInfo() external view returns (CollectionInfo memory) {
+	function getCollectionInfo()
+		external
+		view
+		returns (NFTCollectionInfo memory)
+	{
 		return
-			CollectionInfo({
+			NFTCollectionInfo({
 				campaignId: getCampaignId(),
 				collectionId: getCollectionId(),
 				collectionAddress: address(this),

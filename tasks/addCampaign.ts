@@ -31,9 +31,6 @@ task('addCampaign', 'Adds a new campaign to the Inhabit contract').setAction(
 			console.log('----------------------------------------------------')
 			console.log('Adding campaign NFT collection...')
 
-			const nftCollectionAddress = await inhabit.read.nftCollection()
-			console.log('NFTCollection address', nftCollectionAddress)
-
 			const txHash = await inhabit.write.createCampaign(
 				[GOAL, nftCollections],
 				{
