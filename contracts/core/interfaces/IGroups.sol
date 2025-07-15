@@ -16,9 +16,10 @@ interface IGroups {
 	}
 
 	struct Group {
+		uint256 id;
 		bytes32 referral;
-		Ambassador[] ambassadors;
 		bool state;
+		Ambassador[] ambassadors;
 	}
 
 	struct GroupParams {
@@ -31,11 +32,9 @@ interface IGroups {
 	/// ======== Events =========
 	/// =========================
 
-	event TokenAdded(address token);
-	event TokenRemoved(address token);
-
 	event GroupCreated(
 		uint256 indexed campaignId,
+		uint256 indexed groupId,
 		bytes32 referral,
 		bool state,
 		Ambassador[] ambassadors
@@ -56,13 +55,15 @@ interface IGroups {
 	event AmbassadorSet(
 		uint256 indexed campaignId,
 		uint256 indexed groupId,
-		Ambassador ambassador
+		address ambassador,
+		uint256 fee
 	);
 
 	event AmbassadorAdded(
 		uint256 indexed campaignId,
 		uint256 indexed groupId,
-		Ambassador ambassador
+		address ambassador,
+		uint256 fee
 	);
 
 	event AmbassadorRemoved(
@@ -73,26 +74,20 @@ interface IGroups {
 
 	event Distributed(address indexed embassador, uint256 amount);
 
-	event CampaignReferralSet(
-		uint256 indexed campaignId,
-		bytes32 indexed referral,
-		bool isReferral
-	);
+	/// =========================
+	/// ======= Getters =========
+	/// =========================
+
+	function getGroupCount() external view returns (uint256);
+
+	function getGroup(
+		uint256 _campaignId,
+		bytes32 _referral
+	) external view returns (Group memory);
 
 	/// =========================
 	/// ===== View Functions ====
 	/// =========================
-
-	function getGroup(uint256 _id) external view returns (Group memory);
-
-	function getGroups() external view returns (Group[] memory);
-
-	function isReferralSupported(bytes32 _referral) external view returns (bool);
-
-	function isCampaignReferralSupported(
-		uint256 _campaignId,
-		bytes32 _referral
-	) external view returns (bool);
 
 	function calculateFee(
 		uint256 _amount,
@@ -104,6 +99,4 @@ interface IGroups {
 	) external pure returns (bytes32);
 
 	function activeBalance(address _token) external view returns (uint256);
-
-	function getGroupCount() external view returns (uint256);
 }

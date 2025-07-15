@@ -30,6 +30,7 @@ contract Inhabit is
 	bytes32 public constant USER_ROLE = keccak256('USER_ROLE');
 	address private treasury;
 	uint256 private campaignCount;
+
 	mapping(address => bool) private tokens;
 	mapping(uint256 id => Campaign) private campaigns;
 
@@ -165,51 +166,43 @@ contract Inhabit is
 
 	// the following setters of Groups
 
-	function setCampaignReferral(
+	function setGroupReferral(
 		uint256 _campaignId,
 		bytes32 _referral
 	) external onlyRole(ADMIN_ROLE) ifCampaignExists(_campaignId) {
-		_setCampaignReferral(_campaignId, _referral);
-	}
-
-	function setGroupReferral(
-		uint256 _campaignId,
-		uint256 _groupId,
-		string calldata _referral
-	) external onlyRole(ADMIN_ROLE) ifCampaignExists(_campaignId) {
-		_setGroupReferral(_campaignId, _groupId, _referral);
+		_setGroupReferral(_campaignId, _referral);
 	}
 
 	function setGroupStatus(
 		uint256 _campaignId,
-		uint256 _groupId,
+		bytes32 _referral,
 		bool _status
 	) external onlyRole(ADMIN_ROLE) ifCampaignExists(_campaignId) {
-		_setGroupStatus(_campaignId, _groupId, _status);
+		_setGroupStatus(_campaignId, _referral, _status);
 	}
 
 	function setAmbassadors(
 		uint256 _campaignId,
-		uint256 _groupId,
+		bytes32 _referral,
 		Ambassador[] calldata _ambassadors
 	) external onlyRole(ADMIN_ROLE) ifCampaignExists(_campaignId) {
-		_setAmbassadors(_campaignId, _groupId, _ambassadors);
+		_setAmbassadors(_campaignId, _referral, _ambassadors);
 	}
 
 	function addAmbassadors(
 		uint256 _campaignId,
-		uint256 _groupId,
+		bytes32 _referral,
 		Ambassador[] calldata _ambassadors
 	) external onlyRole(ADMIN_ROLE) ifCampaignExists(_campaignId) {
-		_addAmbassadors(_campaignId, _groupId, _ambassadors);
+		_addAmbassadors(_campaignId, _referral, _ambassadors);
 	}
 
 	function removeAmbassadors(
 		uint256 _campaignId,
-		uint256 _groupId,
+		bytes32 _referral,
 		Ambassador[] calldata _ambassadors
 	) external onlyRole(ADMIN_ROLE) ifCampaignExists(_campaignId) {
-		_removeAmbassadors(_campaignId, _groupId, _ambassadors);
+		_removeAmbassadors(_campaignId, _referral, _ambassadors);
 	}
 
 	// the following setters of Collections
@@ -353,7 +346,7 @@ contract Inhabit is
 	function buyNFT(
 		uint256 _campaignId,
 		address _collection,
-		uint256 _groupId,
+		bytes32 _referral,
 		address _paymentToken
 	) external nonReentrant ifCollectionExists(_campaignId, _collection) {
 		if (!_isTokenSupported(_paymentToken)) revert TOKEN_NOT_SUPPORTED();
@@ -384,7 +377,7 @@ contract Inhabit is
 
 		uint256 referralFee = _distribution(
 			_campaignId,
-			_groupId,
+			_referral,
 			_paymentToken,
 			nftCollection.price
 		);

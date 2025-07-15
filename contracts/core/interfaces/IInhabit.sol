@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
+import {IGroups} from './IGroups.sol';
 import {ICollections} from './ICollections.sol';
 import {INFTCollection} from './INFTCollection.sol';
-import {ICollections} from './ICollections.sol';
 
 interface IInhabit {
 	/// =========================
@@ -22,6 +22,10 @@ interface IInhabit {
 	/// =========================
 	/// ======== Events =========
 	/// =========================
+
+	event TokenAdded(address token);
+
+	event TokenRemoved(address token);
 
 	event NFTPurchased(
 		uint256 indexed campaignId,
@@ -69,7 +73,7 @@ interface IInhabit {
 	);
 
 	/// =========================
-	/// ====== External Functions ======
+	/// ======= Getters =========
 	/// =========================
 
 	function getTreasury() external view returns (address);
@@ -85,38 +89,56 @@ interface IInhabit {
 		view
 		returns (ICollections.Campaign[] memory);
 
-	function getCampaignInfo(
-		uint256 _campaignId
-	) external view returns (CampaignInfo memory);
-
-	function getCampaignsInfo() external view returns (CampaignInfo[] memory);
-
 	function isTokenSupported(address _token) external view returns (bool);
 
-	function getCollectionInfo(
-		uint256 _campaignId,
-		address _collection
-	) external view returns (INFTCollection.NFTCollectionInfo memory);
+	/// =========================
+	/// ======= Setters =========
+	/// =========================
 
-	function getActiveBalance(
-		uint256 _campaignId,
-		address _collection,
-		address _token
-	) external view returns (uint256);
+	function setTreasury(address _newTreasury) external;
 
-	function createCampaign(
-		uint256 _goal,
-		ICollections.CollectionParams[] calldata _collectionsParams
-	) external;
+	function addToToken(address _token) external;
 
-	function addCollection(
-		uint256 _campaignId,
-		INFTCollection.NFTCollectionParams calldata _params
-	) external;
+	function removeFromTokens(address _token) external;
 
 	function setCampaignOwner(uint256 _campaignId, address _newOwner) external;
 
 	function setCampaignStatus(uint256 _campaignId, bool _status) external;
+
+	// the following setters of Groups
+
+	function setGroupReferral(uint256 _campaignId, bytes32 _referral) external;
+
+	function setGroupStatus(
+		uint256 _campaignId,
+		bytes32 _referral,
+		bool _status
+	) external;
+
+	function setAmbassadors(
+		uint256 _campaignId,
+		bytes32 _referral,
+		IGroups.Ambassador[] calldata _ambassadors
+	) external;
+
+	function addAmbassadors(
+		uint256 _campaignId,
+		bytes32 _referral,
+		IGroups.Ambassador[] calldata _ambassadors
+	) external;
+
+	function removeAmbassadors(
+		uint256 _campaignId,
+		bytes32 _referral,
+		IGroups.Ambassador[] calldata _ambassadors
+	) external;
+
+	// the following setters of Collections
+
+	function setNFTCollection(
+		uint256 _campaignId,
+		address _nftCollection
+	) external;
 
 	function setCollectionSupply(
 		uint256 _campaignId,
@@ -142,14 +164,58 @@ interface IInhabit {
 		string calldata _baseURI
 	) external;
 
+	/// ==========================
+	/// ===== View Functions =====
+	/// ==========================
+
+	function getCollectionInfo(
+		uint256 _campaignId,
+		address _collection
+	) external view returns (INFTCollection.NFTCollectionInfo memory);
+
+	function getActiveBalance(
+		uint256 _campaignId,
+		address _collection,
+		address _token
+	) external view returns (uint256);
+
+	function getCampaignInfo(
+		uint256 _campaignId
+	) external view returns (CampaignInfo memory);
+
+	function getCampaignsInfo() external view returns (CampaignInfo[] memory);
+
+	/// =================================
+	/// == External / Public Functions ==
+	/// =================================
+
 	function buyNFT(
 		uint256 _campaignId,
 		address _collection,
-		uint256 _groupId,
+		bytes32 _referral,
 		address _paymentToken
 	) external;
 
+	/// @notice Group functions
+
+	function createGroup(
+		uint256 _campaignId,
+		IGroups.GroupParams calldata _params
+	) external;
+
 	function recoverFunds(address _token, address _to) external;
+
+	/// @notice Collection functions
+
+	function createCampaign(
+		uint256 _goal,
+		ICollections.CollectionParams[] calldata _collectionsParams
+	) external;
+
+	function addCollection(
+		uint256 _campaignId,
+		INFTCollection.NFTCollectionParams calldata _params
+	) external;
 
 	function recoverCollectionFunds(
 		uint256 _campaignId,

@@ -24,29 +24,15 @@ abstract contract Groups is Transfer, Errors, IGroups {
 
 	uint256 private groupCount;
 
-	mapping(bytes32 referral => bool) private referrals;
-
-	mapping(uint256 groupId => Group) private groups;
-
-	mapping(uint256 campaignId => mapping(bytes32 referral => bool))
-		internal campaignReferrals;
+	mapping(uint256 campaignId => mapping(bytes32 referral => Group))
+		private campaignGroups;
 
 	/// =========================
 	/// ====== Modifiers ========
 	/// =========================
 
-	modifier ifGroupExists(uint256 _groupId) {
-		_checkIfGroupExists(_groupId);
-		_;
-	}
-
 	modifier ifAreValidAmbassadors(Ambassador[] memory _ambassadors) {
 		_checkAreValidAmbassadors(_ambassadors);
-		_;
-	}
-
-	modifier ifIsValidReferral(string calldata _referral) {
-		_checkIfIsValidReferral(_referral);
 		_;
 	}
 
@@ -64,86 +50,46 @@ abstract contract Groups is Transfer, Errors, IGroups {
 		return groupCount;
 	}
 
-	function getGroup(uint256 _id) external view returns (Group memory) {
-		return groups[_id];
-	}
-
-	function getGroups() external view returns (Group[] memory groupList) {
-		groupList = new Group[](groupCount);
-		for (uint256 i = 1; i <= groupCount; ) {
-			groupList[i - 1] = groups[i];
-
-			unchecked {
-				++i;
-			}
-		}
-
-		return groupList;
-	}
-
-	function isReferralSupported(bytes32 _referral) public view returns (bool) {
-		return referrals[_referral];
-	}
-
-	function isCampaignReferralSupported(
+	function getGroup(
 		uint256 _campaignId,
 		bytes32 _referral
-	) public view returns (bool) {
-		return campaignReferrals[_campaignId][_referral];
+	) external view returns (Group memory) {
+		Group storage group = campaignGroups[_campaignId][_referral];
+		return group;
 	}
 
 	/// =========================
 	/// ======= Setters =========
 	/// =========================
 
-	function _setCampaignReferral(
-		uint256 _campaignId,
-		bytes32 _referral
-	) internal {
-		bool status = campaignReferrals[_campaignId][_referral];
-		campaignReferrals[_campaignId][_referral] = !status;
+	function _setGroupReferral(uint256 _campaignId, bytes32 _referral) internal {
+		Group storage group = campaignGroups[_campaignId][_referral];
+		if (group.id == 0) revert GROUP_NOT_FOUND();
 
-		emit CampaignReferralSet(_campaignId, _referral, !status);
-	}
-
-	function _setGroupReferral(
-		uint256 _campaignId,
-		uint256 _groupId,
-		string calldata _referral
-	) internal ifGroupExists(_groupId) ifIsValidReferral(_referral) {
-		Group storage group = groups[_groupId];
-		bytes32 referralEncrypted = _encryptReferral(_referral);
-		if (group.referral == referralEncrypted) revert INVALID_REFERRAL();
-
-		referrals[group.referral] = false;
-		campaignReferrals[_campaignId][group.referral] = false;
-
-		group.referral = referralEncrypted;
-
-		referrals[group.referral] = true;
-		campaignReferrals[_campaignId][group.referral] = true;
-
-		emit GroupReferralSet(_campaignId, _groupId, referralEncrypted);
+		group.referral = _referral;
+		emit GroupReferralSet(_campaignId, group.id, _referral);
 	}
 
 	function _setGroupStatus(
 		uint256 _campaignId,
-		uint256 _groupId,
+		bytes32 _referral,
 		bool _status
-	) internal ifGroupExists(_groupId) {
-		Group storage group = groups[_groupId];
-		if (group.state == _status) revert SAME_STATE();
+	) internal {
+		Group storage group = campaignGroups[_campaignId][_referral];
+		if (group.id == 0) revert GROUP_NOT_FOUND();
 
 		group.state = _status;
-		emit GroupStatusSet(_campaignId, _groupId, _status);
+		emit GroupStatusSet(_campaignId, group.id, _status);
 	}
 
 	function _setAmbassadors(
 		uint256 _campaignId,
-		uint256 _groupId,
+		bytes32 _referral,
 		Ambassador[] calldata _ambassadors
-	) internal ifGroupExists(_groupId) ifAreValidAmbassadors(_ambassadors) {
-		Group storage group = groups[_groupId];
+	) internal ifAreValidAmbassadors(_ambassadors) {
+		Group storage group = campaignGroups[_campaignId][_referral];
+		if (group.id == 0) revert GROUP_NOT_FOUND();
+
 		for (uint256 i; i < _ambassadors.length; ) {
 			bool found = false;
 			for (uint256 j; j < group.ambassadors.length; ) {
@@ -159,20 +105,23 @@ abstract contract Groups is Transfer, Errors, IGroups {
 			}
 
 			if (!found) revert AMBASSADOR_NOT_FOUND();
-			emit AmbassadorSet(_campaignId, _groupId, _ambassadors[i]);
-
-			unchecked {
-				++i;
-			}
+			emit AmbassadorSet(
+				_campaignId,
+				group.id,
+				_ambassadors[i].account,
+				_ambassadors[i].fee
+			);
 		}
 	}
 
 	function _addAmbassadors(
 		uint256 _campaignId,
-		uint256 _groupId,
+		bytes32 _referral,
 		Ambassador[] calldata _ambassadors
-	) internal ifGroupExists(_groupId) ifAreValidAmbassadors(_ambassadors) {
-		Group storage group = groups[_groupId];
+	) internal ifAreValidAmbassadors(_ambassadors) {
+		Group storage group = campaignGroups[_campaignId][_referral];
+		if (group.id == 0) revert GROUP_NOT_FOUND();
+
 		for (uint256 i; i < _ambassadors.length; ) {
 			bool found = false;
 			for (uint256 j; j < group.ambassadors.length; ) {
@@ -189,7 +138,12 @@ abstract contract Groups is Transfer, Errors, IGroups {
 			if (found) revert AMBASSADOR_ALREADY_EXISTS();
 
 			group.ambassadors.push(_ambassadors[i]);
-			emit AmbassadorAdded(_campaignId, _groupId, _ambassadors[i]);
+			emit AmbassadorAdded(
+				_campaignId,
+				group.id,
+				_ambassadors[i].account,
+				_ambassadors[i].fee
+			);
 
 			unchecked {
 				++i;
@@ -199,10 +153,12 @@ abstract contract Groups is Transfer, Errors, IGroups {
 
 	function _removeAmbassadors(
 		uint256 _campaignId,
-		uint256 _groupId,
+		bytes32 _referral,
 		Ambassador[] calldata _ambassadors
-	) internal ifGroupExists(_groupId) ifAreValidAmbassadors(_ambassadors) {
-		Group storage group = groups[_groupId];
+	) internal ifAreValidAmbassadors(_ambassadors) {
+		Group storage group = campaignGroups[_campaignId][_referral];
+		if (group.id == 0) revert GROUP_NOT_FOUND();
+
 		for (uint256 i; i < _ambassadors.length; ) {
 			bool found = false;
 			for (uint256 j; j < group.ambassadors.length; ) {
@@ -221,7 +177,7 @@ abstract contract Groups is Transfer, Errors, IGroups {
 			}
 
 			if (!found) revert AMBASSADOR_NOT_FOUND();
-			emit AmbassadorRemoved(_campaignId, _groupId, _ambassadors[i].account);
+			emit AmbassadorRemoved(_campaignId, group.id, _ambassadors[i].account);
 
 			unchecked {
 				++i;
@@ -260,14 +216,12 @@ abstract contract Groups is Transfer, Errors, IGroups {
 	function _createGroup(
 		uint256 _campaignId,
 		GroupParams calldata _params
-	)
-		internal
-		ifIsValidReferral(_params.referral)
-		ifAreValidAmbassadors(_params.ambassadors)
-	{
+	) internal ifAreValidAmbassadors(_params.ambassadors) {
 		bytes32 referralEncrypted = _encryptReferral(_params.referral);
+		if (referralEncrypted == bytes32(0)) revert INVALID_REFERRAL();
 
-		Group storage newGroup = groups[++groupCount];
+		Group storage newGroup = campaignGroups[_campaignId][referralEncrypted];
+		newGroup.id = ++groupCount;
 		newGroup.referral = referralEncrypted;
 		newGroup.state = _params.state;
 
@@ -275,11 +229,9 @@ abstract contract Groups is Transfer, Errors, IGroups {
 			newGroup.ambassadors.push(_params.ambassadors[i]);
 		}
 
-		referrals[referralEncrypted] = true;
-		campaignReferrals[_campaignId][referralEncrypted] = true;
-
 		emit GroupCreated(
 			_campaignId,
+			newGroup.id,
 			newGroup.referral,
 			newGroup.state,
 			newGroup.ambassadors
@@ -288,16 +240,15 @@ abstract contract Groups is Transfer, Errors, IGroups {
 
 	function _distribution(
 		uint256 _campaignId,
-		uint256 _groupId,
+		bytes32 _referral,
 		address _token,
 		uint256 _amount
 	) internal returns (uint256) {
-		if (!_isGroup(_groupId)) return 0;
-
-		Group memory group = groups[_groupId];
-		if (!_isCampaignReferralSupported(_campaignId, group.referral)) return 0;
-		if (group.ambassadors.length == 0) return 0;
+		Group storage group = campaignGroups[_campaignId][_referral];
+		if (group.id == 0) return 0;
 		if (group.state == false) return 0;
+		if (group.ambassadors.length == 0) return 0;
+
 		if (_amount == 0) return 0;
 
 		uint256 totalFee = 0;
@@ -340,21 +291,6 @@ abstract contract Groups is Transfer, Errors, IGroups {
 		return keccak256(abi.encodePacked(_referral));
 	}
 
-	function _isReferralSupported(bytes32 _referral) private view returns (bool) {
-		return referrals[_referral];
-	}
-
-	function _isCampaignReferralSupported(
-		uint256 _campaignId,
-		bytes32 _referral
-	) private view returns (bool) {
-		return campaignReferrals[_campaignId][_referral];
-	}
-
-	function _isGroup(uint256 _id) private view returns (bool) {
-		return _id > 0 && _id <= groupCount ? true : false;
-	}
-
 	function _areAmbassadors(
 		Ambassador[] memory _ambassadors
 	) private pure returns (bool) {
@@ -373,27 +309,9 @@ abstract contract Groups is Transfer, Errors, IGroups {
 		return totalFee > 10000 ? false : true;
 	}
 
-	function _ifIsValidReferral(
-		string calldata _referral
-	) internal view returns (bool) {
-		bytes32 referralEncrypted = _encryptReferral(_referral);
-		if (referralEncrypted == bytes32(0)) return false;
-		if (_isReferralSupported(referralEncrypted)) return false;
-
-		return true;
-	}
-
-	function _checkIfGroupExists(uint256 _groupId) private view {
-		if (!_isGroup(_groupId)) revert GROUP_NOT_FOUND();
-	}
-
 	function _checkAreValidAmbassadors(
 		Ambassador[] memory _ambassadors
 	) private pure {
-		if (_areAmbassadors(_ambassadors) == false) revert INVALID_AMBASSADORS();
-	}
-
-	function _checkIfIsValidReferral(string calldata _referral) private view {
-		if (!_ifIsValidReferral(_referral)) revert INVALID_REFERRAL();
+		if (!_areAmbassadors(_ambassadors)) revert INVALID_AMBASSADORS();
 	}
 }

@@ -19,9 +19,6 @@ const setupContracts: DeployFunction = async function (
 
 	const publicClient = await viem.getPublicClient()
 
-	const { address: nftCollectionAddress } =
-		await deployments.get('NFTCollection')
-
 	const { address: inhabitAddress } = await deployments.get('Inhabit')
 
 	const inhabit = await viem.getContractAt('Inhabit', inhabitAddress as Address)
@@ -29,23 +26,6 @@ const setupContracts: DeployFunction = async function (
 	const gasOption = {
 		account: deployer as Address
 	}
-
-	// log('----------------------------------------------------')
-	// log('Setting up NFT collection clone...')
-
-	// const setNftCollectionTx = await inhabit.write.setNFTCollection(
-	// 	[nftCollectionAddress],
-	// 	{
-	// 		account: deployer,
-	// 		gasOption
-	// 	}
-	// )
-
-	// await publicClient.waitForTransactionReceipt({
-	// 	hash: setNftCollectionTx
-	// })
-
-	// log(`NFT collection set. tx hash: ${setNftCollectionTx}`)
 
 	log('----------------------------------------------------')
 	log('Addding tokens...')
