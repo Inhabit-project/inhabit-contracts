@@ -1,5 +1,111 @@
 {
-	"name": "TITí",
-	"description": "Seed Dispersers of the Corridor\nTiti monkeys (White-headed Tamarins) are small, playful beings that support the health of the forest by controlling pests and dispersing seeds throughout the Corridor.\nTitis evoke the first level of stewardship in the Indigenous Kogui tradition, where children care for \"animals\".",
-	"image": "https://black-fast-chipmunk-543.mypinata.cloud/ipfs/bafybeig5vaz7ycto5lbabkcpd4ekj656dcrwoa7wfx77xy4uiuwiynj6na"
+	"name": "INHABIT Ñuiyanzhi TITI",
+	"symbol": "TITI",
+	"description": "Seed Dispersers of the Corridor\nTiti monkeys (White-headed Tamarins) are small, playful beings that support the health of the forest by controlling pests and dispersing seeds throughout the Corridor. Titis evoke the first level of stewardship in the Indigenous Kogui tradition, where children care for 'animals'.",
+	"image": "ipfs://bafybeibendwijlnunkx7mpsgre2kquvtlt5tnfk7eeydqegyi4hpmrbxai",
+	"rights": [
+		{
+			"type": "LAND RIGHT",
+			"details": [
+				{
+					"title": "Life-long Membership & Stewardship",
+					"description": "You gain lifelong stewardship and utility rights over a tokenized real-world land.",
+					"minimum_fundraise": true,
+					"full_fundraise": true
+				},
+				{
+					"title": "Legal Protector of the land",
+					"description": "You become part of the legal system of guarantee that recognizes Nature as a subject with rights on a specific land related to this membership, in line with the Declaration of the Rights of Nature and Biocultural principles.",
+					"minimum_fundraise": true,
+					"full_fundraise": true
+				}
+			]
+		},
+		{
+			"type": "GOVERNANCE RIGHT",
+			"details": [
+				{
+					"title": "Inhabit DAO access",
+					"description": "You receive governance rights over specific matters as a land guarantor. You have a say in decisions regarding unexpected changes in land use, shifts in Hub management, or any unforeseen events that could alter the relationship between stakeholders and the land or threaten the Rights of Nature.",
+					"minimum_fundraise": true,
+					"full_fundraise": true
+				}
+			]
+		},
+		{
+			"type": "ART RIGHT",
+			"details": [
+				{
+					"title": "Badge of legal protector via exclusive ArtWork by Jeisson Castillo",
+					"description": "Each ArtPiece represents a Migratory Floating Garden from the HUB’s ecosystem, featuring a native species vital to that habitat and tied to levels of care in Kogui ancestral thinking. The unique Art Badge symbolizes your legal stewardship connection to a specific piece of land, which you can use to travel and activate the corridor.",
+					"minimum_fundraise": true,
+					"full_fundraise": true
+				}
+			]
+		},
+		{
+			"type": "MONITORING RIGHT",
+			"details": [
+				{
+					"title": "Impact Monitoring access",
+					"description": "Track the progress of the land you help protect through real-time data mapping and geolocation narratives. Follow the transformation of the land into a bio-cultural hub. You receive regular real-time data and impact reports, geolocation, visual mapping, and key performance indicators (KPIs) detailing progress in areas like tree planting, biodiversity increase, and local community impact.",
+					"minimum_fundraise": true,
+					"full_fundraise": true
+				}
+			]
+		},
+		{
+			"type": "UTILITY RIGHTS",
+			"details": [
+				{
+					"title": "Free accommodation",
+					"minimum_fundraise": false,
+					"full_fundraise": false
+				},
+				{
+					"title": "Free meals",
+					"minimum_fundraise": false,
+					"full_fundraise": false
+				},
+				{
+					"title": "Accommodation discount",
+					"minimum_fundraise": "10%",
+					"full_fundraise": "20%"
+				},
+				{
+					"title": "Meal discount",
+					"minimum_fundraise": "10%",
+					"full_fundraise": "20%"
+				},
+				{
+					"title": "Discounted workshops",
+					"minimum_fundraise": false,
+					"full_fundraise": false
+				}
+			]
+		},
+		{
+			"type": "EDUCATION RIGHT",
+			"details": [
+				{
+					"title": "Access to educational contents",
+					"description": "About inhabiting knowledge and techniques",
+					"minimum_fundraise": false,
+					"full_fundraise": "Basic level contents"
+				}
+			]
+		},
+		{
+			"type": "ASSET RIGHT",
+			"details": [
+				{
+					"title": "Future NFT upgrades",
+					"description": "As early backer, you are entitled to receive future versions of the NFT for free, which will include additional rights and benefits as the project evolves in the NFT 2.0 (conditional on development).",
+					"minimum_fundraise": false,
+					"full_fundraise": false
+				}
+			]
+		}
+	],
+	"membership_contract": "ipfs://bafybeibjohqfidczzoooyipqrhx5gpxwd5njo6y333hbqpncu6cba5frq4"
 }
