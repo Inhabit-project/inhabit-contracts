@@ -8,26 +8,18 @@ import './tasks'
 
 import dotenv from 'dotenv'
 import { HardhatUserConfig, SolcUserConfig } from 'hardhat/types'
+import { celo, celoAlfajores } from 'viem/chains'
 
 import { ensureEnvVar } from './utils/ensure-env-var'
 
-// Load environment variables
-
+// 1.) Load environment variables
 dotenv.config({ path: `./.env.${process.env.NODE_ENV}`, override: true })
 dotenv.config()
 
-const {
-	COINMARKETCAP_API_KEY,
-	SCAN_API_KEY,
-	GAS_REPORT,
-	RPC_HTTPS,
-	WALLET_PRIVATE_KEY
-} = process.env
+const { COINMARKETCAP_API_KEY, SCAN_API_KEY, GAS_REPORT, WALLET_PRIVATE_KEY } =
+	process.env
 
-// Ensure environment variables
-
-const url = ensureEnvVar(RPC_HTTPS, 'CELO_RPC_URL')
-
+// 2.) Ensure environment variables
 const apiKey = ensureEnvVar(SCAN_API_KEY, 'CELOSCAN_API_KEY')
 
 const coinmarketcap = ensureEnvVar(
@@ -39,12 +31,10 @@ const enabled = GAS_REPORT === 'true' ? true : false
 
 const walletPrivateKey = ensureEnvVar(WALLET_PRIVATE_KEY, 'PRIVATE_KEY')
 
-// Set up accounts
-
+// 3.) Set up accounts
 const accounts: string[] = [walletPrivateKey]
 
-// Set up Solidity compiler
-
+// 4.) Set up Solidity compiler
 const solcUserConfig = (version: string): SolcUserConfig => {
 	return {
 		version,
@@ -71,15 +61,15 @@ const config: HardhatUserConfig = {
 		},
 
 		celo: {
-			chainId: 42220,
+			chainId: celo.id,
 			accounts,
-			url
+			url: celo.rpcUrls.default.http[0]
 		},
 
 		celoAlfajores: {
-			chainId: 44787,
+			chainId: celoAlfajores.id,
 			accounts,
-			url
+			url: celoAlfajores.rpcUrls.default.http[0]
 		}
 	},
 
@@ -113,19 +103,19 @@ const config: HardhatUserConfig = {
 		apiKey,
 		customChains: [
 			{
-				network: 'celo',
-				chainId: 42220,
+				network: celo.name,
+				chainId: celo.id,
 				urls: {
-					apiURL: 'https://api.etherscan.io/v2/api?chainid=42220',
-					browserURL: 'https://celoscan.io'
+					apiURL: `https://api.etherscan.io/v2/api?chainid=${celo.id}`,
+					browserURL: celo.blockExplorers.default.url
 				}
 			},
 			{
-				network: 'celoAlfajores',
-				chainId: 44787,
+				network: celoAlfajores.name,
+				chainId: celoAlfajores.id,
 				urls: {
-					apiURL: 'https://api.etherscan.io/v2/api?chainid=44787',
-					browserURL: 'https://alfajores.celoscan.io'
+					apiURL: `https://api.etherscan.io/v2/api?chainid=${celoAlfajores.id}`,
+					browserURL: celoAlfajores.blockExplorers.default.url
 				}
 			}
 		]

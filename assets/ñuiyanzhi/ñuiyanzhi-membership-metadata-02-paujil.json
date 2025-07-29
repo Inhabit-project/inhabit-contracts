@@ -1,8 +1,8 @@
 {
-	"name": "INHABIT Ñuiyanzhi JAGUAR",
-	"symbol": "JAGUAR",
-	"description": "Wisdom Keepers of the Corridor\nJaguars (Panthera onca) are guardians of knowledge, fire, and balance. As top predators and umbrella species of the Sierra Nevada, they regulate flora and fauna—channeling ancestral wisdom through the biocultural Corridor. Jaguars evoke the fourth level of care or stewardship, where wise elders care for 'stones' and 'knowledge'.",
-	"image": "ipfs://bafybeiardqjnm6sgnixnw4wjlhbr4qgekd6zbdwe3idfp2fskg32buiqky",
+	"name": "INHABIT Ñuiyanzhi PAUJIL",
+	"symbol": "PAUJIL",
+	"description": "Flying Architects of the Corridor\nPaujíles (Blue-billed Curassows) are vibrant birds, architects of the forest, shaping its underbrush by spreading seeds and maintaining the equilibrium of small reptiles. Paujíles evoke the second level of stewardship in the Indigenous Kogui tradition, where young adolescents care for 'plants'.",
+	"image": "ipfs://bafkreihucqs5f3sqnezzhg6msvrpkucr2xyegngzhorqnoyekwc5faxyaq",
 	"rights": [
 		{
 			"type": "LAND RIGHT",
@@ -59,28 +59,28 @@
 			"details": [
 				{
 					"title": "Free accommodation",
-					"minimum_fundraise": "3 days",
-					"full_fundraise": "4 days"
+					"minimum_fundraise": "1 day",
+					"full_fundraise": "1 day"
 				},
 				{
 					"title": "Free meals",
-					"minimum_fundraise": "3 days",
-					"full_fundraise": "4 days"
+					"minimum_fundraise": false,
+					"full_fundraise": false
 				},
 				{
 					"title": "Accommodation discount",
-					"minimum_fundraise": "30%",
-					"full_fundraise": "35%"
+					"minimum_fundraise": "20%",
+					"full_fundraise": "30%"
 				},
 				{
 					"title": "Meal discount",
-					"minimum_fundraise": "30%",
-					"full_fundraise": "35%"
+					"minimum_fundraise": "20%",
+					"full_fundraise": "30%"
 				},
 				{
 					"title": "Discounted workshops",
-					"minimum_fundraise": "2 workshops + 1 personalized workshop",
-					"full_fundraise": "2 workshops + 2 personalized workshops"
+					"minimum_fundraise": "1 workshop",
+					"full_fundraise": "1 workshop"
 				}
 			]
 		},
@@ -91,7 +91,7 @@
 					"title": "Access to educational contents",
 					"description": "About inhabiting knowledge and techniques",
 					"minimum_fundraise": false,
-					"full_fundraise": "Full contents"
+					"full_fundraise": "Basic level contents"
 				}
 			]
 		},
@@ -101,11 +101,11 @@
 				{
 					"title": "Future NFT upgrades",
 					"description": "As early backer, you are entitled to receive future versions of the NFT for free, which will include additional rights and benefits as the project evolves in the NFT 2.0 (conditional on development).",
-					"minimum_fundraise": true,
+					"minimum_fundraise": false,
 					"full_fundraise": true
 				}
 			]
 		}
 	],
-	"membership_contract": "ipfs://bafybeigngaxek6i55agq5e74xplqh7fuuec3hxr6gqjfaziap67fzkyd7e"
+	"membership_contract": "ipfs://bafybeieodraibsru2wrrgllx3iao7tlprz3uzrtpkneizp2f6f7e64rgc4"
 }

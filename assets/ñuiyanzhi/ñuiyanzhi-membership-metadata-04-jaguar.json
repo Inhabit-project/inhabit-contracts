@@ -1,8 +1,8 @@
 {
-	"name": "INHABIT Ñuiyanzhi CARACOLI",
-	"symbol": "CARACOLI",
-	"description": "Living Bridges of the Corridor\nCaracolí (Anacardium excelsum) weaves life and water across the Corridor, protecting aquifers and guiding the flow of biodiversity. Its roots and canopy shelter animals and birds, forming vital links between ecosystems. Caracoli evoke the third level of stewardship in the Indigenous Kogui tradition, where adults care for 'people'.",
-	"image": "ipfs://bafybeihcmj56fuvow435n7cwcm6vfx6cdv3gvqt6opa7apre5g24ba66ru",
+	"name": "INHABIT Ñuiyanzhi JAGUAR",
+	"symbol": "JAGUAR",
+	"description": "Wisdom Keepers of the Corridor\nJaguars (Panthera onca) are guardians of knowledge, fire, and balance. As top predators and umbrella species of the Sierra Nevada, they regulate flora and fauna—channeling ancestral wisdom through the biocultural Corridor. Jaguars evoke the fourth level of care or stewardship, where wise elders care for 'stones' and 'knowledge'.",
+	"image": "ipfs://bafkreibmsz23t5d6bxlkqek4cwexdonpi2xqy72skbacqnykjkv55y2xaa",
 	"rights": [
 		{
 			"type": "LAND RIGHT",
@@ -59,28 +59,28 @@
 			"details": [
 				{
 					"title": "Free accommodation",
-					"minimum_fundraise": "2 days",
-					"full_fundraise": "3 days"
+					"minimum_fundraise": "3 days",
+					"full_fundraise": "4 days"
 				},
 				{
 					"title": "Free meals",
-					"minimum_fundraise": false,
-					"full_fundraise": false
+					"minimum_fundraise": "3 days",
+					"full_fundraise": "4 days"
 				},
 				{
 					"title": "Accommodation discount",
-					"minimum_fundraise": "20%",
-					"full_fundraise": "30%"
+					"minimum_fundraise": "30%",
+					"full_fundraise": "35%"
 				},
 				{
 					"title": "Meal discount",
-					"minimum_fundraise": "20%",
-					"full_fundraise": "30%"
+					"minimum_fundraise": "30%",
+					"full_fundraise": "35%"
 				},
 				{
 					"title": "Discounted workshops",
-					"minimum_fundraise": "2 workshops",
-					"full_fundraise": "2 workshops"
+					"minimum_fundraise": "2 workshops + 1 personalized workshop",
+					"full_fundraise": "2 workshops + 2 personalized workshops"
 				}
 			]
 		},
@@ -91,7 +91,7 @@
 					"title": "Access to educational contents",
 					"description": "About inhabiting knowledge and techniques",
 					"minimum_fundraise": false,
-					"full_fundraise": "Medium level contents"
+					"full_fundraise": "Full contents"
 				}
 			]
 		},
@@ -107,5 +107,5 @@
 			]
 		}
 	],
-	"membership_contract": "ipfs://bafybeictdj7xl26v4q64ywo7h6wpv2wo7wjambfwrhc6exxjaq3ofvwgh4"
+	"membership_contract": "ipfs://bafybeifau2xkq3rcvwdb3vtbsnpgyctvafvzmimkotxahwxddxpmnuufyy"
 }

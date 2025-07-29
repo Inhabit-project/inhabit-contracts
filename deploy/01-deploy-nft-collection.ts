@@ -29,4 +29,4 @@ const deployNFTCollection: DeployFunction = async function (
 }
 
 export default deployNFTCollection
-deployNFTCollection.tags = ['celoAlfajores', 'ca-deploy', 'ca-nftCollection']
+deployNFTCollection.tags = ['deploy', 'NFTCollection']

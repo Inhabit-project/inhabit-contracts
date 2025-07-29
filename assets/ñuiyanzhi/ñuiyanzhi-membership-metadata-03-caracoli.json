@@ -1,8 +1,8 @@
 {
-	"name": "INHABIT Ñuiyanzhi TITI",
-	"symbol": "TITI",
-	"description": "Seed Dispersers of the Corridor\nTiti monkeys (White-headed Tamarins) are small, playful beings that support the health of the forest by controlling pests and dispersing seeds throughout the Corridor. Titis evoke the first level of stewardship in the Indigenous Kogui tradition, where children care for 'animals'.",
-	"image": "ipfs://bafybeibendwijlnunkx7mpsgre2kquvtlt5tnfk7eeydqegyi4hpmrbxai",
+	"name": "INHABIT Ñuiyanzhi CARACOLI",
+	"symbol": "CARACOLI",
+	"description": "Living Bridges of the Corridor\nCaracolí (Anacardium excelsum) weaves life and water across the Corridor, protecting aquifers and guiding the flow of biodiversity. Its roots and canopy shelter animals and birds, forming vital links between ecosystems. Caracoli evoke the third level of stewardship in the Indigenous Kogui tradition, where adults care for 'people'.",
+	"image": "ipfs://bafkreig5kobiasg6qgqj5fj2jkxvqpbxeofswerypx3hxkzh4uqiejuxka",
 	"rights": [
 		{
 			"type": "LAND RIGHT",
@@ -59,8 +59,8 @@
 			"details": [
 				{
 					"title": "Free accommodation",
-					"minimum_fundraise": false,
-					"full_fundraise": false
+					"minimum_fundraise": "2 days",
+					"full_fundraise": "3 days"
 				},
 				{
 					"title": "Free meals",
@@ -69,18 +69,18 @@
 				},
 				{
 					"title": "Accommodation discount",
-					"minimum_fundraise": "10%",
-					"full_fundraise": "20%"
+					"minimum_fundraise": "20%",
+					"full_fundraise": "30%"
 				},
 				{
 					"title": "Meal discount",
-					"minimum_fundraise": "10%",
-					"full_fundraise": "20%"
+					"minimum_fundraise": "20%",
+					"full_fundraise": "30%"
 				},
 				{
 					"title": "Discounted workshops",
-					"minimum_fundraise": false,
-					"full_fundraise": false
+					"minimum_fundraise": "2 workshops",
+					"full_fundraise": "2 workshops"
 				}
 			]
 		},
@@ -91,7 +91,7 @@
 					"title": "Access to educational contents",
 					"description": "About inhabiting knowledge and techniques",
 					"minimum_fundraise": false,
-					"full_fundraise": "Basic level contents"
+					"full_fundraise": "Medium level contents"
 				}
 			]
 		},
@@ -101,11 +101,11 @@
 				{
 					"title": "Future NFT upgrades",
 					"description": "As early backer, you are entitled to receive future versions of the NFT for free, which will include additional rights and benefits as the project evolves in the NFT 2.0 (conditional on development).",
-					"minimum_fundraise": false,
-					"full_fundraise": false
+					"minimum_fundraise": true,
+					"full_fundraise": true
 				}
 			]
 		}
 	],
-	"membership_contract": "ipfs://bafybeibjohqfidczzoooyipqrhx5gpxwd5njo6y333hbqpncu6cba5frq4"
+	"membership_contract": "ipfs://bafybeihd3yepdz5nnlaaf7szcvchmfuaqcgmrwi27enx72v4f52x5ubaz4"
 }

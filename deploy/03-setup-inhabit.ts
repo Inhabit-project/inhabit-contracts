@@ -4,16 +4,16 @@ import { DeployFunction } from 'hardhat-deploy/types'
 import { Address } from 'viem'
 
 import {
-	CELO_ALFAJORES_MOCK_NATIVE_USDT_ADDRESS,
-	CELO_ALFAJORES_USDC_ADDRESS,
 	LUCA_ADDRESS,
-	SALVIEGA_ADDRESS
+	SALVIEGA_ADDRESS,
+	USDC_ADDRESS,
+	USDT_ADDRESS
 } from '@/config/const'
 
 const setupContracts: DeployFunction = async function (
 	hre: HardhatRuntimeEnvironment
 ) {
-	const { getNamedAccounts, deployments } = hre
+	const { getNamedAccounts, deployments, network } = hre
 	const { log } = deployments
 	const { deployer } = await getNamedAccounts()
 
@@ -32,7 +32,7 @@ const setupContracts: DeployFunction = async function (
 
 	// Add USDC token
 	const tx2AddToken = await inhabit.write.addToToken(
-		[CELO_ALFAJORES_USDC_ADDRESS],
+		[USDC_ADDRESS(network.name)],
 		{
 			account: deployer,
 			gasOption
@@ -47,7 +47,7 @@ const setupContracts: DeployFunction = async function (
 
 	// Add USDT token
 	const addToTokensTx2 = await inhabit.write.addToToken(
-		[CELO_ALFAJORES_MOCK_NATIVE_USDT_ADDRESS],
+		[USDT_ADDRESS(network.name)],
 		{
 			account: deployer,
 			gasOption
@@ -117,4 +117,4 @@ const setupContracts: DeployFunction = async function (
 }
 
 export default setupContracts
-setupContracts.tags = ['celoAlfajores', 'ca-setup']
+setupContracts.tags = ['deploy', 'setup']

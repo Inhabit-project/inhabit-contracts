@@ -1,8 +1,8 @@
 {
-	"name": "INHABIT Ñuiyanzhi PAUJIL",
-	"symbol": "PAUJIL",
-	"description": "Flying Architects of the Corridor\nPaujíles (Blue-billed Curassows) are vibrant birds, architects of the forest, shaping its underbrush by spreading seeds and maintaining the equilibrium of small reptiles. Paujíles evoke the second level of stewardship in the Indigenous Kogui tradition, where young adolescents care for 'plants'.",
-	"image": "ipfs://bafybeicugbsd3fbxwaokxscmnr4yx5bazgzyzo4nh36a7zmxnedsqon4pe",
+	"name": "INHABIT Ñuiyanzhi TITI",
+	"symbol": "TITI",
+	"description": "Seed Dispersers of the Corridor\nTiti monkeys (White-headed Tamarins) are small, playful beings that support the health of the forest by controlling pests and dispersing seeds throughout the Corridor. Titis evoke the first level of stewardship in the Indigenous Kogui tradition, where children care for 'animals'.",
+	"image": "ipfs://bafkreiflxvnygkhspyu2quo5p36bh4rdf2bo32mwywekmbjjzkeis46xve",
 	"rights": [
 		{
 			"type": "LAND RIGHT",
@@ -59,8 +59,8 @@
 			"details": [
 				{
 					"title": "Free accommodation",
-					"minimum_fundraise": "1 day",
-					"full_fundraise": "1 day"
+					"minimum_fundraise": false,
+					"full_fundraise": false
 				},
 				{
 					"title": "Free meals",
@@ -69,18 +69,18 @@
 				},
 				{
 					"title": "Accommodation discount",
-					"minimum_fundraise": "20%",
-					"full_fundraise": "30%"
+					"minimum_fundraise": "10%",
+					"full_fundraise": "20%"
 				},
 				{
 					"title": "Meal discount",
-					"minimum_fundraise": "20%",
-					"full_fundraise": "30%"
+					"minimum_fundraise": "10%",
+					"full_fundraise": "20%"
 				},
 				{
 					"title": "Discounted workshops",
-					"minimum_fundraise": "1 workshop",
-					"full_fundraise": "1 workshop"
+					"minimum_fundraise": false,
+					"full_fundraise": false
 				}
 			]
 		},
@@ -102,10 +102,10 @@
 					"title": "Future NFT upgrades",
 					"description": "As early backer, you are entitled to receive future versions of the NFT for free, which will include additional rights and benefits as the project evolves in the NFT 2.0 (conditional on development).",
 					"minimum_fundraise": false,
-					"full_fundraise": true
+					"full_fundraise": false
 				}
 			]
 		}
 	],
-	"membership_contract": "ipfs://bafybeiaqpbirsefrridfjirftiwykxrbnbc645lqpy3y47h3bfbwief2ei"
+	"membership_contract": "ipfs://bafybeib56wtszsa2irzf7ecwepoqrqbfb63ttrqaw5s3psj3ugdp6krwsy"
 }

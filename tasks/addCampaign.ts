@@ -1,11 +1,7 @@
 import { task } from 'hardhat/config'
 import { Address } from 'viem'
 
-import {
-	CELO_ALFAJORES_NFT_COLLECTIONS,
-	CELO_NFT_COLLECTIONS,
-	productionChains
-} from '@/config/const'
+import { NFT_COLLECTIONS } from '@/config/const'
 
 task('addCampaign', 'Adds a new campaign to the Inhabit contract').setAction(
 	async (_, hre) => {
@@ -24,9 +20,7 @@ task('addCampaign', 'Adds a new campaign to the Inhabit contract').setAction(
 
 			const GOAL = 100_000_000_000n // 100,000 USDC
 
-			const nftCollections = productionChains.includes(network.name)
-				? CELO_NFT_COLLECTIONS
-				: CELO_ALFAJORES_NFT_COLLECTIONS
+			const nftCollections = NFT_COLLECTIONS(network.name)
 
 			console.log('----------------------------------------------------')
 			console.log('Adding campaign NFT collection...')

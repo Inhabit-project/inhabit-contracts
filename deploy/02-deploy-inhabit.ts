@@ -24,7 +24,7 @@ const deployInhabit: DeployFunction = async function (
 		await deployments.get('NFTCollection')
 
 	const defaultAdmin = deployer
-	const treasury = TREASURY_ADDRESS
+	const treasury = TREASURY_ADDRESS(network.name)
 
 	const args = [defaultAdmin, NFTCollectionAddress, treasury]
 
@@ -65,4 +65,4 @@ const deployInhabit: DeployFunction = async function (
 }
 
 export default deployInhabit
-deployInhabit.tags = ['celoAlfajores', 'ca-deploy', 'ca-inhabit']
+deployInhabit.tags = ['deploy', 'Inhabit']
