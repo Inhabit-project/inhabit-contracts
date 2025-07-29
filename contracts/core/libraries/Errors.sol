@@ -50,7 +50,7 @@ contract Errors {
 	 * @notice Used throughout contract for input validation
 	 */
 	function _isZeroAddress(address _address) internal pure returns (bool) {
-		return _address == address(0) ? false : true;
+		return _address == address(0);
 	}
 
 	/// ======================
