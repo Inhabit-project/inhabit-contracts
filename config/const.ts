@@ -84,7 +84,7 @@ export const CELO_ALFAJORES_NFT_COLLECTIONS: CollectionParams[] = [
 	{
 		name: 'INHABIT Ñuiyanzhi TITI',
 		symbol: 'TITI',
-		uri: 'ipfs://bafybeiejfgiaw4l6hysgwgos5pvc53hpjrgehydcym7zqphfkpqh4x4v7q/01-titi.json',
+		uri: 'ipfs://bafkreibolg6roout4mkb5wnijrjbd4j4hnayonhj6zm4qln3akdrvroeca',
 		supply: 2483n,
 		price: 1_000_000n,
 		state: true
@@ -92,7 +92,7 @@ export const CELO_ALFAJORES_NFT_COLLECTIONS: CollectionParams[] = [
 	{
 		name: 'INHABIT Ñuiyanzhi PAUJIL',
 		symbol: 'PAUJIL',
-		uri: 'ipfs://bafybeiejfgiaw4l6hysgwgos5pvc53hpjrgehydcym7zqphfkpqh4x4v7q/03-caracoli.json',
+		uri: 'ipfs://bafkreigtdetnyswilnytxmjkzralwj4nzo46lq4su6s3ndbnjfhfstk7be',
 		supply: 124n,
 		price: 2_000_000n,
 		state: true
@@ -100,7 +100,7 @@ export const CELO_ALFAJORES_NFT_COLLECTIONS: CollectionParams[] = [
 	{
 		name: 'INHABIT Ñuiyanzhi CARACOLI',
 		symbol: 'CARACOLI',
-		uri: 'ipfs://bafybeiejfgiaw4l6hysgwgos5pvc53hpjrgehydcym7zqphfkpqh4x4v7q/04-jaguar.json',
+		uri: 'ipfs://bafkreiduq4rtk2rn6oobhiblsen2j7cnehebqvermfiamypv2jnvmoprte',
 		supply: 19n,
 		price: 3_000_000n,
 		state: true
@@ -108,7 +108,7 @@ export const CELO_ALFAJORES_NFT_COLLECTIONS: CollectionParams[] = [
 	{
 		name: 'INHABIT Ñuiyanzhi JAGUAR',
 		symbol: 'JAGUAR',
-		uri: 'ipfs://bafkreiae3gykborfjm565gnxlswd7yaiqn66s4kbntrsjlqaemrgjduhqi',
+		uri: 'ipfs://bafkreiedbb23kdp4xkxoeskzxchdfpd4u7k7kdt62hokdsumumvzikxere',
 		supply: 5n,
 		price: 4_000_000n,
 		state: true
