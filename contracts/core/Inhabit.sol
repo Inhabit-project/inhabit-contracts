@@ -4,11 +4,11 @@ pragma solidity ^0.8.28;
 import {ERC20} from 'solady/src/tokens/ERC20.sol';
 import {ERC721} from 'solady/src/tokens/ERC721.sol';
 import {Initializable} from '@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol';
-import {AccessControlUpgradeable} from '@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol';
 import {ReentrancyGuardUpgradeable} from '@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol';
 
 import {INFTCollection} from './interfaces/INFTCollection.sol';
 import {IInhabit} from '../core/interfaces/IInhabit.sol';
+import {Admin} from './Admin.sol';
 import {Groups} from './Groups.sol';
 import {Collections} from './Collections.sol';
 
@@ -16,8 +16,8 @@ import 'hardhat/console.sol';
 
 contract Inhabit is
 	Initializable,
-	AccessControlUpgradeable,
 	ReentrancyGuardUpgradeable,
+	Admin,
 	Groups,
 	Collections,
 	IInhabit
@@ -26,8 +26,6 @@ contract Inhabit is
 	/// === Storage Variables ===
 	/// =========================
 
-	bytes32 public constant ADMIN_ROLE = keccak256('ADMIN_ROLE');
-	bytes32 public constant USER_ROLE = keccak256('USER_ROLE');
 	address private treasury;
 	uint256 private campaignCount;
 
@@ -68,13 +66,9 @@ contract Inhabit is
 		address _nftCollection,
 		address _treasury
 	) public initializer {
-		__AccessControl_init();
 		__ReentrancyGuard_init();
 
-		_grantRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
-		_grantRole(ADMIN_ROLE, _defaultAdmin);
-		_grantRole(USER_ROLE, _defaultAdmin);
-
+		__Admin_init(_defaultAdmin);
 		__Collections_init(_nftCollection);
 		__Groups_init();
 

@@ -18,7 +18,7 @@ task('addCampaign', 'Adds a new campaign to the Inhabit contract').setAction(
 				inhabitAddress as Address
 			)
 
-			const GOAL = 100_000_000_000n // 100,000 USDC
+			const GOAL = 180_000_000_000n // 180,000 USDC
 
 			const nftCollections = NFT_COLLECTIONS(network.name)
 

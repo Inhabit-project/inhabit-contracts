@@ -62,6 +62,7 @@ abstract contract Groups is Transfer, Errors, IGroups {
 	/// ======= Setters =========
 	/// =========================
 
+	// TODO: Add validation for campaignId and referral
 	function _setGroupReferral(uint256 _campaignId, bytes32 _referral) internal {
 		Group storage group = campaignGroups[_campaignId][_referral];
 		if (group.id == 0) revert GROUP_NOT_FOUND();

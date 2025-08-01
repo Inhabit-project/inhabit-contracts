@@ -24,7 +24,6 @@ export const networkConfig: NetworkConfigInfo = {
 export const NATIVE: Address = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'
 
 // NFT Collections
-
 const CELO_NFT_COLLECTIONS: CollectionParams[] = [
 	{
 		name: 'INHABIT Ñuiyanzhi TITI',
@@ -108,8 +107,9 @@ export const NFT_COLLECTIONS: (chain: string) => CollectionParams[] = (
 	}
 }
 
+// Treasury
 const CELO_TREASURY_ADDRESS: Address =
-	'0xd243438f6d14E2097e96D81e56E08C7D847a67A6'
+	'0xfba00D9F6b1fE0C1BD232A85bfF934A5e1EF0F8b'
 
 const CELO_ALFAJORES_TREASURY_ADDRESS: Address =
 	'0xd243438f6d14E2097e96D81e56E08C7D847a67A6'
@@ -181,4 +181,4 @@ export const SALVIEGA_ADDRESS: Address =
 	'0xd7A4467a26d26d00cB6044CE09eBD69EDAC0564C'
 
 export const LUCA_ADDRESS: Address =
-	'0x7753E5f36f20B14fFb6b6a61319Eb66f63abdb0b'
+	'0xAADd2E2a4904e69a2BC862F5b905d7dEdbF04f3b'
