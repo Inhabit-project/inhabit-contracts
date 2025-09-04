@@ -83,36 +83,35 @@ abstract contract Groups is Transfer, Errors, IGroups {
 		emit GroupStatusSet(_campaignId, group.id, _status);
 	}
 
-	function _setAmbassadors(
+	function _setAmbassador(
 		uint256 _campaignId,
 		bytes32 _referral,
-		Ambassador[] calldata _ambassadors
-	) internal ifAreValidAmbassadors(_ambassadors) {
+		Ambassador calldata _ambassador
+	) internal {
 		Group storage group = campaignGroups[_campaignId][_referral];
 		if (group.id == 0) revert GROUP_NOT_FOUND();
 
-		for (uint256 i; i < _ambassadors.length; ) {
-			bool found = false;
-			for (uint256 j; j < group.ambassadors.length; ) {
-				if (group.ambassadors[j].account == _ambassadors[i].account) {
-					group.ambassadors[j] = _ambassadors[i];
-					found = true;
-					break;
-				}
-
-				unchecked {
-					++j;
-				}
+		bool found = false;
+		for (uint256 i; i < group.ambassadors.length; ) {
+			if (group.ambassadors[i].account == _ambassador.account) {
+				group.ambassadors[i].fee = _ambassador.fee;
+				found = true;
+				break;
 			}
 
-			if (!found) revert AMBASSADOR_NOT_FOUND();
-			emit AmbassadorSet(
-				_campaignId,
-				group.id,
-				_ambassadors[i].account,
-				_ambassadors[i].fee
-			);
+			unchecked {
+				++i;
+			}
 		}
+
+		if (!found) revert AMBASSADOR_NOT_FOUND();
+
+		emit AmbassadorSet(
+			_campaignId,
+			group.id,
+			_ambassador.account,
+			_ambassador.fee
+		);
 	}
 
 	function _addAmbassadors(
@@ -152,38 +151,34 @@ abstract contract Groups is Transfer, Errors, IGroups {
 		}
 	}
 
-	function _removeAmbassadors(
+	function _removeAmbassador(
 		uint256 _campaignId,
 		bytes32 _referral,
-		Ambassador[] calldata _ambassadors
-	) internal ifAreValidAmbassadors(_ambassadors) {
+		address _ambassador
+	) internal {
 		Group storage group = campaignGroups[_campaignId][_referral];
 		if (group.id == 0) revert GROUP_NOT_FOUND();
 
-		for (uint256 i; i < _ambassadors.length; ) {
-			bool found = false;
-			for (uint256 j; j < group.ambassadors.length; ) {
-				if (group.ambassadors[j].account == _ambassadors[i].account) {
-					group.ambassadors[j] = group.ambassadors[
-						group.ambassadors.length - 1
-					];
-					group.ambassadors.pop();
-					found = true;
-					break;
+		bool found = false;
+		for (uint256 i; i < group.ambassadors.length; ) {
+			if (group.ambassadors[i].account == _ambassador) {
+				uint256 lastIndex = group.ambassadors.length - 1;
+				if (i != lastIndex) {
+					group.ambassadors[i] = group.ambassadors[lastIndex];
 				}
-
-				unchecked {
-					++j;
-				}
+				group.ambassadors.pop();
+				found = true;
+				break;
 			}
-
-			if (!found) revert AMBASSADOR_NOT_FOUND();
-			emit AmbassadorRemoved(_campaignId, group.id, _ambassadors[i].account);
 
 			unchecked {
 				++i;
 			}
 		}
+
+		if (!found) revert AMBASSADOR_NOT_FOUND();
+
+		emit AmbassadorRemoved(_campaignId, group.id, _ambassador);
 	}
 
 	/// =========================
@@ -307,7 +302,7 @@ abstract contract Groups is Transfer, Errors, IGroups {
 			}
 		}
 
-		return totalFee > 10000 ? false : true;
+		return totalFee <= 10000;
 	}
 
 	function _checkAreValidAmbassadors(

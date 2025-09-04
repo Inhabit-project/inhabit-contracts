@@ -175,12 +175,12 @@ contract Inhabit is
 		_setGroupStatus(_campaignId, _referral, _status);
 	}
 
-	function setAmbassadors(
+	function setAmbassador(
 		uint256 _campaignId,
 		bytes32 _referral,
-		Ambassador[] calldata _ambassadors
+		Ambassador calldata _ambassador
 	) external onlyRole(ADMIN_ROLE) ifCampaignExists(_campaignId) {
-		_setAmbassadors(_campaignId, _referral, _ambassadors);
+		_setAmbassador(_campaignId, _referral, _ambassador);
 	}
 
 	function addAmbassadors(
@@ -191,12 +191,12 @@ contract Inhabit is
 		_addAmbassadors(_campaignId, _referral, _ambassadors);
 	}
 
-	function removeAmbassadors(
+	function removeAmbassador(
 		uint256 _campaignId,
 		bytes32 _referral,
-		Ambassador[] calldata _ambassadors
+		address _ambassador
 	) external onlyRole(ADMIN_ROLE) ifCampaignExists(_campaignId) {
-		_removeAmbassadors(_campaignId, _referral, _ambassadors);
+		_removeAmbassador(_campaignId, _referral, _ambassador);
 	}
 
 	// the following setters of Collections

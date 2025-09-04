@@ -115,10 +115,10 @@ interface IInhabit {
 		bool _status
 	) external;
 
-	function setAmbassadors(
+	function setAmbassador(
 		uint256 _campaignId,
 		bytes32 _referral,
-		IGroups.Ambassador[] calldata _ambassadors
+		IGroups.Ambassador calldata _ambassador
 	) external;
 
 	function addAmbassadors(
@@ -127,10 +127,10 @@ interface IInhabit {
 		IGroups.Ambassador[] calldata _ambassadors
 	) external;
 
-	function removeAmbassadors(
+	function removeAmbassador(
 		uint256 _campaignId,
 		bytes32 _referral,
-		IGroups.Ambassador[] calldata _ambassadors
+		address _ambassador
 	) external;
 
 	// the following setters of Collections
