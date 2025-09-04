@@ -6,15 +6,13 @@ import {ERC721} from 'solady/src/tokens/ERC721.sol';
 import {Initializable} from '@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol';
 import {ReentrancyGuardUpgradeable} from '@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol';
 
-import {INFTCollection} from './interfaces/INFTCollection.sol';
-import {IInhabit} from '../core/interfaces/IInhabit.sol';
-import {Admin} from './Admin.sol';
-import {Groups} from './Groups.sol';
-import {Collections} from './Collections.sol';
+import {INFTCollection} from '../interfaces/INFTCollection.sol';
+import {IInhabit} from '../interfaces/IInhabit.sol';
+import {Admin} from '../Admin.sol';
+import {Groups} from '../Groups.sol';
+import {Collections} from '../Collections.sol';
 
-import 'hardhat/console.sol';
-
-contract Inhabit is
+contract MockInhabit is
 	Initializable,
 	ReentrancyGuardUpgradeable,
 	Admin,

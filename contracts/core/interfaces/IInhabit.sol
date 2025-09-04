@@ -190,6 +190,7 @@ interface IInhabit {
 	/// =================================
 
 	function buyNFT(
+		address _to,
 		uint256 _campaignId,
 		address _collection,
 		bytes32 _referral,
