@@ -346,49 +346,41 @@ contract Inhabit is
 	) external nonReentrant ifCollectionExists(_campaignId, _collection) {
 		if (!_isTokenSupported(_paymentToken)) revert TOKEN_NOT_SUPPORTED();
 
-		INFTCollection.NFTCollectionInfo memory nftCollection = _getCollectionInfo(
-			_collection
-		);
-
 		Campaign memory campaign = getCampaign(_campaignId);
 		if (!campaign.state) revert CAMPAIGN_NOT_ACTIVE();
 
-		if (ERC20(_paymentToken).balanceOf(msg.sender) < nftCollection.price)
+		uint256 price = _getAdjustedPrice(_collection, _paymentToken);
+
+		if (ERC20(_paymentToken).balanceOf(msg.sender) < price)
 			revert INSUFFICIENT_FUNDS();
 
-		if (
-			ERC20(_paymentToken).allowance(msg.sender, address(this)) <
-			nftCollection.price
-		) revert INSUFFICIENT_ALLOWANCE();
+		if (ERC20(_paymentToken).allowance(msg.sender, address(this)) < price)
+			revert INSUFFICIENT_ALLOWANCE();
 
 		_transferAmountFrom(
 			_paymentToken,
-			TransferData({
-				from: msg.sender,
-				to: address(this),
-				amount: nftCollection.price
-			})
+			TransferData({from: msg.sender, to: address(this), amount: price})
 		);
 
 		uint256 referralFee = _distribution(
 			_campaignId,
 			_referral,
 			_paymentToken,
-			nftCollection.price
+			price
 		);
 
-		_transferAmount(_paymentToken, treasury, nftCollection.price - referralFee);
+		_transferAmount(_paymentToken, treasury, price - referralFee);
 
 		uint256 tokenId = _safeMint(_collection, _to);
 
-		campaigns[_campaignId].fundsRaised += nftCollection.price;
+		campaigns[_campaignId].fundsRaised += price;
 
 		emit NFTPurchased(
 			_campaignId,
 			_collection,
 			_to,
 			_paymentToken,
-			nftCollection.price,
+			price,
 			tokenId,
 			block.timestamp
 		);
@@ -461,6 +453,44 @@ contract Inhabit is
 		onlyCampaignOwner(_campaignId)
 	{
 		_recoverCollectionFunds(_collection, _token, _to);
+	}
+
+	/// =========================
+	/// === Helper Functions ====
+	/// =========================
+
+	function _getAdjustedPrice(
+		address _collection,
+		address _token
+	) private view returns (uint256) {
+		INFTCollection.NFTCollectionInfo memory info = _getCollectionInfo(
+			_collection
+		);
+
+		uint8 priceDecimals = 6; // estándar interno
+		uint8 tokenDecimals = _getTokenDecimals(_token); // x token decimals
+
+		return _scale(info.price, priceDecimals, tokenDecimals);
+	}
+
+	function _getTokenDecimals(address _token) private view returns (uint8) {
+		try ERC20(_token).decimals() returns (uint8 decimals) {
+			return decimals;
+		} catch {
+			return 18;
+		}
+	}
+
+	function _scale(
+		uint256 _price,
+		uint8 fromDec,
+		uint8 toDec
+	) private pure returns (uint256) {
+		if (fromDec == toDec) return _price;
+		return
+			(fromDec < toDec)
+				? _price * 10 ** (toDec - fromDec)
+				: _price / 10 ** (fromDec - toDec);
 	}
 
 	/// =========================
