@@ -11,6 +11,7 @@ import {IInhabit} from '../interfaces/IInhabit.sol';
 import {Admin} from '../Admin.sol';
 import {Groups} from '../Groups.sol';
 import {Collections} from '../Collections.sol';
+import {PriceFeed} from '../PriceFeed.sol';
 
 contract MockInhabit is
 	Initializable,
@@ -18,6 +19,7 @@ contract MockInhabit is
 	Admin,
 	Groups,
 	Collections,
+	PriceFeed,
 	IInhabit
 {
 	/// =========================
@@ -340,23 +342,24 @@ contract MockInhabit is
 		uint256 _campaignId,
 		address _collection,
 		bytes32 _referral,
-		address _paymentToken
+		address _paymentToken,
+		uint256 _paymentAmount
 	) external nonReentrant ifCollectionExists(_campaignId, _collection) {
-		if (!_isTokenSupported(_paymentToken)) revert TOKEN_NOT_SUPPORTED();
+		if (_isZeroAddress(_to) || _isZeroAddress(_paymentToken))
+			revert INVALID_ADDRESS();
 
-		INFTCollection.NFTCollectionInfo memory nftCollection = _getCollectionInfo(
-			_collection
-		);
+		if (_paymentAmount == 0) revert INVALID_AMOUNT();
 
 		Campaign memory campaign = getCampaign(_campaignId);
 		if (!campaign.state) revert CAMPAIGN_NOT_ACTIVE();
 
-		if (ERC20(_paymentToken).balanceOf(msg.sender) < nftCollection.price)
+		uint256 price = _getPrice(_collection, _paymentToken, _paymentAmount);
+
+		if (ERC20(_paymentToken).balanceOf(msg.sender) < _paymentAmount)
 			revert INSUFFICIENT_FUNDS();
 
 		if (
-			ERC20(_paymentToken).allowance(msg.sender, address(this)) <
-			nftCollection.price
+			ERC20(_paymentToken).allowance(msg.sender, address(this)) < _paymentAmount
 		) revert INSUFFICIENT_ALLOWANCE();
 
 		_transferAmountFrom(
@@ -364,7 +367,7 @@ contract MockInhabit is
 			TransferData({
 				from: msg.sender,
 				to: address(this),
-				amount: nftCollection.price
+				amount: _paymentAmount
 			})
 		);
 
@@ -372,21 +375,21 @@ contract MockInhabit is
 			_campaignId,
 			_referral,
 			_paymentToken,
-			nftCollection.price
+			_paymentAmount
 		);
 
-		_transferAmount(_paymentToken, treasury, nftCollection.price - referralFee);
+		_transferAmount(_paymentToken, treasury, _paymentAmount - referralFee);
 
 		uint256 tokenId = _safeMint(_collection, _to);
 
-		campaigns[_campaignId].fundsRaised += nftCollection.price;
+		campaigns[_campaignId].fundsRaised += price;
 
 		emit NFTPurchased(
 			_campaignId,
 			_collection,
 			_to,
 			_paymentToken,
-			nftCollection.price,
+			_paymentAmount,
 			tokenId,
 			block.timestamp
 		);
@@ -437,6 +440,7 @@ contract MockInhabit is
 		INFTCollection.NFTCollectionParams calldata _p
 	) external override onlyRole(USER_ROLE) onlyCampaignOwner(_campaignId) {
 		CollectionParams memory p = CollectionParams(
+			_p.paymentToken,
 			_p.name,
 			_p.symbol,
 			_p.uri,
@@ -459,6 +463,41 @@ contract MockInhabit is
 		onlyCampaignOwner(_campaignId)
 	{
 		_recoverCollectionFunds(_collection, _token, _to);
+	}
+
+	/// =========================
+	/// === Helper Functions ====
+	/// =========================
+
+	function _getPrice(
+		address _collection,
+		address _paymentToken,
+		uint256 _paymentAmount
+	) private view returns (uint256) {
+		INFTCollection.NFTCollectionInfo memory info = _getCollectionInfo(
+			_collection
+		);
+
+		if (tokens[_paymentToken]) {
+			if (_paymentAmount < info.price)
+				revert INSUFFICIENT_USD_VALUE(_paymentToken, _paymentAmount);
+			else return info.price;
+		}
+
+		uint256 paymentAmountInUsd = PriceFeed.getPriceInUSD(
+			_paymentToken,
+			_paymentAmount
+		);
+
+		uint256 collectionTokenPriceInUsd = PriceFeed.getPriceInUSD(
+			info.paymentToken,
+			info.price
+		);
+
+		if (paymentAmountInUsd < collectionTokenPriceInUsd)
+			revert INSUFFICIENT_USD_VALUE(_paymentToken, _paymentAmount);
+
+		return info.price;
 	}
 
 	/// =========================

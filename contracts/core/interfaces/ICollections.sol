@@ -9,6 +9,7 @@ interface ICollections {
 	/// =========================
 
 	struct CollectionParams {
+		address paymentToken;
 		string name;
 		string symbol;
 		string uri;

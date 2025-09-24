@@ -115,6 +115,7 @@ abstract contract Collections is ICollections, Errors {
 				.NFTCollectionParams({
 					campaignId: _campaignId,
 					collectionId: collectionCount,
+					paymentToken: params.paymentToken,
 					name: params.name,
 					symbol: params.symbol,
 					uri: params.uri,
@@ -170,6 +171,7 @@ abstract contract Collections is ICollections, Errors {
 			.NFTCollectionParams({
 				campaignId: _campaign.id,
 				collectionId: collectionCount,
+				paymentToken: _params.paymentToken,
 				name: _params.name,
 				symbol: _params.symbol,
 				uri: _params.uri,

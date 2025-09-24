@@ -14,6 +14,7 @@ contract Errors {
 	error INSUFFICIENT_USD_VALUE(address paymentToken, uint256 paymentAmount);
 	error INVALID_ADDRESS();
 	error INVALID_AMOUNT();
+	error INVALID_AGGREGATOR();
 	error INVALID_USD_VALUE();
 	error INVALID_REFERRAL();
 	error INVALID_INDEX();

@@ -10,18 +10,14 @@ import {ERC20} from '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 // local
 /// interfaces
 import {IPriceFeed} from './interfaces/IPriceFeed.sol';
+import {Errors} from './libraries/Errors.sol';
 
-contract PriceFeed is IPriceFeed {
-	/// =========================
-	/// ========= Errors ========
-	/// =========================
-
-	error INVALID_AGGREGATOR();
-	error INVALID_AMOUNT();
-
+contract PriceFeed is IPriceFeed, Errors {
 	/// =========================
 	/// === Storage Variables ===
 	/// =========================
+
+	address private usdToken;
 
 	mapping(address token => AggregatorV3Interface aggregator)
 		private aggregators;
@@ -42,6 +38,10 @@ contract PriceFeed is IPriceFeed {
 		return aggregators[_aggregator];
 	}
 
+	function getUsdToken() public view returns (address) {
+		return usdToken;
+	}
+
 	/// =========================
 	/// ======= Setters =========
 	/// =========================
@@ -51,6 +51,38 @@ contract PriceFeed is IPriceFeed {
 		AggregatorV3Interface _aggregator
 	) external {
 		aggregators[_token] = _aggregator;
+	}
+
+	function setUsdToken(address _usdToken) external {
+		if (_usdToken == usdToken || _usdToken == address(0))
+			revert INVALID_ADDRESS();
+
+		usdToken = _usdToken;
+	}
+
+	/// =========================
+	/// === Public Functions ====
+	/// =========================
+
+	function calculateTokenAmount(
+		address _paymentToken,
+		uint256 _price
+	) external view returns (uint256 amountInToken) {
+		uint256 amountInUsd = getPriceInUSD(usdToken, _price);
+
+		uint8 tokenDecimals = ERC20(_paymentToken).decimals();
+
+		uint256 usdPerPaymentToken = getPriceInUSD(
+			_paymentToken,
+			10 ** tokenDecimals
+		);
+
+		if (usdPerPaymentToken == 0) revert INVALID_AMOUNT();
+
+		amountInToken = _divCeil(
+			amountInUsd * (10 ** tokenDecimals),
+			usdPerPaymentToken
+		);
 	}
 
 	/// =========================
@@ -75,6 +107,10 @@ contract PriceFeed is IPriceFeed {
 	/// =========================
 	/// === Private Functions ===
 	/// =========================
+
+	function _divCeil(uint256 a, uint256 b) private pure returns (uint256) {
+		return (a + b - 1) / b;
+	}
 
 	function _getLatestPrice(
 		AggregatorV3Interface _aggregator

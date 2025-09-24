@@ -442,6 +442,7 @@ contract Inhabit is
 		INFTCollection.NFTCollectionParams calldata _p
 	) external override onlyRole(USER_ROLE) onlyCampaignOwner(_campaignId) {
 		CollectionParams memory p = CollectionParams(
+			_p.paymentToken,
 			_p.name,
 			_p.symbol,
 			_p.uri,
