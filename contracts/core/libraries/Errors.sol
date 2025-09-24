@@ -11,8 +11,10 @@ contract Errors {
 	error INSUFFICIENT_ALLOWANCE();
 	error INSUFFICIENT_FUNDS();
 	error INSUFFICIENT_SUPPLY();
+	error INSUFFICIENT_USD_VALUE(address paymentToken, uint256 paymentAmount);
 	error INVALID_ADDRESS();
 	error INVALID_AMOUNT();
+	error INVALID_USD_VALUE();
 	error INVALID_REFERRAL();
 	error INVALID_INDEX();
 	error INVALID_PRICE();

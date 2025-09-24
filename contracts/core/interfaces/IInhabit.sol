@@ -194,7 +194,8 @@ interface IInhabit {
 		uint256 _campaignId,
 		address _collection,
 		bytes32 _referral,
-		address _paymentToken
+		address _paymentToken,
+		uint256 _paymentAmount
 	) external;
 
 	/// @notice Group functions

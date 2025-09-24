@@ -26,6 +26,7 @@ interface INFTCollection is IERC721 {
 	struct NFTCollectionParams {
 		uint256 campaignId;
 		uint256 collectionId;
+		address paymentToken;
 		string name;
 		string symbol;
 		string uri;
@@ -38,6 +39,7 @@ interface INFTCollection is IERC721 {
 		uint256 campaignId;
 		uint256 collectionId;
 		address collectionAddress;
+		address paymentToken;
 		string name;
 		string symbol;
 		string baseURI;
@@ -50,6 +52,12 @@ interface INFTCollection is IERC721 {
 	/// =========================
 	/// ======== Events =========
 	/// =========================
+
+	/**
+	 * @dev Event emitted when the payment token is updated
+	 * @param newPaymentToken The new payment token
+	 */
+	event PaymentTokenUpdated(address indexed newPaymentToken);
 
 	/**
 	 * @dev Event emitted when the supply limit is updated

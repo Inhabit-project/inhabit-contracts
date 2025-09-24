@@ -11,6 +11,7 @@ import {IInhabit} from '../core/interfaces/IInhabit.sol';
 import {Admin} from './Admin.sol';
 import {Groups} from './Groups.sol';
 import {Collections} from './Collections.sol';
+import {PriceFeed} from './PriceFeed.sol';
 
 import 'hardhat/console.sol';
 
@@ -20,6 +21,7 @@ contract Inhabit is
 	Admin,
 	Groups,
 	Collections,
+	PriceFeed,
 	IInhabit
 {
 	/// =========================
@@ -342,34 +344,43 @@ contract Inhabit is
 		uint256 _campaignId,
 		address _collection,
 		bytes32 _referral,
-		address _paymentToken
+		address _paymentToken,
+		uint256 _paymentAmount
 	) external nonReentrant ifCollectionExists(_campaignId, _collection) {
-		if (!_isTokenSupported(_paymentToken)) revert TOKEN_NOT_SUPPORTED();
+		if (_isZeroAddress(_to) || _isZeroAddress(_paymentToken))
+			revert INVALID_ADDRESS();
+
+		if (_paymentAmount == 0) revert INVALID_AMOUNT();
 
 		Campaign memory campaign = getCampaign(_campaignId);
 		if (!campaign.state) revert CAMPAIGN_NOT_ACTIVE();
 
-		uint256 price = _getAdjustedPrice(_collection, _paymentToken);
+		uint256 price = _getPrice(_collection, _paymentToken, _paymentAmount);
 
-		if (ERC20(_paymentToken).balanceOf(msg.sender) < price)
+		if (ERC20(_paymentToken).balanceOf(msg.sender) < _paymentAmount)
 			revert INSUFFICIENT_FUNDS();
 
-		if (ERC20(_paymentToken).allowance(msg.sender, address(this)) < price)
-			revert INSUFFICIENT_ALLOWANCE();
+		if (
+			ERC20(_paymentToken).allowance(msg.sender, address(this)) < _paymentAmount
+		) revert INSUFFICIENT_ALLOWANCE();
 
 		_transferAmountFrom(
 			_paymentToken,
-			TransferData({from: msg.sender, to: address(this), amount: price})
+			TransferData({
+				from: msg.sender,
+				to: address(this),
+				amount: _paymentAmount
+			})
 		);
 
 		uint256 referralFee = _distribution(
 			_campaignId,
 			_referral,
 			_paymentToken,
-			price
+			_paymentAmount
 		);
 
-		_transferAmount(_paymentToken, treasury, price - referralFee);
+		_transferAmount(_paymentToken, treasury, _paymentAmount - referralFee);
 
 		uint256 tokenId = _safeMint(_collection, _to);
 
@@ -380,7 +391,7 @@ contract Inhabit is
 			_collection,
 			_to,
 			_paymentToken,
-			price,
+			_paymentAmount,
 			tokenId,
 			block.timestamp
 		);
@@ -459,38 +470,35 @@ contract Inhabit is
 	/// === Helper Functions ====
 	/// =========================
 
-	function _getAdjustedPrice(
+	function _getPrice(
 		address _collection,
-		address _token
+		address _paymentToken,
+		uint256 _paymentAmount
 	) private view returns (uint256) {
 		INFTCollection.NFTCollectionInfo memory info = _getCollectionInfo(
 			_collection
 		);
 
-		uint8 priceDecimals = 6; // estándar interno
-		uint8 tokenDecimals = _getTokenDecimals(_token); // x token decimals
-
-		return _scale(info.price, priceDecimals, tokenDecimals);
-	}
-
-	function _getTokenDecimals(address _token) private view returns (uint8) {
-		try ERC20(_token).decimals() returns (uint8 decimals) {
-			return decimals;
-		} catch {
-			return 18;
+		if (tokens[_paymentToken]) {
+			if (_paymentAmount < info.price)
+				revert INSUFFICIENT_USD_VALUE(_paymentToken, _paymentAmount);
+			else return info.price;
 		}
-	}
 
-	function _scale(
-		uint256 _price,
-		uint8 fromDec,
-		uint8 toDec
-	) private pure returns (uint256) {
-		if (fromDec == toDec) return _price;
-		return
-			(fromDec < toDec)
-				? _price * 10 ** (toDec - fromDec)
-				: _price / 10 ** (fromDec - toDec);
+		uint256 paymentAmountInUsd = PriceFeed.getPriceInUSD(
+			_paymentToken,
+			_paymentAmount
+		);
+
+		uint256 collectionTokenPriceInUsd = PriceFeed.getPriceInUSD(
+			info.paymentToken,
+			info.price
+		);
+
+		if (paymentAmountInUsd < collectionTokenPriceInUsd)
+			revert INSUFFICIENT_USD_VALUE(_paymentToken, _paymentAmount);
+
+		return info.price;
 	}
 
 	/// =========================

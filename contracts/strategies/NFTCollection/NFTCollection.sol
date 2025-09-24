@@ -21,6 +21,7 @@ contract NFTCollection is
 	/// === Storage Variables ===
 	/// =========================
 
+	address private paymentToken;
 	uint256 private tokenCount;
 	uint256 private supply;
 	uint256 private price;
@@ -46,6 +47,7 @@ contract NFTCollection is
 
 		__BaseStrategy_init(_params.campaignId, _params.collectionId);
 
+		paymentToken = _params.paymentToken;
 		supply = _params.supply;
 		price = _params.price;
 		state = _params.state;
@@ -55,6 +57,10 @@ contract NFTCollection is
 	/// =========================
 	/// ======= Getters =========
 	/// =========================
+
+	function getPaymentToken() external view returns (address) {
+		return paymentToken;
+	}
 
 	function getTokenCount() external view returns (uint256) {
 		return tokenCount;
@@ -109,6 +115,15 @@ contract NFTCollection is
 	/// ======= Setters =========
 	/// =========================
 
+	function setPaymentToken(address _paymentToken) external onlyInhabit {
+		if (_paymentToken == paymentToken || _paymentToken == address(0))
+			revert INVALID_ADDRESS();
+
+		paymentToken = _paymentToken;
+
+		emit PaymentTokenUpdated(_paymentToken);
+	}
+
 	function setSupply(uint256 _supply) external onlyInhabit {
 		if (_supply < tokenCount) revert INVALID_SUPPLY();
 		supply = _supply;
@@ -150,6 +165,7 @@ contract NFTCollection is
 				campaignId: getCampaignId(),
 				collectionId: getCollectionId(),
 				collectionAddress: address(this),
+				paymentToken: paymentToken,
 				name: name(),
 				symbol: symbol(),
 				tokenCount: tokenCount,

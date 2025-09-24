@@ -20,7 +20,9 @@
 		"test": "NODE_ENV=celoAlfajores hardhat test",
 		"typechain": "hardhat typechain"
 	},
-	"dependencies": {},
+	"dependencies": {
+		"@chainlink/contracts": "^1.4.0"
+	},
 	"devDependencies": {
 		"@eslint/eslintrc": "^3.3.1",
 		"@nomicfoundation/hardhat-chai-matchers": "^2.1.0",
