@@ -73,6 +73,7 @@ contract Inhabit is
 		__Admin_init(_defaultAdmin);
 		__Collections_init(_nftCollection);
 		__Groups_init();
+		__PriceFeed_init();
 
 		treasury = _treasury;
 	}

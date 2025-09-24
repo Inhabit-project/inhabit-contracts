@@ -23,77 +23,6 @@ export const networkConfig: NetworkConfigInfo = {
 
 export const NATIVE: Address = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'
 
-// NFT Collections
-const CELO_NFT_COLLECTIONS: CollectionParams[] = [
-	{
-		name: 'INHABIT Ñuiyanzhi TITI',
-		symbol: 'TITI',
-		uri: 'ipfs://bafkreidij5vgh5kxt3q6wj2kcfijvctqkclpnkkx2rfzxz3ud44ddjqzki',
-		supply: 2483n,
-		price: 50_000_000n,
-		state: true
-	},
-	{
-		name: 'INHABIT Ñuiyanzhi PAUJIL',
-		symbol: 'PAUJIL',
-		uri: 'ipfs://bafkreiclrauiief3ll6sip6jr4vbhsyh4m5iwfopayifjblpek7vudasr4',
-		supply: 124n,
-		price: 500_000_000n,
-		state: true
-	},
-	{
-		name: 'INHABIT Ñuiyanzhi CARACOLI',
-		symbol: 'CARACOLI',
-		uri: 'ipfs://bafkreidrdymjzsmuaxz7it44cqfccivy74vxrxjn3mxm276lx5tuywchcy',
-		supply: 19n,
-		price: 2000_000_000n,
-		state: true
-	},
-	{
-		name: 'INHABIT Ñuiyanzhi JAGUAR',
-		symbol: 'JAGUAR',
-		uri: 'ipfs://bafkreigja4pmvrxiwfba2llgwgv76yjbnkd7sizrcz7kb7qt7vpnzl27lu',
-		supply: 5n,
-		price: 5000_000_000n,
-		state: true
-	}
-]
-
-const CELO_ALFAJORES_NFT_COLLECTIONS: CollectionParams[] = [
-	{
-		name: 'INHABIT Ñuiyanzhi TITI',
-		symbol: 'TITI',
-		uri: 'ipfs://bafkreidij5vgh5kxt3q6wj2kcfijvctqkclpnkkx2rfzxz3ud44ddjqzki',
-		supply: 2483n,
-		price: 1_000_000n,
-		state: true
-	},
-	{
-		name: 'INHABIT Ñuiyanzhi PAUJIL',
-		symbol: 'PAUJIL',
-		uri: 'ipfs://bafkreiclrauiief3ll6sip6jr4vbhsyh4m5iwfopayifjblpek7vudasr4',
-		supply: 124n,
-		price: 2_000_000n,
-		state: true
-	},
-	{
-		name: 'INHABIT Ñuiyanzhi CARACOLI',
-		symbol: 'CARACOLI',
-		uri: 'ipfs://bafkreidrdymjzsmuaxz7it44cqfccivy74vxrxjn3mxm276lx5tuywchcy',
-		supply: 19n,
-		price: 3_000_000n,
-		state: true
-	},
-	{
-		name: 'INHABIT Ñuiyanzhi JAGUAR',
-		symbol: 'JAGUAR',
-		uri: 'ipfs://bafkreigja4pmvrxiwfba2llgwgv76yjbnkd7sizrcz7kb7qt7vpnzl27lu',
-		supply: 5n,
-		price: 4_000_000n,
-		state: true
-	}
-]
-
 export const NFT_COLLECTIONS: (chain: string) => CollectionParams[] = (
 	chain: string
 ) => {
@@ -125,7 +54,64 @@ export const TREASURY_ADDRESS: (chain: string) => Address = (chain: string) => {
 	}
 }
 
-// CUSD
+// Chainlink
+/// Price Feeds
+//// USDC / USD
+const CELO_USDC_USD_ADDRESS: Address =
+	'0xc7A353BaE210aed958a1A2928b654938EC59DaB2'
+
+const CELO_ALFAJORES_USDC_USD_ADDRESS: Address =
+	'0x642Abc0c069dC5041dEA5bFC155D38D844779274'
+
+export const USDC_USD_ADDRESS: (chain: string) => Address = (chain: string) => {
+	switch (chain) {
+		case 'celo':
+			return CELO_USDC_USD_ADDRESS
+		case 'celoAlfajores':
+			return CELO_ALFAJORES_USDC_USD_ADDRESS
+		default:
+			throw new Error(`Unsupported chain: ${chain}`)
+	}
+}
+
+//// CUSD / USD
+const CELO_CUSD_USD_ADDRESS: Address =
+	'0xe38A27BE4E7d866327e09736F3C570F256FFd048'
+
+const CELO_ALFAJORES_CUSD_USD_ADDRESS: Address =
+	'0x8b255b1FB27d4D06bD8899f81095627464868EEE'
+
+export const CUSD_USD_ADDRESS: (chain: string) => Address = (chain: string) => {
+	switch (chain) {
+		case 'celo':
+			return CELO_CUSD_USD_ADDRESS
+		case 'celoAlfajores':
+			return CELO_ALFAJORES_CUSD_USD_ADDRESS
+		default:
+			throw new Error(`Unsupported chain: ${chain}`)
+	}
+}
+
+//// CCOP / USD
+const CELO_CCOP_USD_ADDRESS: Address =
+	'0x97b770B0200CCe161907a9cbe0C6B177679f8F7C'
+
+const CELO_ALFAJORES_CCOP_USD_ADDRESS: Address =
+	'0xe49Ef087247030CF9C4035DBaA55f5c7659c9334'
+
+export const CCOP_USD_ADDRESS: (chain: string) => Address = (chain: string) => {
+	switch (chain) {
+		case 'celo':
+			return CELO_CCOP_USD_ADDRESS
+		case 'celoAlfajores':
+			return CELO_ALFAJORES_CCOP_USD_ADDRESS
+		default:
+			throw new Error(`Unsupported chain: ${chain}`)
+	}
+}
+
+// COINS
+/// CUSD
 const CELO_CUSD_ADDRESS: Address = '0x765DE816845861e75A25fCA122bb6898B8B1282a' // 18 decimals
 
 const CELO_ALFAJORES_CUSD_ADDRESS: Address =
@@ -142,7 +128,7 @@ export const CUSD_ADDRESS: (chain: string) => Address = (chain: string) => {
 	}
 }
 
-// USDC
+/// USDC
 const CELO_USDC_ADDRESS: Address = '0xef4229c8c3250C675F21BCefa42f58EfbfF6002a' // 6 decimals
 
 const CELO_ALFAJORES_USDC_ADDRESS: Address =
@@ -176,9 +162,105 @@ export const USDT_ADDRESS: (chain: string) => Address = (chain: string) => {
 	}
 }
 
+/// CCOP
+const CELO_CCOP_ADDRESS: Address = '0x8A567e2aE79CA692Bd748aB832081C45de4041eA'
+
+const CELO_ALFAJORES_CCOP_ADDRESS: Address =
+	'0xe6A57340f0df6E020c1c0a80bC6E13048601f0d4'
+
+export const CCOP_ADDRESS: (chain: string) => Address = (chain: string) => {
+	switch (chain) {
+		case 'celo':
+			return CELO_CCOP_ADDRESS
+		case 'celoAlfajores':
+			return CELO_ALFAJORES_CCOP_ADDRESS
+		default:
+			throw new Error(`Unsupported chain: ${chain}`)
+	}
+}
+
 // Admins and Users
 export const SALVIEGA_ADDRESS: Address =
 	'0xd7A4467a26d26d00cB6044CE09eBD69EDAC0564C'
 
 export const LUCA_ADDRESS: Address =
 	'0xAADd2E2a4904e69a2BC862F5b905d7dEdbF04f3b'
+
+// NFT Collections
+const CELO_NFT_COLLECTIONS: CollectionParams[] = [
+	{
+		paymentToken: USDC_ADDRESS('celo'),
+		name: 'INHABIT Ñuiyanzhi TITI',
+		symbol: 'TITI',
+		uri: 'ipfs://bafkreidij5vgh5kxt3q6wj2kcfijvctqkclpnkkx2rfzxz3ud44ddjqzki',
+		supply: 2483n,
+		price: 50_000_000n,
+		state: true
+	},
+	{
+		paymentToken: USDC_ADDRESS('celo'),
+		name: 'INHABIT Ñuiyanzhi PAUJIL',
+		symbol: 'PAUJIL',
+		uri: 'ipfs://bafkreiclrauiief3ll6sip6jr4vbhsyh4m5iwfopayifjblpek7vudasr4',
+		supply: 124n,
+		price: 500_000_000n,
+		state: true
+	},
+	{
+		paymentToken: USDC_ADDRESS('celo'),
+		name: 'INHABIT Ñuiyanzhi CARACOLI',
+		symbol: 'CARACOLI',
+		uri: 'ipfs://bafkreidrdymjzsmuaxz7it44cqfccivy74vxrxjn3mxm276lx5tuywchcy',
+		supply: 19n,
+		price: 2000_000_000n,
+		state: true
+	},
+	{
+		paymentToken: USDC_ADDRESS('celo'),
+		name: 'INHABIT Ñuiyanzhi JAGUAR',
+		symbol: 'JAGUAR',
+		uri: 'ipfs://bafkreigja4pmvrxiwfba2llgwgv76yjbnkd7sizrcz7kb7qt7vpnzl27lu',
+		supply: 5n,
+		price: 5000_000_000n,
+		state: true
+	}
+]
+
+const CELO_ALFAJORES_NFT_COLLECTIONS: CollectionParams[] = [
+	{
+		paymentToken: USDC_ADDRESS('celoAlfajores'),
+		name: 'INHABIT Ñuiyanzhi TITI',
+		symbol: 'TITI',
+		uri: 'ipfs://bafkreidij5vgh5kxt3q6wj2kcfijvctqkclpnkkx2rfzxz3ud44ddjqzki',
+		supply: 2483n,
+		price: 1_000_000n,
+		state: true
+	},
+	{
+		paymentToken: USDC_ADDRESS('celoAlfajores'),
+		name: 'INHABIT Ñuiyanzhi PAUJIL',
+		symbol: 'PAUJIL',
+		uri: 'ipfs://bafkreiclrauiief3ll6sip6jr4vbhsyh4m5iwfopayifjblpek7vudasr4',
+		supply: 124n,
+		price: 2_000_000n,
+		state: true
+	},
+	{
+		paymentToken: USDC_ADDRESS('celoAlfajores'),
+		name: 'INHABIT Ñuiyanzhi CARACOLI',
+		symbol: 'CARACOLI',
+		uri: 'ipfs://bafkreidrdymjzsmuaxz7it44cqfccivy74vxrxjn3mxm276lx5tuywchcy',
+		supply: 19n,
+		price: 3_000_000n,
+		state: true
+	},
+	{
+		paymentToken: USDC_ADDRESS('celoAlfajores'),
+		name: 'INHABIT Ñuiyanzhi JAGUAR',
+		symbol: 'JAGUAR',
+		uri: 'ipfs://bafkreigja4pmvrxiwfba2llgwgv76yjbnkd7sizrcz7kb7qt7vpnzl27lu',
+		supply: 5n,
+		price: 4_000_000n,
+		state: true
+	}
+]

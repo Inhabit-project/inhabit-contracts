@@ -12,7 +12,9 @@ import {ERC20} from '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 import {IPriceFeed} from './interfaces/IPriceFeed.sol';
 import {Errors} from './libraries/Errors.sol';
 
-contract PriceFeed is IPriceFeed, Errors {
+import 'hardhat/console.sol';
+
+abstract contract PriceFeed is IPriceFeed, Errors {
 	/// =========================
 	/// === Storage Variables ===
 	/// =========================
@@ -23,10 +25,10 @@ contract PriceFeed is IPriceFeed, Errors {
 		private aggregators;
 
 	/// =========================
-	/// ====== Constructor ======
+	/// ====== Initializer ======
 	/// =========================
 
-	constructor() {}
+	function __PriceFeed_init() internal {}
 
 	/// =========================
 	/// ======= Getters =========
@@ -46,22 +48,26 @@ contract PriceFeed is IPriceFeed, Errors {
 	/// ======= Setters =========
 	/// =========================
 
-	function setAggregator(
+	function addAggregator(
 		address _token,
 		AggregatorV3Interface _aggregator
 	) external {
 		aggregators[_token] = _aggregator;
 	}
 
+	function removeAggregator(address _token) external {
+		delete aggregators[_token];
+	}
+
 	function setUsdToken(address _usdToken) external {
-		if (_usdToken == usdToken || _usdToken == address(0))
+		if (_usdToken == usdToken || _isZeroAddress(_usdToken))
 			revert INVALID_ADDRESS();
 
 		usdToken = _usdToken;
 	}
 
 	/// =========================
-	/// === Public Functions ====
+	/// ==== View Functions =====
 	/// =========================
 
 	function calculateTokenAmount(

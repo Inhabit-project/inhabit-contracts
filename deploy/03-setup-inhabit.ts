@@ -4,11 +4,17 @@ import { DeployFunction } from 'hardhat-deploy/types'
 import { Address } from 'viem'
 
 import {
+	CCOP_ADDRESS,
+	CCOP_USD_ADDRESS,
+	CUSD_ADDRESS,
+	CUSD_USD_ADDRESS,
 	LUCA_ADDRESS,
 	SALVIEGA_ADDRESS,
 	USDC_ADDRESS,
+	USDC_USD_ADDRESS,
 	USDT_ADDRESS
 } from '@/config/const'
+import { delay } from '@/utils/delay'
 
 const setupContracts: DeployFunction = async function (
 	hre: HardhatRuntimeEnvironment
@@ -59,6 +65,48 @@ const setupContracts: DeployFunction = async function (
 	})
 
 	log(`USDT token added. tx hash: ${addToTokensTx2}`)
+
+	log('----------------------------------------------------')
+	log('Addding aggregators...')
+
+	// Add USDC aggregator
+	const addAggregatorTx1 = await inhabit.write.addAggregator(
+		[USDC_ADDRESS(network.name), USDC_USD_ADDRESS(network.name)],
+		gasOption
+	)
+
+	await publicClient.waitForTransactionReceipt({
+		hash: addAggregatorTx1
+	})
+	log(`USDC aggregator added. tx hash: ${addAggregatorTx1}`)
+
+	await delay(2000)
+
+	// Add CUSD aggregator
+	const addAggregatorTx2 = await inhabit.write.addAggregator(
+		[CUSD_ADDRESS(network.name), CUSD_USD_ADDRESS(network.name)],
+		gasOption
+	)
+
+	await publicClient.waitForTransactionReceipt({
+		hash: addAggregatorTx2
+	})
+
+	log(`CUSD aggregator added. tx hash: ${addAggregatorTx2}`)
+
+	await delay(2000)
+
+	// Add CCOP aggregator
+	const addAggregatorTx3 = await inhabit.write.addAggregator(
+		[CCOP_ADDRESS(network.name), CCOP_USD_ADDRESS(network.name)],
+		gasOption
+	)
+
+	await publicClient.waitForTransactionReceipt({
+		hash: addAggregatorTx3
+	})
+
+	log(`CCOP aggregator added. tx hash: ${addAggregatorTx3}`)
 
 	log('----------------------------------------------------')
 	log('Setting up contracts for roles...')

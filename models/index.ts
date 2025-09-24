@@ -7,6 +7,7 @@ export interface NetworkConfigInfo {
 }
 
 export interface CollectionParams {
+	paymentToken: Address
 	name: string
 	symbol: string
 	uri: string

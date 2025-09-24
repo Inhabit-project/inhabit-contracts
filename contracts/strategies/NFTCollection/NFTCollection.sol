@@ -116,7 +116,7 @@ contract NFTCollection is
 	/// =========================
 
 	function setPaymentToken(address _paymentToken) external onlyInhabit {
-		if (_paymentToken == paymentToken || _paymentToken == address(0))
+		if (_paymentToken == paymentToken || _isZeroAddress(_paymentToken))
 			revert INVALID_ADDRESS();
 
 		paymentToken = _paymentToken;
