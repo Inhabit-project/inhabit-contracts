@@ -36,7 +36,7 @@ abstract contract PriceFeed is IPriceFeed, Errors {
 
 	function getAggregator(
 		address _aggregator
-	) public view returns (AggregatorV3Interface) {
+	) external view returns (AggregatorV3Interface) {
 		return aggregators[_aggregator];
 	}
 
@@ -48,46 +48,49 @@ abstract contract PriceFeed is IPriceFeed, Errors {
 	/// ======= Setters =========
 	/// =========================
 
-	function addAggregator(
+	function _addAggregator(
 		address _token,
 		AggregatorV3Interface _aggregator
-	) external {
+	) internal {
 		aggregators[_token] = _aggregator;
+		emit AggregatorAdded(_token, address(_aggregator));
 	}
 
-	function removeAggregator(address _token) external {
-		delete aggregators[_token];
+	function _removeAggregator(address _token) internal {
+		aggregators[_token] = AggregatorV3Interface(address(0));
+		emit AggregatorRemoved(_token, address(0));
 	}
 
-	function setUsdToken(address _usdToken) external {
+	function _setUsdToken(address _usdToken) internal {
 		if (_usdToken == usdToken || _isZeroAddress(_usdToken))
 			revert INVALID_ADDRESS();
-
 		usdToken = _usdToken;
+		emit UsdTokenSet(_usdToken);
 	}
 
 	/// =========================
 	/// ==== View Functions =====
 	/// =========================
 
-	function calculateTokenAmount(
+	function calculateUsdTokenPriceInPaymentToken(
 		address _paymentToken,
-		uint256 _price
-	) external view returns (uint256 amountInToken) {
-		uint256 amountInUsd = getPriceInUSD(usdToken, _price);
+		uint256 _nftPriceInUsdToken
+	) external view returns (uint256 priceInPaymentToken) {
+		if (_nftPriceInUsdToken == 0) revert INVALID_AMOUNT();
 
-		uint8 tokenDecimals = ERC20(_paymentToken).decimals();
-
-		uint256 usdPerPaymentToken = getPriceInUSD(
+		uint256 paymentTokenPriceInUsdToken = getPriceInUsdToken(
 			_paymentToken,
-			10 ** tokenDecimals
+			10 ** ERC20(_paymentToken).decimals()
 		);
 
-		if (usdPerPaymentToken == 0) revert INVALID_AMOUNT();
+		uint256 nftPriceInUsdToken = getPriceInUsdToken(
+			usdToken,
+			_nftPriceInUsdToken
+		);
 
-		amountInToken = _divCeil(
-			amountInUsd * (10 ** tokenDecimals),
-			usdPerPaymentToken
+		priceInPaymentToken = _divCeil(
+			nftPriceInUsdToken * (10 ** ERC20(_paymentToken).decimals()),
+			paymentTokenPriceInUsdToken
 		);
 	}
 
@@ -95,19 +98,40 @@ abstract contract PriceFeed is IPriceFeed, Errors {
 	/// == Internal Functions ===
 	/// =========================
 
-	function getPriceInUSD(
+	function getTokenPriceInUSD(
 		address _token,
 		uint256 _amount
-	) internal view returns (uint256 amountInUsd) {
+	) internal view returns (uint256 priceInUsd) {
 		AggregatorV3Interface aggregator = aggregators[_token];
 
-		if (aggregator == AggregatorV3Interface(address(0)))
-			revert INVALID_AGGREGATOR();
+		if (address(aggregator) == address(0)) revert INVALID_AGGREGATOR();
 
-		int256 tokenPriceInUsd = _getLatestPrice(aggregator);
-		uint8 decimals = ERC20(_token).decimals();
+		(, int256 price, , , ) = aggregator.latestRoundData();
 
-		amountInUsd = (_amount * uint256(tokenPriceInUsd)) / (10 ** decimals);
+		if (price <= 0) revert INVALID_AMOUNT();
+
+		uint8 tokenDecimals = ERC20(_token).decimals();
+		priceInUsd = (_amount * uint256(price)) / (10 ** tokenDecimals);
+	}
+
+	function getPriceInUsdToken(
+		address _token,
+		uint256 _amount
+	) internal view returns (uint256 priceInUsdToken) {
+		AggregatorV3Interface aggregator = aggregators[_token];
+
+		if (address(aggregator) == address(0)) revert INVALID_AGGREGATOR();
+
+		(, int256 price, , , ) = aggregator.latestRoundData();
+
+		if (price <= 0) revert INVALID_AMOUNT();
+
+		uint8 feedDecimals = aggregator.decimals();
+		uint8 tokenDecimals = ERC20(_token).decimals();
+		uint8 usdTokenDecimals = ERC20(usdToken).decimals();
+
+		uint256 amountInUsd = (_amount * uint256(price)) / (10 ** tokenDecimals);
+		priceInUsdToken = _toDecimals(amountInUsd, feedDecimals, usdTokenDecimals);
 	}
 
 	/// =========================
@@ -118,10 +142,15 @@ abstract contract PriceFeed is IPriceFeed, Errors {
 		return (a + b - 1) / b;
 	}
 
-	function _getLatestPrice(
-		AggregatorV3Interface _aggregator
-	) private view returns (int256) {
-		(, int256 price, , , ) = _aggregator.latestRoundData();
-		return price;
+	function _toDecimals(
+		uint256 amount,
+		uint8 fromDecimals,
+		uint8 toDecimals
+	) private pure returns (uint256) {
+		if (fromDecimals == toDecimals) return amount;
+		return
+			(fromDecimals > toDecimals)
+				? amount / (10 ** (fromDecimals - toDecimals))
+				: amount * (10 ** (toDecimals - fromDecimals));
 	}
 }

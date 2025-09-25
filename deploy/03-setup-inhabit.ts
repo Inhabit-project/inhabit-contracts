@@ -6,8 +6,6 @@ import { Address } from 'viem'
 import {
 	CCOP_ADDRESS,
 	CCOP_USD_ADDRESS,
-	CUSD_ADDRESS,
-	CUSD_USD_ADDRESS,
 	LUCA_ADDRESS,
 	SALVIEGA_ADDRESS,
 	USDC_ADDRESS,
@@ -67,6 +65,23 @@ const setupContracts: DeployFunction = async function (
 	log(`USDT token added. tx hash: ${addToTokensTx2}`)
 
 	log('----------------------------------------------------')
+	log('Setting up usd token...')
+
+	// Add usd token
+	const addUsdTokenTx = await inhabit.write.setUsdToken(
+		[USDC_ADDRESS(network.name)],
+		gasOption
+	)
+
+	await publicClient.waitForTransactionReceipt({
+		hash: addUsdTokenTx
+	})
+
+	log(`USDC token added. tx hash: ${addUsdTokenTx}`)
+
+	await delay(2000)
+
+	log('----------------------------------------------------')
 	log('Addding aggregators...')
 
 	// Add USDC aggregator
@@ -78,23 +93,24 @@ const setupContracts: DeployFunction = async function (
 	await publicClient.waitForTransactionReceipt({
 		hash: addAggregatorTx1
 	})
+
 	log(`USDC aggregator added. tx hash: ${addAggregatorTx1}`)
 
 	await delay(2000)
 
 	// Add CUSD aggregator
-	const addAggregatorTx2 = await inhabit.write.addAggregator(
-		[CUSD_ADDRESS(network.name), CUSD_USD_ADDRESS(network.name)],
-		gasOption
-	)
+	// const addAggregatorTx2 = await inhabit.write.addAggregator(
+	// 	[CUSD_ADDRESS(network.name), CUSD_USD_ADDRESS(network.name)],
+	// 	gasOption
+	// )
 
-	await publicClient.waitForTransactionReceipt({
-		hash: addAggregatorTx2
-	})
+	// await publicClient.waitForTransactionReceipt({
+	// 	hash: addAggregatorTx2
+	// })
 
-	log(`CUSD aggregator added. tx hash: ${addAggregatorTx2}`)
+	// log(`CUSD aggregator added. tx hash: ${addAggregatorTx2}`)
 
-	await delay(2000)
+	// await delay(2000)
 
 	// Add CCOP aggregator
 	const addAggregatorTx3 = await inhabit.write.addAggregator(

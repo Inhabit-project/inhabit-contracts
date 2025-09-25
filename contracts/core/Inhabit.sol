@@ -1,28 +1,41 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
+// third party
+/// chainlink
+import {AggregatorV3Interface} from '@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol';
+
+/// solady
 import {ERC20} from 'solady/src/tokens/ERC20.sol';
 import {ERC721} from 'solady/src/tokens/ERC721.sol';
+
+/// openzeppelin
 import {Initializable} from '@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol';
 import {ReentrancyGuardUpgradeable} from '@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol';
 
-import {INFTCollection} from './interfaces/INFTCollection.sol';
-import {IInhabit} from '../core/interfaces/IInhabit.sol';
+// local
+/// library
 import {Admin} from './Admin.sol';
-import {Groups} from './Groups.sol';
 import {Collections} from './Collections.sol';
+import {Errors} from './libraries/Errors.sol';
+import {Groups} from './Groups.sol';
 import {PriceFeed} from './PriceFeed.sol';
+
+/// interface
+import {IInhabit} from '../core/interfaces/IInhabit.sol';
+import {ICollections} from './interfaces/ICollections.sol';
+import {INFTCollection} from './interfaces/INFTCollection.sol';
 
 import 'hardhat/console.sol';
 
 contract Inhabit is
+	IInhabit,
 	Initializable,
 	ReentrancyGuardUpgradeable,
 	Admin,
 	Groups,
 	Collections,
-	PriceFeed,
-	IInhabit
+	PriceFeed
 {
 	/// =========================
 	/// === Storage Variables ===
@@ -90,12 +103,21 @@ contract Inhabit is
 		return campaignCount;
 	}
 
-	function getCampaign(uint256 _id) public view returns (Campaign memory) {
+	function getCampaign(
+		uint256 _id
+	) public view returns (ICollections.Campaign memory) {
 		return campaigns[_id];
 	}
 
-	function getCampaigns() external view override returns (Campaign[] memory) {
-		Campaign[] memory allCampaigns = new Campaign[](campaignCount);
+	function getCampaigns()
+		external
+		view
+		override
+		returns (ICollections.Campaign[] memory)
+	{
+		ICollections.Campaign[] memory allCampaigns = new ICollections.Campaign[](
+			campaignCount
+		);
 		for (uint256 i = 1; i <= campaignCount; ) {
 			allCampaigns[i - 1] = campaigns[i];
 
@@ -263,6 +285,23 @@ contract Inhabit is
 		onlyCampaignOwner(_campaignId)
 	{
 		_setCollectionBaseURI(_collection, _baseURI);
+	}
+
+	// the following setters of PriceFeed
+
+	function addAggregator(
+		address _token,
+		address _aggregator
+	) external onlyRole(ADMIN_ROLE) {
+		_addAggregator(_token, AggregatorV3Interface(_aggregator));
+	}
+
+	function removeAggregator(address _token) external onlyRole(ADMIN_ROLE) {
+		_removeAggregator(_token);
+	}
+
+	function setUsdToken(address _usdToken) external onlyRole(ADMIN_ROLE) {
+		_setUsdToken(_usdToken);
 	}
 
 	/// ==========================
@@ -482,17 +521,16 @@ contract Inhabit is
 		);
 
 		if (tokens[_paymentToken]) {
-			if (_paymentAmount < info.price)
-				revert INSUFFICIENT_USD_VALUE(_paymentToken, _paymentAmount);
+			if (_paymentAmount < info.price) revert INVALID_AMOUNT();
 			else return info.price;
 		}
 
-		uint256 paymentAmountInUsd = PriceFeed.getPriceInUSD(
+		uint256 paymentAmountInUsd = PriceFeed.getPriceInUsdToken(
 			_paymentToken,
 			_paymentAmount
 		);
 
-		uint256 collectionTokenPriceInUsd = PriceFeed.getPriceInUSD(
+		uint256 collectionTokenPriceInUsd = PriceFeed.getPriceInUsdToken(
 			info.paymentToken,
 			info.price
 		);

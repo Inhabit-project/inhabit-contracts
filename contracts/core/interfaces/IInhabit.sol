@@ -164,6 +164,14 @@ interface IInhabit {
 		string calldata _baseURI
 	) external;
 
+	// the following setters of PriceFeed
+
+	function addAggregator(address _token, address _aggregator) external;
+
+	function removeAggregator(address _token) external;
+
+	function setUsdToken(address _usdToken) external;
+
 	/// ==========================
 	/// ===== View Functions =====
 	/// ==========================
