@@ -8,16 +8,20 @@
 		"create:safe": "bun run scripts/create-safe-multisig.ts",
 		"deploy:celo": "NODE_ENV=celo hardhat deploy --network celo --tags deploy",
 		"deploy:celoAlfajores": "NODE_ENV=celoAlfajores hardhat deploy --network celoAlfajores --tags deploy",
+		"deploy:celoSepolia": "NODE_ENV=celoSepolia hardhat deploy --network celoSepolia --tags deploy",
 		"deploy:localhost": "hardhat deploy --network localhost --tags localhost",
 		"upgrade:celo": "NODE_ENV=celo hardhat deploy --network celo --tags upgrade",
 		"upgrade:celoAlfajores": "NODE_ENV=celoAlfajores hardhat deploy --network celoAlfajores --tags upgrade",
+		"upgrade:celoSepolia": "NODE_ENV=celoSepolia hardhat deploy --network celoSepolia --tags upgrade",
 		"upgrade:localhost": "hardhat deploy --network localhost --tags upgrade",
 		"format": "prettier --write .",
 		"lint": "eslint",
 		"lint:fix": "eslint --fix",
 		"task:addCampaign:celoAlfajores": "NODE_ENV=celoAlfajores bun hardhat addCampaign --network celoAlfajores",
+		"task:addCampaign:celoSepolia": "NODE_ENV=celoSepolia bun hardhat addCampaign --network celoSepolia",
 		"task:addCampaign:celo": "NODE_ENV=celo bun hardhat addCampaign --network celo",
 		"test": "NODE_ENV=celoAlfajores hardhat test",
+		"test:celoSepolia": "NODE_ENV=celoSepolia hardhat test",
 		"typechain": "hardhat typechain"
 	},
 	"dependencies": {
@@ -60,6 +64,6 @@
 		"solidity-coverage": "^0.8.16",
 		"tsconfig-paths": "^4.2.0",
 		"typescript-eslint": "^8.38.0",
-		"viem": "^2.33.1"
+		"viem": "^2.40.3"
 	}
 }

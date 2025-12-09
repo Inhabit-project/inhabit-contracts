@@ -41,6 +41,8 @@ const deployInhabit: DeployFunction = async function (
 
 	log(`Inhabit transaction hash: ${proxyTransaction.hash}`)
 
+	await new Promise(resolve => setTimeout(resolve, 2000))
+
 	const proxyAddress: string = await proxy.getAddress()
 	log(`Inhabit proxy deployed at: ${proxyAddress}`)
 

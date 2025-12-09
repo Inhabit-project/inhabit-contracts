@@ -7,17 +7,33 @@ import 'tsconfig-paths/register'
 import './tasks'
 
 import dotenv from 'dotenv'
+import { extendEnvironment } from 'hardhat/config'
 import { HardhatUserConfig, SolcUserConfig } from 'hardhat/types'
-import { celo, celoAlfajores } from 'viem/chains'
+import { celo, celoAlfajores, celoSepolia } from 'viem/chains'
 
 import { ensureEnvVar } from './utils/ensure-env-var'
+
+declare module 'hardhat/types/runtime' {
+	interface HardhatRuntimeEnvironment {
+		appEnv: string
+	}
+}
 
 // 1.) Load environment variables
 dotenv.config({ path: `./.env.${process.env.NODE_ENV}`, override: true })
 dotenv.config()
 
-const { COINMARKETCAP_API_KEY, SCAN_API_KEY, GAS_REPORT, WALLET_PRIVATE_KEY } =
-	process.env
+const {
+	COINMARKETCAP_API_KEY,
+	SCAN_API_KEY,
+	GAS_REPORT,
+	WALLET_PRIVATE_KEY,
+	ENV
+} = process.env
+
+extendEnvironment(hre => {
+	hre.appEnv = ensureEnvVar(ENV, 'ENV')
+})
 
 // 2.) Ensure environment variables
 const apiKey = ensureEnvVar(SCAN_API_KEY, 'CELOSCAN_API_KEY')
@@ -70,6 +86,12 @@ const config: HardhatUserConfig = {
 			chainId: celoAlfajores.id,
 			accounts,
 			url: celoAlfajores.rpcUrls.default.http[0]
+		},
+
+		celoSepolia: {
+			chainId: celoSepolia.id,
+			accounts,
+			url: celoSepolia.rpcUrls.default.http[0]
 		}
 	},
 
@@ -116,6 +138,14 @@ const config: HardhatUserConfig = {
 				urls: {
 					apiURL: `https://api.etherscan.io/v2/api?chainid=${celoAlfajores.id}`,
 					browserURL: celoAlfajores.blockExplorers.default.url
+				}
+			},
+			{
+				network: celoSepolia.name,
+				chainId: celoSepolia.id,
+				urls: {
+					apiURL: `https://api.etherscan.io/v2/api?chainid=${celoSepolia.id}`,
+					browserURL: celoSepolia.blockExplorers.default.url
 				}
 			}
 		]
