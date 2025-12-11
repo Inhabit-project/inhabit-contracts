@@ -4,7 +4,9 @@ pragma solidity ^0.8.28;
 import {ERC721Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol';
 import {ERC721URIStorageUpgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721URIStorageUpgradeable.sol';
 import {ERC721BurnableUpgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721BurnableUpgradeable.sol';
+import {ERC2771ContextUpgradeable} from '@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol';
 import {Initializable} from '@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol';
+import {ContextUpgradeable} from '@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol';
 
 import {INFTCollection} from '../../core/interfaces/INFTCollection.sol';
 import {BaseStrategy} from '../../strategies/BaseStrategy.sol';
@@ -14,6 +16,7 @@ contract NFTCollection is
 	ERC721Upgradeable,
 	ERC721URIStorageUpgradeable,
 	ERC721BurnableUpgradeable,
+	ERC2771ContextUpgradeable,
 	BaseStrategy,
 	INFTCollection
 {
@@ -32,7 +35,9 @@ contract NFTCollection is
 	/// ====== Constructor ======
 	/// =========================
 
-	constructor() {
+	constructor(
+		address _trustedForwarder
+	) ERC2771ContextUpgradeable(_trustedForwarder) {
 		_disableInitializers();
 	}
 
@@ -241,5 +246,32 @@ contract NFTCollection is
 		returns (bool)
 	{
 		return super.supportsInterface(interfaceId);
+	}
+
+	function _msgSender()
+		internal
+		view
+		override(ContextUpgradeable, ERC2771ContextUpgradeable)
+		returns (address sender)
+	{
+		return ERC2771ContextUpgradeable._msgSender();
+	}
+
+	function _msgData()
+		internal
+		view
+		override(ContextUpgradeable, ERC2771ContextUpgradeable)
+		returns (bytes calldata)
+	{
+		return ERC2771ContextUpgradeable._msgData();
+	}
+
+	function _contextSuffixLength()
+		internal
+		view
+		override(ContextUpgradeable, ERC2771ContextUpgradeable)
+		returns (uint256)
+	{
+		return ERC2771ContextUpgradeable._contextSuffixLength();
 	}
 }

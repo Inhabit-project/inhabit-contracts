@@ -13,7 +13,7 @@ abstract contract Collections is ICollections, Errors {
 	/// === Storage Variables ===
 	/// =========================
 
-	INFTCollection private nftCollection;
+	INFTCollection internal nftCollection;
 	uint256 private collectionCount;
 
 	mapping(address account => uint256) private nonces;
@@ -55,10 +55,7 @@ abstract contract Collections is ICollections, Errors {
 	/// =========================
 
 	function _setNftCollection(address _nftCollection) internal {
-		if (_nftCollection == address(0)) revert ZERO_ADDRESS();
-		if (address(nftCollection) == _nftCollection) revert SAME_ADDRESS();
 		nftCollection = INFTCollection(_nftCollection);
-
 		emit NftCollectionUpdated(_nftCollection);
 	}
 

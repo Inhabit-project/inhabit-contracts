@@ -25,6 +25,15 @@ const upgradeInhabit: DeployFunction = async function (
 
 	const Inhabit: ContractFactory = await ethers.getContractFactory('Inhabit')
 
+	try {
+		await upgrades.forceImport(proxyAddress, Inhabit, {
+			kind: 'transparent'
+		})
+		log('Proxy imported successfully')
+	} catch {
+		log('Proxy already registered or import not needed')
+	}
+
 	const upgradedProxy = await upgrades.upgradeProxy(proxyAddress, Inhabit)
 
 	await upgradedProxy.getAddress()

@@ -135,10 +135,7 @@ interface IInhabit {
 
 	// the following setters of Collections
 
-	function setNFTCollection(
-		uint256 _campaignId,
-		address _nftCollection
-	) external;
+	function setNFTCollection(address _nftCollection) external;
 
 	function setCollectionSupply(
 		uint256 _campaignId,

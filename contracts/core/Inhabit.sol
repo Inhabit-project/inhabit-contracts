@@ -118,6 +118,8 @@ contract Inhabit is
 		ICollections.Campaign[] memory allCampaigns = new ICollections.Campaign[](
 			campaignCount
 		);
+
+		console.log('campaignCount', campaignCount);
 		for (uint256 i = 1; i <= campaignCount; ) {
 			allCampaigns[i - 1] = campaigns[i];
 
@@ -227,11 +229,10 @@ contract Inhabit is
 	// the following setters of Collections
 
 	function setNFTCollection(
-		uint256 _campaignId,
 		address _nftCollection
 	) external onlyRole(ADMIN_ROLE) {
-		if (!_isCollection(_campaignId, _nftCollection))
-			revert COLLECTION_NOT_FOUND();
+		if (_nftCollection == address(0)) revert ZERO_ADDRESS();
+		if (_nftCollection == address(nftCollection)) revert SAME_ADDRESS();
 		_setNftCollection(_nftCollection);
 	}
 

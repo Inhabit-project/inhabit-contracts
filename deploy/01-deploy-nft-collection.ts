@@ -16,7 +16,7 @@ const deployNFTCollection: DeployFunction = async function (
 
 	const nftCollection = await deploy('NFTCollection', {
 		from: deployer,
-		args: [],
+		args: [deployer],
 		log: true,
 		waitConfirmations: networkConfig[network.name].blockConfirmations || 1
 	})
@@ -24,7 +24,7 @@ const deployNFTCollection: DeployFunction = async function (
 	log(`NFTCollection contract at ${nftCollection.address}`)
 
 	if (!developmentChains.includes(network.name)) {
-		await verify(nftCollection.address, [])
+		await verify(nftCollection.address, [deployer])
 	}
 }
 
