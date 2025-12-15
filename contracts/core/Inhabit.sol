@@ -66,6 +66,10 @@ contract Inhabit is
 		_;
 	}
 
+	/// =========================
+	/// ===== Constructor =======
+	/// =========================
+
 	/// @custom:oz-upgrades-unsafe-allow constructor
 
 	constructor() {

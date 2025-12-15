@@ -91,4 +91,11 @@ contract Errors {
 	error INVALID_GOAL();
 	error PURCHASE_NOT_FOUND();
 	error REFUND_ALREADY_CLAIMED();
+
+	/// ======================
+	/// ==== Forwarder =======
+	/// ======================
+
+	error RELAYER_ALREADY_SUPPORTED();
+	error RELAYER_NOT_SUPPORTED();
 }
