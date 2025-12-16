@@ -1,7 +1,8 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { DeployFunction } from 'hardhat-deploy/types'
 
-import { developmentChains, TREASURY_ADDRESS } from '@/config/const'
+import { developmentChains } from '@/config/const'
+import { delay } from '@/utils/delay'
 import {
 	getImplementationAddress,
 	getProxyAdmin
@@ -9,7 +10,7 @@ import {
 import { saveUpgradeableContractDeploymentInfo } from '@/utils/upgrades/save-upgradable-contract-deployment-info'
 import { verify } from '@/utils/verify'
 
-const deployInhabit: DeployFunction = async function (
+const deployForwarder: DeployFunction = async function (
 	hre: HardhatRuntimeEnvironment
 ) {
 	const { ethers, upgrades } = hre
@@ -18,19 +19,18 @@ const deployInhabit: DeployFunction = async function (
 	const { deployer } = await getNamedAccounts()
 
 	log('----------------------------------------------------')
-	log('Deploying Inhabit and waiting for confirmations...')
+	log('Deploying Forwarder and waiting for confirmations...')
 
-	const { address: NFTCollectionAddress } =
-		await deployments.get('NFTCollection')
-
+	const name = 'Inhabit Forwarder V1'
 	const defaultAdmin = deployer
-	const treasury = TREASURY_ADDRESS(network.name)
 
-	const args = [defaultAdmin, NFTCollectionAddress, treasury]
+	const args = [name, defaultAdmin]
 
-	const Inhabit = await ethers.getContractFactory('Inhabit')
+	const Forwarder = await ethers.getContractFactory('Forwarder')
 
-	const proxy = await upgrades.deployProxy(Inhabit, args)
+	const proxy = await upgrades.deployProxy(Forwarder, args, {
+		initializer: 'initialize(string,address)'
+	})
 	await proxy.waitForDeployment()
 
 	const proxyTransaction = proxy.deploymentTransaction()
@@ -39,32 +39,32 @@ const deployInhabit: DeployFunction = async function (
 		throw new Error('Failed to get deployment transaction for proxy')
 	}
 
-	log(`Inhabit transaction hash: ${proxyTransaction.hash}`)
+	log(`Forwarder transaction hash: ${proxyTransaction.hash}`)
 
-	await new Promise(resolve => setTimeout(resolve, 2000))
+	await delay(2000)
 
 	const proxyAddress: string = await proxy.getAddress()
-	log(`Inhabit proxy deployed at: ${proxyAddress}`)
+	log(`Forwarder proxy deployed at: ${proxyAddress}`)
 
 	const implementationAddress: string =
 		await getImplementationAddress(proxyAddress)
-	log(`Inhabit implementation deployed at: ${implementationAddress}`)
+	log(`Forwarder implementation deployed at: ${implementationAddress}`)
 
 	const proxyAdmin: string = await getProxyAdmin(proxyAddress)
-	log(`Inhabit proxy admin: ${proxyAdmin}`)
+	log(`Forwarder proxy admin: ${proxyAdmin}`)
 
 	if (!developmentChains.includes(network.name)) {
 		await verify(proxyAddress, [])
 	}
 
-	const artifact = await deployments.getExtendedArtifact('Inhabit')
-	await save('Inhabit', { address: proxyAddress, ...artifact })
+	const artifact = await deployments.getExtendedArtifact('Forwarder')
+	await save('Forwarder', { address: proxyAddress, ...artifact })
 
 	await saveUpgradeableContractDeploymentInfo(
-		'Inhabit',
+		'Forwarder',
 		proxy as unknown as import('ethers').Contract
 	)
 }
 
-export default deployInhabit
-deployInhabit.tags = ['deploy', 'Inhabit']
+export default deployForwarder
+deployForwarder.tags = ['deploy', 'forwarder']

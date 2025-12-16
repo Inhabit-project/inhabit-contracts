@@ -14,20 +14,18 @@ import {ERC20} from 'solady/src/tokens/ERC20.sol';
 import {Admin} from './Admin.sol';
 import {Transfer} from './libraries/Transfer.sol';
 /// interface
-import {Forwarder} from './interfaces/Forwarder.sol';
+import {IForwarder} from './interfaces/IForwarder.sol';
 
 contract Forwarder is
 	Initializable,
 	ERC2771ForwarderUpgradeable,
 	Transfer,
 	Admin,
-	Forwarder
+	IForwarder
 {
 	/// =========================
 	/// === Storage Variables ===
 	/// =========================
-
-	uint256[50] private __gap;
 
 	mapping(address => bool) private relayers;
 
@@ -58,6 +56,8 @@ contract Forwarder is
 		string memory _name,
 		address _defaultAdmin
 	) public initializer {
+		if (_isZeroAddress(_defaultAdmin)) revert ZERO_ADDRESS();
+
 		__ERC2771Forwarder_init(_name);
 		__Admin_init(_defaultAdmin);
 	}

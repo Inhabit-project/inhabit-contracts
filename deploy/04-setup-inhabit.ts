@@ -181,4 +181,4 @@ const setupContracts: DeployFunction = async function (
 }
 
 export default setupContracts
-setupContracts.tags = ['deploy', 'setup']
+setupContracts.tags = ['deploy', 'inhabit-setup']
