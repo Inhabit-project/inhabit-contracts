@@ -31,6 +31,7 @@ const deployForwarder: DeployFunction = async function (
 	const proxy = await upgrades.deployProxy(Forwarder, args, {
 		initializer: 'initialize(string,address)'
 	})
+
 	await proxy.waitForDeployment()
 
 	const proxyTransaction = proxy.deploymentTransaction()
@@ -41,16 +42,21 @@ const deployForwarder: DeployFunction = async function (
 
 	log(`Forwarder transaction hash: ${proxyTransaction.hash}`)
 
-	await delay(2000)
+	await proxyTransaction.wait()
 
 	const proxyAddress: string = await proxy.getAddress()
+
 	log(`Forwarder proxy deployed at: ${proxyAddress}`)
+
+	await delay(3000)
 
 	const implementationAddress: string =
 		await getImplementationAddress(proxyAddress)
+
 	log(`Forwarder implementation deployed at: ${implementationAddress}`)
 
 	const proxyAdmin: string = await getProxyAdmin(proxyAddress)
+
 	log(`Forwarder proxy admin: ${proxyAdmin}`)
 
 	if (!developmentChains.includes(network.name)) {
