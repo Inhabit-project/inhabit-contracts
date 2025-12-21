@@ -1,4 +1,4 @@
-import { Address } from 'viem'
+import { Address, zeroAddress } from 'viem'
 
 import { CollectionParams, NetworkConfigInfo } from '@/models'
 
@@ -35,6 +35,10 @@ const treasuryAddresses: Record<string, Address> = {
 
 export const TREASURY_ADDRESS: (chain: string) => Address = (chain: string) => {
 	switch (chain) {
+		case 'localhost':
+			return zeroAddress
+		case 'hardhat':
+			return zeroAddress
 		case 'celo':
 			return treasuryAddresses.celo
 		case 'celoAlfajores':
@@ -280,6 +284,49 @@ const TESTNET_NFT_COLLECTIONS: (network: string) => CollectionParams[] = (
 		},
 		{
 			paymentToken: USDC_ADDRESS(network),
+			name: 'INHABIT Ñuiyanzhi JAGUAR',
+			symbol: 'JAGUAR',
+			uri: 'ipfs://bafkreigja4pmvrxiwfba2llgwgv76yjbnkd7sizrcz7kb7qt7vpnzl27lu',
+			supply: 5n,
+			price: 4_000_000n,
+			state: true
+		}
+	]
+}
+
+export const LOCAL_NFT_COLLECTIONS: (
+	usdcAddress: Address
+) => CollectionParams[] = (usdcAddress: Address) => {
+	return [
+		{
+			paymentToken: usdcAddress,
+			name: 'INHABIT Ñuiyanzhi TITI',
+			symbol: 'TITI',
+			uri: 'ipfs://bafkreidij5vgh5kxt3q6wj2kcfijvctqkclpnkkx2rfzxz3ud44ddjqzki',
+			supply: 2483n,
+			price: 1_000_000n,
+			state: true
+		},
+		{
+			paymentToken: usdcAddress,
+			name: 'INHABIT Ñuiyanzhi PAUJIL',
+			symbol: 'PAUJIL',
+			uri: 'ipfs://bafkreiclrauiief3ll6sip6jr4vbhsyh4m5iwfopayifjblpek7vudasr4',
+			supply: 124n,
+			price: 2_000_000n,
+			state: true
+		},
+		{
+			paymentToken: usdcAddress,
+			name: 'INHABIT Ñuiyanzhi CARACOLI',
+			symbol: 'CARACOLI',
+			uri: 'ipfs://bafkreidrdymjzsmuaxz7it44cqfccivy74vxrxjn3mxm276lx5tuywchcy',
+			supply: 19n,
+			price: 3_000_000n,
+			state: true
+		},
+		{
+			paymentToken: usdcAddress,
 			name: 'INHABIT Ñuiyanzhi JAGUAR',
 			symbol: 'JAGUAR',
 			uri: 'ipfs://bafkreigja4pmvrxiwfba2llgwgv76yjbnkd7sizrcz7kb7qt7vpnzl27lu',

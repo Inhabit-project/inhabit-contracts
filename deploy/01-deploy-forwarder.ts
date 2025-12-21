@@ -73,4 +73,4 @@ const deployForwarder: DeployFunction = async function (
 }
 
 export default deployForwarder
-deployForwarder.tags = ['deploy', 'forwarder']
+deployForwarder.tags = ['deploy', 'localhost', 'forwarder']

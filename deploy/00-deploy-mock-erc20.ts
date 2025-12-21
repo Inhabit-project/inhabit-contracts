@@ -4,7 +4,7 @@ import { DeployFunction } from 'hardhat-deploy/types'
 import { developmentChains, networkConfig } from '@/config/const'
 import { verify } from '@/utils/verify'
 
-const deployNFTCollection: DeployFunction = async function (
+const deployMockErc20: DeployFunction = async function (
 	hre: HardhatRuntimeEnvironment
 ) {
 	const { getNamedAccounts, deployments, network } = hre
@@ -12,21 +12,26 @@ const deployNFTCollection: DeployFunction = async function (
 	const { deployer } = await getNamedAccounts()
 
 	log('----------------------------------------------------')
-	log('Deploying NFTCollection and waiting for confirmations...')
+	log('Deploying MockErc20 and waiting for confirmations...')
 
-	const nftCollection = await deploy('NFTCollection', {
+	const name: string = 'USD Coin'
+	const symbol: string = 'USDC'
+
+	const args = [name, symbol]
+
+	const mockErc20 = await deploy('MockErc20', {
 		from: deployer,
-		args: [],
+		args,
 		log: true,
 		waitConfirmations: networkConfig[network.name].blockConfirmations || 1
 	})
 
-	log(`NFTCollection contract at ${nftCollection.address}`)
+	log(`MockErc20 contract at ${mockErc20.address}`)
 
 	if (!developmentChains.includes(network.name)) {
-		await verify(nftCollection.address, [])
+		await verify(mockErc20.address, [])
 	}
 }
 
-export default deployNFTCollection
-deployNFTCollection.tags = ['localhost', 'l-deploy', 'l-nftCollection']
+export default deployMockErc20
+deployMockErc20.tags = ['localhost', 'mockErc20']

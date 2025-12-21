@@ -33,4 +33,4 @@ const setupContracts: DeployFunction = async function (
 }
 
 export default setupContracts
-setupContracts.tags = ['deploy', 'forwarder-setup']
+setupContracts.tags = ['deploy', 'localhost', 'forwarder-setup']

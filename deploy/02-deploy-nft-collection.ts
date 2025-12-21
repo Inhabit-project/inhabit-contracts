@@ -14,9 +14,11 @@ const deployNFTCollection: DeployFunction = async function (
 	log('----------------------------------------------------')
 	log('Deploying NFTCollection and waiting for confirmations...')
 
+	const forwarderAddress = await deployments.get('Forwarder')
+
 	const nftCollection = await deploy('NFTCollection', {
 		from: deployer,
-		args: [deployer],
+		args: [forwarderAddress.address],
 		log: true,
 		waitConfirmations: networkConfig[network.name].blockConfirmations || 1
 	})
@@ -29,4 +31,4 @@ const deployNFTCollection: DeployFunction = async function (
 }
 
 export default deployNFTCollection
-deployNFTCollection.tags = ['deploy', 'NFTCollection']
+deployNFTCollection.tags = ['deploy', 'localhost', 'NFTCollection']

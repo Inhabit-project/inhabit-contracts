@@ -20,7 +20,8 @@
 		"./scripts",
 		"./test",
 		"./tasks",
-		"./typechain-types/**/*"
+		"./typechain-types/**/*",
+		"deprecated/v2/test/Inhabit.test.ts"
 	],
 
 	"exclude": ["node_modules"],

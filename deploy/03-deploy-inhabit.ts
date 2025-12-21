@@ -70,4 +70,4 @@ const deployInhabit: DeployFunction = async function (
 }
 
 export default deployInhabit
-deployInhabit.tags = ['deploy', 'Inhabit']
+deployInhabit.tags = ['deploy', 'localhost', 'Inhabit']

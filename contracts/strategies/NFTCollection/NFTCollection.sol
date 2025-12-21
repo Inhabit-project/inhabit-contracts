@@ -201,6 +201,18 @@ contract NFTCollection is
 		return tokenCount;
 	}
 
+	function metaTransferFrom(
+		address from,
+		address to,
+		uint256 tokenId
+	) external {
+		address sender = _msgSender();
+
+		if (sender != from) revert NOT_NFT_OWNER();
+
+		_transfer(from, to, tokenId);
+	}
+
 	/// ==========================
 	/// ======== Overrides =======
 	/// ==========================
