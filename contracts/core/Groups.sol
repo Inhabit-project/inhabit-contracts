@@ -192,6 +192,32 @@ abstract contract Groups is Transfer, Errors, IGroups {
 		return (_amount * _porcentaje) / 10000;
 	}
 
+	function calculateTotalFee(
+		uint256 _campaignId,
+		bytes32 _referral,
+		uint256 _amount
+	) external view returns (uint256) {
+		Group storage group = campaignGroups[_campaignId][_referral];
+		if (group.id == 0) return 0;
+		if (group.state == false) return 0;
+		if (group.ambassadors.length == 0) return 0;
+
+		if (_amount == 0) return 0;
+
+		uint256 totalFee = 0;
+		for (uint256 i; i < group.ambassadors.length; ) {
+			uint256 fee = _calculateFee(_amount, group.ambassadors[i].fee);
+
+			totalFee += fee;
+
+			unchecked {
+				++i;
+			}
+		}
+
+		return totalFee;
+	}
+
 	function encriptReferral(
 		string calldata _referral
 	) external pure returns (bytes32) {

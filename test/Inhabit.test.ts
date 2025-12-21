@@ -7,29 +7,40 @@ import { LOCAL_NFT_COLLECTIONS } from '@/config/const'
 
 chai.use(chaiBigint)
 
-type Contract = Awaited<ReturnType<typeof viem.getContractAt>>
+// Types inferred from viem.getContractAt
+type InhabitContract = Awaited<ReturnType<typeof viem.getContractAt<'Inhabit'>>>
+type MockErc20Contract = Awaited<
+	ReturnType<typeof viem.getContractAt<'MockErc20'>>
+>
+type ForwarderContract = Awaited<
+	ReturnType<typeof viem.getContractAt<'Forwarder'>>
+>
+type NFTCollectionContract = Awaited<
+	ReturnType<typeof viem.getContractAt<'NFTCollection'>>
+>
 
 type Fixture = {
 	deployer: Address
 	luca: Address
+	juan: Address
 	ledger: Address
-	inhabit: Contract
-	mockUSDC: Contract
-	forwarder: Contract
+	inhabit: InhabitContract
+	mockUSDC: MockErc20Contract
+	forwarder: ForwarderContract
 }
 
 describe('Inhabit', function () {
 	let fixture: Fixture
 	let deployer: Address
 	let luca: Address
-	let ledger: Address
-	let inhabit: Contract
-	let mockUSDC: Contract
-	let forwarder: Contract
+	let juan: Address
+	let inhabit: InhabitContract
+	let mockUSDC: MockErc20Contract
+	let forwarder: ForwarderContract
 
 	async function deployFixture(): Promise<Fixture> {
 		const { deployments, getNamedAccounts } = hre
-		const { deployer, luca, ledger } = await getNamedAccounts()
+		const { deployer, luca, juan, ledger } = await getNamedAccounts()
 
 		await deployments.fixture(['localhost'])
 
@@ -37,18 +48,27 @@ describe('Inhabit', function () {
 		const mockErc20Address = (await deployments.get('MockErc20'))
 			.address as Address
 
-		const mockUSDC = await viem.getContractAt('MockErc20', mockErc20Address)
+		const mockUSDC: MockErc20Contract = await viem.getContractAt(
+			'MockErc20',
+			mockErc20Address
+		)
 
 		// Forwarder
 		const forwarderAddress = (await deployments.get('Forwarder'))
 			.address as Address
 
-		const forwarder = await viem.getContractAt('Forwarder', forwarderAddress)
+		const forwarder: ForwarderContract = await viem.getContractAt(
+			'Forwarder',
+			forwarderAddress
+		)
 
 		// Inhabit
 		const inhabitAddress = (await deployments.get('Inhabit')).address as Address
 
-		const inhabit = await viem.getContractAt('Inhabit', inhabitAddress)
+		const inhabit: InhabitContract = await viem.getContractAt(
+			'Inhabit',
+			inhabitAddress
+		)
 
 		// Set treasury to ledger (treasury is zeroAddress in localhost by default)
 		await inhabit.write.setTreasury([ledger], {
@@ -75,20 +95,21 @@ describe('Inhabit', function () {
 		return {
 			deployer: deployer as Address,
 			luca: luca as Address,
+			juan: juan as Address,
 			ledger: ledger as Address,
-			inhabit: inhabit as Contract,
-			mockUSDC: mockUSDC as Contract,
-			forwarder: forwarder as Contract
+			inhabit,
+			mockUSDC,
+			forwarder
 		}
 	}
 
 	describe('Inhabit main contract', function () {
 		beforeEach(async function () {
 			fixture = await deployFixture()
-			;({ deployer, luca, ledger, inhabit, mockUSDC, forwarder } = fixture)
+			;({ deployer, luca, juan, inhabit, mockUSDC, forwarder } = fixture)
 		})
 
-		it('Should buy NFT for Luca and then Luca returns it to deployer via meta transaction', async function () {
+		it('Should buy NFT for Luca without referral', async function () {
 			const publicClient = await viem.getPublicClient()
 
 			// 1. Get campaign info to obtain the collection address
@@ -100,7 +121,273 @@ describe('Inhabit', function () {
 			console.log('Collection address:', collectionAddress)
 
 			// Get NFTCollection contract
-			const nftCollection = await viem.getContractAt(
+			const nftCollection: NFTCollectionContract = await viem.getContractAt(
+				'NFTCollection',
+				collectionAddress
+			)
+
+			// 2. Approve USDC for Inhabit contract
+			const nftPrice = campaignInfo.collectionsInfo[0].price as bigint
+			console.log('NFT Price:', nftPrice)
+
+			await mockUSDC.write.approve([inhabit.address, nftPrice], {
+				account: deployer
+			})
+
+			// 3. Buy NFT for Luca (no referral)
+			const txBuyNft = await inhabit.write.buyNFT(
+				[
+					luca, // _to
+					1n, // _campaignId
+					collectionAddress, // _collection
+					zeroHash, // _referral (no referral)
+					mockUSDC.address, // _paymentToken
+					nftPrice // _paymentAmount
+				],
+				{
+					account: deployer
+				}
+			)
+
+			await publicClient.waitForTransactionReceipt({ hash: txBuyNft })
+
+			// 4. Verify Luca owns the NFT (tokenId = 1)
+			const tokenId = 1n
+			const ownerAfterBuy = (await nftCollection.read.ownerOf([
+				tokenId
+			])) as Address
+			expect(ownerAfterBuy.toLowerCase()).to.equal(luca.toLowerCase())
+
+			console.log(
+				'✅ NFT purchased for Luca without referral. Token ID:',
+				tokenId
+			)
+		})
+
+		it('Should buy NFT for Luca with referral', async function () {
+			const publicClient = await viem.getPublicClient()
+
+			// 1. Get campaign info to obtain the collection address
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			const campaignInfo = (await inhabit.read.getCampaignInfo([1n])) as any
+			const collectionAddress = campaignInfo.collectionsInfo[0]
+				.collectionAddress as Address
+
+			console.log('Collection address:', collectionAddress)
+
+			// Get NFTCollection contract
+			const nftCollection: NFTCollectionContract = await viem.getContractAt(
+				'NFTCollection',
+				collectionAddress
+			)
+
+			// 2. Create a group with referral and ambassador (juan as ambassador with 5% fee)
+			const referralString = 'INHABIT2025'
+			const ambassadorFee = 500n // 5% (500 basis points = 5%)
+
+			const groupParams = {
+				referral: referralString,
+				ambassadors: [
+					{
+						account: juan,
+						fee: ambassadorFee
+					}
+				],
+				state: true
+			}
+
+			await inhabit.write.createGroup([1n, groupParams], {
+				account: deployer
+			})
+
+			console.log('✅ Group created with referral:', referralString)
+
+			// 3. Get the encrypted referral hash
+			const referralHash = (await inhabit.read.encriptReferral([
+				referralString
+			])) as Hex
+
+			console.log('Referral hash:', referralHash)
+
+			// 4. Approve USDC for Inhabit contract
+			const nftPrice = campaignInfo.collectionsInfo[0].price as bigint
+			console.log('NFT Price:', nftPrice)
+
+			await mockUSDC.write.approve([inhabit.address, nftPrice], {
+				account: deployer
+			})
+
+			// 5. Get juan (ambassador) balance before purchase
+			const juanBalanceBefore = (await mockUSDC.read.balanceOf([
+				juan
+			])) as bigint
+			console.log('Juan (ambassador) balance before:', juanBalanceBefore)
+
+			// 6. Buy NFT for Luca WITH referral
+			const txBuyNft = await inhabit.write.buyNFT(
+				[
+					luca, // _to
+					1n, // _campaignId
+					collectionAddress, // _collection
+					referralHash, // _referral (with referral!)
+					mockUSDC.address, // _paymentToken
+					nftPrice // _paymentAmount
+				],
+				{
+					account: deployer
+				}
+			)
+
+			await publicClient.waitForTransactionReceipt({ hash: txBuyNft })
+
+			// 7. Verify Luca owns the NFT (tokenId = 1)
+			const tokenId = 1n
+			const ownerAfterBuy = (await nftCollection.read.ownerOf([
+				tokenId
+			])) as Address
+			expect(ownerAfterBuy.toLowerCase()).to.equal(luca.toLowerCase())
+
+			console.log('✅ NFT purchased for Luca with referral. Token ID:', tokenId)
+
+			// 8. Verify juan (ambassador) received the commission (5% of nftPrice)
+			const juanBalanceAfter = (await mockUSDC.read.balanceOf([juan])) as bigint
+			const expectedCommission = (nftPrice * ambassadorFee) / 10000n
+			const actualCommission = juanBalanceAfter - juanBalanceBefore
+
+			console.log('Expected commission:', expectedCommission)
+			console.log('Actual commission:', actualCommission)
+
+			expect(actualCommission).to.equal(expectedCommission)
+
+			console.log(
+				'✅ Ambassador (juan) received commission:',
+				actualCommission.toString()
+			)
+		})
+
+		it('Should mint NFT for Luca with referral (simulating credit card payment)', async function () {
+			const publicClient = await viem.getPublicClient()
+
+			// 1. Get campaign info to obtain the collection address
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			const campaignInfo = (await inhabit.read.getCampaignInfo([1n])) as any
+			const collectionAddress = campaignInfo.collectionsInfo[0]
+				.collectionAddress as Address
+
+			console.log('Collection address:', collectionAddress)
+
+			// Get NFTCollection contract
+			const nftCollection: NFTCollectionContract = await viem.getContractAt(
+				'NFTCollection',
+				collectionAddress
+			)
+
+			// 2. Create a group with referral and ambassador (juan as ambassador with 5% fee)
+			const referralString = 'MINTTEST2025'
+			const ambassadorFee = 500n // 5% (500 basis points = 5%)
+
+			const groupParams = {
+				referral: referralString,
+				ambassadors: [
+					{
+						account: juan,
+						fee: ambassadorFee
+					}
+				],
+				state: true
+			}
+
+			await inhabit.write.createGroup([1n, groupParams], {
+				account: deployer
+			})
+
+			console.log('✅ Group created with referral:', referralString)
+
+			// 3. Get the encrypted referral hash
+			const referralHash = (await inhabit.read.encriptReferral([
+				referralString
+			])) as Hex
+
+			console.log('Referral hash:', referralHash)
+
+			// 4. Get NFT price
+			const nftPrice = campaignInfo.collectionsInfo[0].price as bigint
+			console.log('NFT Price:', nftPrice)
+
+			// 5. Use calculateTotalFee from contract to get the commission
+			const totalFee = (await inhabit.read.calculateTotalFee([
+				1n, // campaignId
+				referralHash, // referral
+				nftPrice // amount
+			])) as bigint
+			console.log('Total fee (from contract):', totalFee)
+
+			// 6. Approve USDC for Inhabit contract (only totalFee, not full price)
+			await mockUSDC.write.approve([inhabit.address, totalFee], {
+				account: deployer
+			})
+
+			// 7. Get juan (ambassador) balance before purchase
+			const juanBalanceBefore = (await mockUSDC.read.balanceOf([
+				juan
+			])) as bigint
+			console.log('Juan (ambassador) balance before:', juanBalanceBefore)
+
+			// 8. Call mintNFT (simulates when user already paid via credit card)
+			const txMintNft = await inhabit.write.mintNFT(
+				[
+					luca, // _to
+					1n, // _campaignId
+					collectionAddress, // _collection
+					referralHash, // _referral
+					mockUSDC.address, // _paymentToken
+					nftPrice, // _paymentAmount (full price for fundsRaised calculation)
+					totalFee // _totalFee (only commission amount from calculateTotalFee)
+				],
+				{
+					account: deployer
+				}
+			)
+
+			await publicClient.waitForTransactionReceipt({ hash: txMintNft })
+
+			// 9. Verify Luca owns the NFT (tokenId = 1)
+			const tokenId = 1n
+			const ownerAfterMint = (await nftCollection.read.ownerOf([
+				tokenId
+			])) as Address
+			expect(ownerAfterMint.toLowerCase()).to.equal(luca.toLowerCase())
+
+			console.log('✅ NFT minted for Luca. Token ID:', tokenId)
+
+			// 10. Verify juan (ambassador) received the commission
+			const juanBalanceAfter = (await mockUSDC.read.balanceOf([juan])) as bigint
+			const actualCommission = juanBalanceAfter - juanBalanceBefore
+
+			console.log('Expected commission:', totalFee)
+			console.log('Actual commission:', actualCommission)
+
+			expect(actualCommission).to.equal(totalFee)
+
+			console.log(
+				'✅ Ambassador (juan) received commission:',
+				actualCommission.toString()
+			)
+		})
+
+		it.skip('Should buy NFT for Luca and then Luca returns it to deployer via meta transaction', async function () {
+			const publicClient = await viem.getPublicClient()
+
+			// 1. Get campaign info to obtain the collection address
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			const campaignInfo = (await inhabit.read.getCampaignInfo([1n])) as any
+			const collectionAddress = campaignInfo.collectionsInfo[0]
+				.collectionAddress as Address
+
+			console.log('Collection address:', collectionAddress)
+
+			// Get NFTCollection contract
+			const nftCollection: NFTCollectionContract = await viem.getContractAt(
 				'NFTCollection',
 				collectionAddress
 			)

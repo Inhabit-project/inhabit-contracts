@@ -442,6 +442,70 @@ contract Inhabit is
 		);
 	}
 
+	function mintNFT(
+		address _to,
+		uint256 _campaignId,
+		address _collection,
+		bytes32 _referral,
+		address _paymentToken,
+		uint256 _paymentAmount,
+		uint256 _totalFee
+	)
+		external
+		nonReentrant
+		onlyRole(ADMIN_ROLE)
+		ifCollectionExists(_campaignId, _collection)
+	{
+		if (_isZeroAddress(_to) || _isZeroAddress(_paymentToken))
+			revert INVALID_ADDRESS();
+
+		if (!getCampaign(_campaignId).state) revert CAMPAIGN_NOT_ACTIVE();
+
+		if (ERC20(_paymentToken).balanceOf(msg.sender) < _totalFee)
+			revert INSUFFICIENT_FUNDS();
+
+		if (ERC20(_paymentToken).allowance(msg.sender, address(this)) < _totalFee)
+			revert INSUFFICIENT_ALLOWANCE();
+
+		_transferAmountFrom(
+			_paymentToken,
+			TransferData({from: msg.sender, to: address(this), amount: _totalFee})
+		);
+
+		{
+			uint256 referralFee = _distribution(
+				_campaignId,
+				_referral,
+				_paymentToken,
+				_paymentAmount
+			);
+
+			uint256 spareFee = _totalFee - referralFee;
+
+			if (spareFee > 0) {
+				_transferAmount(_paymentToken, msg.sender, spareFee);
+			}
+		}
+
+		uint256 tokenId = _safeMint(_collection, _to);
+
+		campaigns[_campaignId].fundsRaised += _getPrice(
+			_collection,
+			_paymentToken,
+			_paymentAmount
+		);
+
+		emit NFTPurchased(
+			_campaignId,
+			_collection,
+			_to,
+			_paymentToken,
+			_paymentAmount,
+			tokenId,
+			block.timestamp
+		);
+	}
+
 	/// @notice Group functions
 
 	function createGroup(
