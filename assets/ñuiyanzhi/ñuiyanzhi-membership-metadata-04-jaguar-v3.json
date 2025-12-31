@@ -1,0 +1,112 @@
+{
+	"name": "INHABIT Ñuiyanzhi JAGUAR",
+	"symbol": "JAGUAR",
+	"description": "Wisdom Keepers of the Corridor\nJaguars (Panthera onca) are guardians of knowledge, fire, and balance. As top predators and umbrella species of the Sierra Nevada, they regulate flora and fauna—channeling ancestral wisdom through the biocultural Corridor. Jaguars evoke the fourth level of care or stewardship, where wise elders care for 'stones' and 'knowledge'.",
+	"image": "ipfs://bafkreibmsz23t5d6bxlkqek4cwexdonpi2xqy72skbacqnykjkv55y2xaa",
+	"image_high_resolution": "ipfs://bafybeidkjwnkusizzwok4mkeq433rqkwwow6u2ejw6jgjxgrzmtjznoxoa",
+	"rights": [
+		{
+			"type": "LAND RIGHT",
+			"details": [
+				{
+					"title": "Life-long Membership & Stewardship",
+					"description": "You gain lifelong stewardship and utility rights over a tokenized real-world land.",
+					"minimum_fundraise": true,
+					"full_fundraise": true
+				},
+				{
+					"title": "Legal Protector of the land",
+					"description": "You become part of the legal system of guarantee that recognizes Nature as a subject with rights on a specific land related to this membership, in line with the Declaration of the Rights of Nature and Biocultural principles.",
+					"minimum_fundraise": true,
+					"full_fundraise": true
+				}
+			]
+		},
+		{
+			"type": "GOVERNANCE RIGHT",
+			"details": [
+				{
+					"title": "Inhabit DAO access",
+					"description": "You receive governance rights over specific matters as a land guarantor. You have a say in decisions regarding unexpected changes in land use, shifts in Hub management, or any unforeseen events that could alter the relationship between stakeholders and the land or threaten the Rights of Nature.",
+					"minimum_fundraise": true,
+					"full_fundraise": true
+				}
+			]
+		},
+		{
+			"type": "ART RIGHT",
+			"details": [
+				{
+					"title": "Badge of legal protector via exclusive ArtWork by Jeisson Castillo",
+					"description": "Each ArtPiece represents a Migratory Floating Garden from the HUB’s ecosystem, featuring a native species vital to that habitat and tied to levels of care in Kogui ancestral thinking. The unique Art Badge symbolizes your legal stewardship connection to a specific piece of land, which you can use to travel and activate the corridor.",
+					"minimum_fundraise": true,
+					"full_fundraise": true
+				}
+			]
+		},
+		{
+			"type": "MONITORING RIGHT",
+			"details": [
+				{
+					"title": "Impact Monitoring access",
+					"description": "Track the progress of the land you help protect through real-time data mapping and geolocation narratives. Follow the transformation of the land into a bio-cultural hub. You receive regular real-time data and impact reports, geolocation, visual mapping, and key performance indicators (KPIs) detailing progress in areas like tree planting, biodiversity increase, and local community impact.",
+					"minimum_fundraise": true,
+					"full_fundraise": true
+				}
+			]
+		},
+		{
+			"type": "UTILITY RIGHTS",
+			"details": [
+				{
+					"title": "Free accommodation",
+					"minimum_fundraise": "3 days",
+					"full_fundraise": "4 days"
+				},
+				{
+					"title": "Free meals",
+					"minimum_fundraise": "3 days",
+					"full_fundraise": "4 days"
+				},
+				{
+					"title": "Accommodation discount",
+					"minimum_fundraise": "30%",
+					"full_fundraise": "35%"
+				},
+				{
+					"title": "Meal discount",
+					"minimum_fundraise": "30%",
+					"full_fundraise": "35%"
+				},
+				{
+					"title": "Discounted workshops",
+					"minimum_fundraise": "2 workshops + 1 personalized workshop",
+					"full_fundraise": "2 workshops + 2 personalized workshops"
+				}
+			]
+		},
+		{
+			"type": "EDUCATION RIGHT",
+			"details": [
+				{
+					"title": "Access to educational contents",
+					"description": "About inhabiting knowledge and techniques",
+					"minimum_fundraise": false,
+					"full_fundraise": "Full contents"
+				}
+			]
+		},
+		{
+			"type": "ASSET RIGHT",
+			"details": [
+				{
+					"title": "Future NFT upgrades",
+					"description": "As early backer, you are entitled to receive future versions of the NFT for free, which will include additional rights and benefits as the project evolves in the NFT 2.0 (conditional on development).",
+					"minimum_fundraise": true,
+					"full_fundraise": true
+				}
+			]
+		}
+	],
+	"membership_contract": "ipfs://bafybeichyoxmjwco4thx6fun4irzpxhzbminwxzmektajfcolaod3lt56m"
+}

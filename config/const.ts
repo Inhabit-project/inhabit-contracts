@@ -216,7 +216,7 @@ const MAINNET_NFT_COLLECTIONS: (network: string) => CollectionParams[] = (
 			paymentToken: USDC_ADDRESS(network),
 			name: 'INHABIT Ñuiyanzhi TITI',
 			symbol: 'TITI',
-			uri: 'ipfs://bafkreidij5vgh5kxt3q6wj2kcfijvctqkclpnkkx2rfzxz3ud44ddjqzki',
+			uri: 'ipfs://bafkreify4keberhtw7ql4e2gfsfw7vebz2mstuszfux47rfna6rvkdnpsm',
 			supply: 2483n,
 			price: 50_000_000n,
 			state: true
@@ -225,7 +225,7 @@ const MAINNET_NFT_COLLECTIONS: (network: string) => CollectionParams[] = (
 			paymentToken: USDC_ADDRESS(network),
 			name: 'INHABIT Ñuiyanzhi PAUJIL',
 			symbol: 'PAUJIL',
-			uri: 'ipfs://bafkreiclrauiief3ll6sip6jr4vbhsyh4m5iwfopayifjblpek7vudasr4',
+			uri: 'ipfs://bafkreifa6fw5yrilziqvh5lm5edansla5o32ldtgtmgqwle55ra6liplqq',
 			supply: 124n,
 			price: 500_000_000n,
 			state: true
@@ -234,7 +234,7 @@ const MAINNET_NFT_COLLECTIONS: (network: string) => CollectionParams[] = (
 			paymentToken: USDC_ADDRESS(network),
 			name: 'INHABIT Ñuiyanzhi CARACOLI',
 			symbol: 'CARACOLI',
-			uri: 'ipfs://bafkreidrdymjzsmuaxz7it44cqfccivy74vxrxjn3mxm276lx5tuywchcy',
+			uri: 'ipfs://bafkreidsswc3kx3gstjxortudvxv6st4hidyidchdhg2do2s4bamne657u',
 			supply: 19n,
 			price: 2000_000_000n,
 			state: true
@@ -243,7 +243,7 @@ const MAINNET_NFT_COLLECTIONS: (network: string) => CollectionParams[] = (
 			paymentToken: USDC_ADDRESS(network),
 			name: 'INHABIT Ñuiyanzhi JAGUAR',
 			symbol: 'JAGUAR',
-			uri: 'ipfs://bafkreigja4pmvrxiwfba2llgwgv76yjbnkd7sizrcz7kb7qt7vpnzl27lu',
+			uri: 'ipfs://bafkreia2fbhj3s6hxns5bt4jebnews3txno7ye3esxnc5pst3pdjb2jtzi',
 			supply: 5n,
 			price: 5000_000_000n,
 			state: true
@@ -259,7 +259,7 @@ const TESTNET_NFT_COLLECTIONS: (network: string) => CollectionParams[] = (
 			paymentToken: USDC_ADDRESS(network),
 			name: 'INHABIT Ñuiyanzhi TITI',
 			symbol: 'TITI',
-			uri: 'ipfs://bafkreidij5vgh5kxt3q6wj2kcfijvctqkclpnkkx2rfzxz3ud44ddjqzki',
+			uri: 'ipfs://bafkreify4keberhtw7ql4e2gfsfw7vebz2mstuszfux47rfna6rvkdnpsm',
 			supply: 2483n,
 			price: 1_000_000n,
 			state: true
@@ -268,7 +268,7 @@ const TESTNET_NFT_COLLECTIONS: (network: string) => CollectionParams[] = (
 			paymentToken: USDC_ADDRESS(network),
 			name: 'INHABIT Ñuiyanzhi PAUJIL',
 			symbol: 'PAUJIL',
-			uri: 'ipfs://bafkreiclrauiief3ll6sip6jr4vbhsyh4m5iwfopayifjblpek7vudasr4',
+			uri: 'ipfs://bafkreif3zjx7fxn7uyvh43znuuuwmxta3jbbyxgm7vvfyvnugc3zw7q5iu',
 			supply: 124n,
 			price: 2_000_000n,
 			state: true
@@ -277,7 +277,7 @@ const TESTNET_NFT_COLLECTIONS: (network: string) => CollectionParams[] = (
 			paymentToken: USDC_ADDRESS(network),
 			name: 'INHABIT Ñuiyanzhi CARACOLI',
 			symbol: 'CARACOLI',
-			uri: 'ipfs://bafkreidrdymjzsmuaxz7it44cqfccivy74vxrxjn3mxm276lx5tuywchcy',
+			uri: 'ipfs://bafkreieechmip4kftckvznmafujhgd7aodu4kadpzzrixxy54f34lobv7q',
 			supply: 19n,
 			price: 3_000_000n,
 			state: true
@@ -286,7 +286,7 @@ const TESTNET_NFT_COLLECTIONS: (network: string) => CollectionParams[] = (
 			paymentToken: USDC_ADDRESS(network),
 			name: 'INHABIT Ñuiyanzhi JAGUAR',
 			symbol: 'JAGUAR',
-			uri: 'ipfs://bafkreigja4pmvrxiwfba2llgwgv76yjbnkd7sizrcz7kb7qt7vpnzl27lu',
+			uri: 'ipfs://bafkreickw7q4ccmxgn2aafps53ndyek5kt7oyc54rxh2lmiwqduwcwpg2u',
 			supply: 5n,
 			price: 4_000_000n,
 			state: true
